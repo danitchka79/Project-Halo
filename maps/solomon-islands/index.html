@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Solomon Islands Candidate Sites — MICI Deployment Survey</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="hs_layer.js"></script>
+<style>
+  :root {
+    --ocean-deep: #081c25;
+    --harbour: #49b6d6;
+    --marina: #f2c14e;
+    --seawall: #6ea85c;
+    --wharf: #c15fd0;
+    --muzammil: #ef6b4d;
+    --panel: rgba(10,35,45,0.92);
+    --panel-border: rgba(255,255,255,0.12);
+    --ink: #eef3f2;
+    --ink-dim: #9fb4ba;
+    --accent: #22d3ee;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--ocean-deep);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #app { position: relative; width: 100%; height: 100vh; }
+  #map { width: 100%; height: 100%; background: var(--ocean-deep); }
+  .leaflet-control-layers { font-size: 12.5px; color: #1a1a1a; }
+  .leaflet-control-layers label { color: #1a1a1a; }
+
+  header {
+    position: absolute; top: 0; left: 0; right: 0;
+    padding: 22px 28px 14px 28px;
+    background: linear-gradient(to bottom, rgba(8,20,25,0.85) 0%, rgba(8,20,25,0) 100%);
+    pointer-events: none;
+    z-index: 1000;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 21px;
+    margin: 0 0 4px 0;
+  }
+  header p {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-dim);
+    max-width: 520px;
+    line-height: 1.5;
+  }
+
+  #panel {
+    position: absolute;
+    top: 20px; right: 20px;
+    max-height: calc(100vh - 140px); overflow-y: auto;
+    width: 240px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 16px;
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    font-size: 12.5px;
+  }
+  #panel h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 10px 0;
+  }
+  .legend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .legend-row.type-toggle { cursor: pointer; user-select: none; transition: opacity 0.12s ease; }
+  .legend-row.type-toggle:hover { opacity: 0.85; }
+  .legend-row.type-toggle.off { opacity: 0.32; }
+  .legend-row.type-toggle.off .legend-swatch { filter: grayscale(1); }
+  #cyclone-bar {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: none; align-items: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 8px 12px; backdrop-filter: blur(6px);
+    z-index: 1000; font-size: 12.5px; white-space: nowrap;
+  }
+  #cyclone-bar.visible { display: flex; }
+  .cyc-title { font-family: 'Fraunces', serif; font-weight: 600; margin-right: 4px; }
+  .cyc-chip {
+    display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px;
+    border: 1px solid var(--panel-border); background: rgba(255,255,255,0.08); color: var(--ink);
+    font: inherit; cursor: pointer; user-select: none;
+  }
+  .cyc-chip:hover { background: rgba(255,255,255,0.16); }
+  .cyc-chip.off { opacity: 0.35; }
+  .cyc-sw { width: 14px; height: 4px; border-radius: 2px; }
+  .cyc-n { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-dim); }
+  .cyc-shown { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-dim); margin-left: 4px; }
+  .cyc-shown b { color: var(--ink); }
+  .legend-swatch { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .legend-swatch.leaf-swatch { border-radius: 0; }
+  .legend-swatch.icon-swatch { width: 17px; height: 17px; border-radius: 0; }
+  .legend-count { margin-left: auto; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-dim); }
+  .divider { height: 1px; background: var(--panel-border); margin: 12px 0; }
+  .caveat { font-size: 11px; color: var(--ink-dim); line-height: 1.5; }
+
+  #zoom-controls {
+    position: absolute; bottom: 24px; right: 20px;
+    display: flex; flex-direction: column; gap: 6px; z-index: 1000;
+  }
+  .zbtn {
+    width: 34px; height: 34px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    color: var(--ink); border-radius: 8px; font-size: 17px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+  }
+  .zbtn:hover { background: rgba(255,255,255,0.12); }
+
+  .site-tooltip {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    color: var(--ink); font-size: 12px; padding: 3px 8px; border-radius: 6px;
+  }
+  .leaflet-popup-content-wrapper {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    color: var(--ink); border-radius: 8px; backdrop-filter: blur(6px);
+  }
+  .leaflet-popup-tip { background: var(--panel); }
+  .leaflet-popup-content { margin: 10px 12px; font-size: 12.5px; }
+  .tt-title { font-family: 'Fraunces', serif; font-weight: 600; font-size: 13.5px; margin-bottom: 4px; display:flex; align-items:center; gap:6px;}
+  .tt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display:inline-block; }
+  .tt-row { color: var(--ink-dim); line-height: 1.55; }
+  .tt-row b { color: var(--ink); font-weight: 500; }
+  .leaflet-popup-content a { color: var(--harbour); }
+  .plant-icon, .dot-icon { background: transparent; border: none; cursor: pointer; }
+  .delete-btn { margin-top: 8px; padding: 4px 10px; font-size: 11px; border-radius: 4px; border: 1px solid #ef4444; background: transparent; color: #ef4444; cursor: pointer; }
+  .delete-btn:hover { background: #ef4444; color: #fff; }
+  .edit-btn { margin-top: 8px; margin-right: 6px; padding: 4px 10px; font-size: 11px; border-radius: 4px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+  .edit-btn:hover { background: var(--accent); color: #06282f; }
+  .edit-form label { display: block; margin-top: 5px; font-size: 10.5px; color: var(--ink-dim); }
+  .edit-form input, .edit-form textarea { width: 100%; box-sizing: border-box; padding: 3px 6px; font-size: 12px; font-family: inherit; background: rgba(255,255,255,0.08); color: var(--ink); border: 1px solid var(--panel-border); border-radius: 4px; }
+  .edit-form .edit-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8px; width: 260px; }
+  .edit-form .edit-grid .wide { grid-column: span 2; }
+  .move-cmd { width: 100%; font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; padding: 5px 6px; margin-top: 6px; background: rgba(255,255,255,0.08); color: var(--ink); border: 1px solid var(--panel-border); border-radius: 4px; }
+
+  #count-readout {
+    position: absolute; bottom: 214px; left: 28px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-dim);
+    z-index: 1000; pointer-events: none;
+  }
+  #count-readout b { color: var(--ink); }
+  #hs-readout {
+    position: absolute; bottom: 234px; left: 28px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink-dim);
+    z-index: 1000; pointer-events: none;
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 6px; padding: 3px 8px;
+  }
+  #hs-readout:empty { display: none; }
+  #hs-readout b { color: var(--ink); }
+
+  #batch-panel {
+    position: absolute; top: 100px; left: 20px; width: 300px;
+    max-height: calc(100vh - 140px); overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 16px; backdrop-filter: blur(6px);
+    z-index: 1000; font-size: 12.5px; display: none;
+  }
+  #batch-panel.visible { display: block; }
+  #batch-panel h2 { font-family: 'Fraunces', serif; font-size: 14px; font-weight: 600; margin: 0 0 10px 0; }
+  #batch-panel input[type="text"], #batch-panel textarea {
+    width: 100%; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;
+    padding: 5px 6px; background: rgba(255,255,255,0.08); color: var(--ink);
+    border: 1px solid var(--panel-border); border-radius: 4px;
+  }
+  #batch-panel textarea { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; height: 130px; resize: vertical; }
+  .batch-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .batch-item .batch-item-label { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--ink-dim); flex-shrink: 0; width: 16px; }
+  .batch-item input[type="text"] { flex: 1; }
+  .batch-item button { flex-shrink: 0; width: 22px; height: 22px; border-radius: 4px; border: none; background: rgba(255,255,255,0.1); color: var(--ink); cursor: pointer; }
+  .batch-btn { width: 100%; padding: 7px; margin-top: 6px; border-radius: 6px; border: 1px solid var(--panel-border); background: var(--accent); color: #06282f; font-weight: 500; cursor: pointer; }
+  .batch-btn.secondary { background: rgba(255,255,255,0.08); color: var(--ink); }
+  #timelapse-bar {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: none; align-items: center; gap: 10px;
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 10px; padding: 10px 16px; backdrop-filter: blur(6px);
+    z-index: 1000; font-size: 12.5px; white-space: nowrap;
+  }
+  #timelapse-bar.visible { display: flex; }
+  #timelapse-play {
+    width: 30px; height: 30px; border-radius: 50%; border: none;
+    background: var(--accent); color: #06282f; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  #timelapse-slider { width: 260px; }
+  #timelapse-date {
+    font-family: 'IBM Plex Mono', monospace; color: var(--ink); min-width: 78px; text-align: right;
+  }
+
+  @media (max-width: 640px) {
+    #panel { width: 190px; font-size: 11.5px; padding: 12px; }
+    header { padding: 16px 16px 10px 16px; }
+    h1 { font-size: 16px; }
+    header p { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="map"></div>
+
+  <header>
+    <h1>Solomon Islands Candidate Sites — Deployment Survey</h1>
+    <p>Candidate sites. Base map (bottom-left): Esri street map / satellite imagery, a historic satellite timelapse back to 2014, GEBCO seafloor bathymetry, Global Mangrove Watch mangrove extent over satellite, WAVERYS annual mean significant wave height, or IBTrACS cyclone tracks. Right-click opens Google Maps, Ctrl+right-click a nautical chart, Shift+right-click stages points to add.</p>
+  </header>
+
+  <div id="panel">
+    <div class="legend-row" style="margin-bottom:10px;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width:100%;">
+        <input type="checkbox" id="toggle-move-mode" style="cursor:pointer; accent-color: var(--accent);">
+        <span class="label">Move points (drag to reposition)</span>
+      </label>
+    </div>
+    <div class="divider"></div>
+    <h2>Site type</h2>
+    <div class="legend-row type-toggle" data-bucket="harbour" data-on="1">
+      <span class="legend-swatch" style="background:var(--harbour)"></span>
+      <span>Natural harbour</span>
+      <span class="legend-count" id="count-harbour"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="marina" data-on="1">
+      <span class="legend-swatch" style="background:var(--marina)"></span>
+      <span>Marina</span>
+      <span class="legend-count" id="count-marina"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="seawall" data-on="1">
+      <span class="legend-swatch" style="background:var(--seawall)"></span>
+      <span>Proposed NbS Seawall</span>
+      <span class="legend-count" id="count-seawall"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="wharf" data-on="1">
+      <span class="legend-swatch" style="background:var(--wharf)"></span>
+      <span>Existing wharf/jetty</span>
+      <span class="legend-count" id="count-wharf"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="other" data-on="1">
+      <span class="legend-swatch" style="background:var(--accent)"></span>
+      <span>Potential site</span>
+      <span class="legend-count" id="count-other"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="muzammil" data-on="1">
+      <span class="legend-swatch" style="background:var(--muzammil)"></span>
+      <span>Muzammil's list</span>
+      <span class="legend-count" id="count-muzammil"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="mangrove-present" data-on="1">
+      <svg class="legend-swatch leaf-swatch" viewBox="0 0 24 24"><path fill="#22c55e" d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+      <span>Coastal mangroves present</span>
+      <span class="legend-count" id="count-mangrove-present"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="mangrove-absent" data-on="1">
+      <svg class="legend-swatch leaf-swatch" viewBox="0 0 24 24"><path fill="#ef4444" d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+      <span>Coastal mangroves absent</span>
+      <span class="legend-count" id="count-mangrove-absent"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="mangrove-loss" data-on="1">
+      <svg class="legend-swatch leaf-swatch" viewBox="0 0 24 24"><path fill="#3b82f6" d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+      <span>Coastal mangroves recent loss</span>
+      <span class="legend-count" id="count-mangrove-loss"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="mangrove-restoration" data-on="1">
+      <svg class="legend-swatch leaf-swatch" viewBox="0 0 24 24"><path fill="#14b8a6" d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z"/></svg>
+      <span>Mangrove restoration</span>
+      <span class="legend-count" id="count-mangrove-restoration"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="construction" data-on="1">
+      <svg class="legend-swatch leaf-swatch" viewBox="0 0 24 24"><path fill="#f59e0b" d="M22.7,19l-9.1-9.1c0.9-2.3,0.4-5-1.5-6.9c-2-2-5-2.4-7.4-1.3L9,6l-3,3L1.6,4.7C0.4,7.1,0.9,10.1,2.9,12.1c1.9,1.9,4.6,2.4,6.9,1.5l9.1,9.1c0.4,0.4,1,0.4,1.4,0l2.3-2.3C23.1,20,23.1,19.4,22.7,19z"/></svg>
+      <span>Construction (reclamation, dredging)</span>
+      <span class="legend-count" id="count-construction"></span>
+    </div>
+    <div class="legend-row type-toggle" data-bucket="shipwreck" data-on="1">
+      <svg class="legend-swatch leaf-swatch" viewBox="0 0 24 24">
+        <g transform="rotate(20 12 12)">
+          <line x1="9" y1="13" x2="9" y2="3" stroke="#ff69b4" stroke-width="1.1"/>
+          <polygon points="9,4 15,10 9,10" fill="#ff69b4"/>
+          <polygon points="3,13 21,13 17,19 7,19" fill="#ff69b4" stroke="rgba(8,20,25,0.7)" stroke-width="0.6"/>
+        </g>
+        <path d="M1,19 Q3.5,16.5 6,19 T11,19 T16,19 T21,19 T23,19" stroke="#ff69b4" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+      </svg>
+      <span>Shipwrecks</span>
+      <span class="legend-count" id="count-shipwreck"></span>
+    </div>
+    <div id="dynamic-legend-rows"></div>
+    <div class="caveat" style="margin-top:-2px; margin-bottom:4px;">Click a type above to show/hide it.</div>
+    <div class="legend-row" id="unverified-toggle" data-on="1" style="cursor:pointer; user-select:none;" title="Faded pins are placed at an island, town or nearby feature, not the exact property/project. Click to show/hide them.">
+      <span class="legend-swatch" style="background:transparent; border:1.5px dashed #fbbf24;"></span>
+      <span>Location unverified (faded pins) - <b id="unverified-state">shown</b></span>
+      <span class="legend-count" id="count-unverified"></span>
+    </div>
+    <div class="divider"></div>
+    <div class="legend-row" style="flex-direction:column; align-items:stretch; gap:4px;">
+      <span class="label" style="display:flex; justify-content:space-between;"><span>H<sub>s</sub> opacity</span> <span id="hs-opacity-value" style="font-family:'IBM Plex Mono',monospace; color:var(--ink-dim);">90%</span></span>
+      <input type="range" id="hs-opacity" min="0" max="100" value="90" style="width:100%;">
+      <span class="caveat" style="margin-top:-2px;">Shown on the Streets and Wave height basemaps.</span>
+    </div>
+    <div class="divider"></div>
+    <div class="legend-row" style="cursor:pointer;">
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; width:100%;">
+        <input type="checkbox" id="toggle-contours" checked style="cursor:pointer; accent-color: var(--accent);">
+        <span class="label">Show annual mean H<sub>s</sub> contours</span>
+      </label>
+    </div>
+    <div id="contour-legend" style="margin-top:4px;">
+      <div style="height:10px; border-radius:3px; background:linear-gradient(to right,#440154,#482878,#3e4989,#31688e,#26828e,#1f9e89,#35b779,#6ece58,#b5de2b,#fde725);"></div>
+      <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); margin-top:3px;">
+        <span>0.2 m</span><span>1.1 m</span><span>2.0 m</span>
+      </div>
+      <div style="font-size:10.5px; color:var(--ink-dim); margin-top:4px; line-height:1.4;">
+        Copernicus Marine WAVERYS monthly climatology, 1993–2020 (0.2°), averaged to an annual mean, in 0.1 m bands. Hover the map to read the value at the cursor. Coarse offshore model: it does not resolve sheltering inside lagoons and bays.
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="legend-row"><span class="label">Bathymetry colour scale (sea)</span></div>
+    <div style="height:12px; border-radius:3px; background:linear-gradient(to right,#06204f 0.0%,#104688 34.8%,#1784c4 56.5%,#16aad6 67.4%,#36c6e6 78.3%,#56e2f7 89.1%,#8cf2ec 97.8%,#b9ffed 100.0%); margin-top:4px;"></div>
+    <div style="position:relative; height:11px; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim); margin-top:2px;">
+      <span style="position:absolute; left:0%;">&minus;9200 m</span>
+      <span style="position:absolute; left:34.8%; transform:translateX(-50%);">&minus;6000</span>
+      <span style="position:absolute; left:67.4%; transform:translateX(-50%);">&minus;3000</span>
+      <span style="position:absolute; right:0;">0 m</span>
+    </div>
+    <div class="legend-row" style="margin-top:8px;"><span class="label">Land</span></div>
+    <div style="height:12px; border-radius:3px; background:linear-gradient(to right,#a7f0b2 0.0%,#33cc66 1.9%,#bbe492 11.5%,#e8dfac 30.8%,#f5ce92 57.7%,#edc272 100.0%); margin-top:4px;"></div>
+    <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim); margin-top:2px;">
+      <span>0 m</span><span>1300 m</span><span>2600 m</span>
+    </div>
+    <div class="caveat" style="margin-top:6px;">Rendered from the GEBCO 2020 15&Prime; grid (~460 m) with hillshading, by make_layers.py. Deepest point in view: the trench south of the Solomons, &minus;9122 m. Selectable as a basemap (bottom-left).</div>
+    <div class="legend-row" style="margin-top:8px;"><span class="label">-10 &lt; Bathymetry &lt; 0 colour scale</span></div>
+    <div style="height:12px; border-radius:3px; background:linear-gradient(to right,#081c4a 0%,#d2faf5 100%); margin-top:4px;"></div>
+    <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim); margin-top:3px;">
+      <span>&minus;10 m (or deeper)</span><span>0 m</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:5px; margin-top:5px;">
+      <span style="width:12px; height:12px; border-radius:3px; background:#786450; flex-shrink:0;"></span>
+      <span style="font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim);">Land</span>
+    </div>
+    <div class="caveat" style="margin-top:6px;">Rendered directly from this region's GEBCO 2020 depth grid, colour scaled 0 m to &minus;10 m and clipped beyond that &mdash; picks out fringing reef and lagoon right at the coastline. Selectable as a separate basemap (bottom-left).</div>
+    <div class="divider"></div>
+    <div class="legend-row"><span class="label">Cyclone track colour = intensity (10-min wind)</span></div>
+    <div style="height:6px; border-radius:3px; background:linear-gradient(to right,#b8c7cd 0 16.6%,#e3b52f 16.6% 33.3%,#ec8a3a 33.3% 50%,#dc4a28 50% 66.6%,#e8508a 66.6% 83.3%,#a855f7 83.3%); margin-top:4px;"></div>
+    <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--ink-dim); margin-top:2px;"><span>&lt;34</span><span>C1</span><span>C2</span><span>C3</span><span>C4</span><span>C5</span></div>
+    <div class="caveat" style="margin-top:4px;">To show only some categories, pick the Cyclones basemap and use the category bar at the bottom of the map.</div>
+    <div class="caveat" style="margin-top:6px;">Cyclones basemap (bottom-left): NOAA IBTrACS v04r01 best tracks of every system from the 1969/70 season on that was at cyclone strength within 500 km of Solomon Islands land (163 storms to Oct 2026; tracks since 2025 are provisional), over the Global Mangrove Watch mangrove extent. Hover a track for its name, click for details. Wind is the 10-min agency wind; &asymp; marks a peak converted from the US 1-min wind.</div>
+    <div class="divider"></div>
+    <div class="caveat">
+      Edit sites in sites.csv, then run <code>python solomon_sites_tool.py update "Solomon Islands Candidate Sites Map.html" sites.csv</code>.
+    </div>
+  </div>
+
+  <div id="zoom-controls">
+    <button class="zbtn" id="zoom-in" title="Zoom in">+</button>
+    <button class="zbtn" id="zoom-out" title="Zoom out">&minus;</button>
+    <button class="zbtn" id="zoom-reset" title="Reset view">&#8635;</button>
+  </div>
+
+  <div id="hs-readout"></div>
+  <div id="count-readout">Showing <b id="shown-count">0</b> sites</div>
+
+  <div id="cyclone-bar">
+    <span class="cyc-title">Peak category</span>
+    <button class="cyc-toggle cyc-chip off" data-cat="Category 5" data-on="0" title="Click: show/hide. Double-click: show only Category 5"><span class="cyc-sw" style="background:#a855f7"></span>Cat 5 <span class="cyc-n" id="cyc-count-5"></span></button>
+    <button class="cyc-toggle cyc-chip off" data-cat="Category 4" data-on="0" title="Click: show/hide. Double-click: show only Category 4"><span class="cyc-sw" style="background:#e8508a"></span>Cat 4 <span class="cyc-n" id="cyc-count-4"></span></button>
+    <button class="cyc-toggle cyc-chip off" data-cat="Category 3" data-on="0" title="Click: show/hide. Double-click: show only Category 3"><span class="cyc-sw" style="background:#dc4a28"></span>Cat 3 <span class="cyc-n" id="cyc-count-3"></span></button>
+    <button class="cyc-toggle cyc-chip off" data-cat="Category 2" data-on="0" title="Click: show/hide. Double-click: show only Category 2"><span class="cyc-sw" style="background:#ec8a3a"></span>Cat 2 <span class="cyc-n" id="cyc-count-2"></span></button>
+    <button class="cyc-toggle cyc-chip off" data-cat="Category 1" data-on="0" title="Click: show/hide. Double-click: show only Category 1"><span class="cyc-sw" style="background:#e3b52f"></span>Cat 1 <span class="cyc-n" id="cyc-count-1"></span></button>
+    <button class="cyc-chip" id="cyc-all">All</button>
+    <span class="cyc-shown">Showing <b id="cyc-shown">all</b></span>
+  </div>
+
+  <div id="timelapse-bar">
+    <button id="timelapse-play" title="Play">&#9654;</button>
+    <input type="range" id="timelapse-slider" min="0" max="0" value="0">
+    <span id="timelapse-date">—</span>
+  </div>
+
+  <div id="batch-panel">
+    <h2>Batch add (<span id="batch-count">0</span>)</h2>
+    <div class="caveat" style="margin-top:-6px; margin-bottom:10px;">Shift+right-click the map to stage a point. Plain right-click still opens Google Maps.</div>
+    <label class="label" style="display:block; margin-bottom:3px;">Name (optional)</label>
+    <div style="display:flex; gap:6px;">
+      <input type="text" id="batch-name-all" placeholder="e.g. Marovo Cluster" style="flex:1;">
+      <button class="batch-btn" id="batch-name-apply" style="width:auto; margin-top:0; padding:0 10px;">Apply to all</button>
+    </div>
+    <label class="label" style="display:block; margin:10px 0 3px;">Type (applies to all)</label>
+    <input type="text" id="batch-type" list="batch-type-options" placeholder="e.g. Potential site">
+    <datalist id="batch-type-options"></datalist>
+    <label class="label" style="display:block; margin:10px 0 3px;">Island (applies to all)</label>
+    <input type="text" id="batch-island" list="batch-island-options" placeholder="e.g. Guadalcanal">
+    <datalist id="batch-island-options"></datalist>
+    <div class="divider"></div>
+    <div id="batch-list"></div>
+    <button class="batch-btn" id="batch-generate">Generate commands</button>
+    <button class="batch-btn secondary" id="batch-clear">Clear all</button>
+    <textarea id="batch-output" readonly style="display:none;" onclick="this.select()"></textarea>
+  </div>
+</div>
+
+<script>
+const SITES = [{"num":1,"name":"Honiara Port (Point Cruz)","type":"Existing wharf/jetty","lat":-9.429,"lon":159.953,"x":159.953,"y":9.429,"island":"Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.4290,159.9530/@-9.4290,159.9530,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.4290!4d159.9530","folder":"Site photos/01 Honiara Port (Point Cruz)","notes":"Starter example - approximate location; check and edit"},{"num":2,"name":"Tulagi Harbour","type":"Natural harbour","lat":-9.104,"lon":160.149,"x":160.149,"y":9.104,"island":"Nggela (Florida Islands)","scores":[],"link":"https://www.google.com/maps/place/-9.1040,160.1490/@-9.1040,160.1490,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.1040!4d160.1490","folder":"Site photos/02 Tulagi Harbour","notes":"Starter example - approximate location; check and edit"},{"num":3,"name":"Noro Port","type":"Existing wharf/jetty","lat":-8.24,"lon":157.199,"x":157.199,"y":8.24,"island":"New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.2400,157.1990/@-8.2400,157.1990,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.2400!4d157.1990","folder":"Site photos/03 Noro Port","notes":"Starter example - approximate location; check and edit"},{"num":4,"name":"Gizo","type":"Existing wharf/jetty","lat":-8.102,"lon":156.842,"x":156.842,"y":8.102,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.1020,156.8420/@-8.1020,156.8420,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.1020!4d156.8420","folder":"Site photos/04 Gizo","notes":"Starter example - approximate location; check and edit"},{"num":5,"name":"Munda","type":"Potential site","lat":-8.328,"lon":157.262,"x":157.262,"y":8.328,"island":"New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.3280,157.2620/@-8.3280,157.2620,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.3280!4d157.2620","folder":"Site photos/05 Munda","notes":"Starter example - approximate location; check and edit"},{"num":6,"name":"Seghe (Marovo Lagoon)","type":"Potential site","lat":-8.577,"lon":157.88,"x":157.88,"y":8.577,"island":"New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.5770,157.8800/@-8.5770,157.8800,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.5770!4d157.8800","folder":"Site photos/06 Seghe (Marovo Lagoon)","notes":"Starter example - approximate location; check and edit"},{"num":7,"name":"Auki","type":"Existing wharf/jetty","lat":-8.768,"lon":160.703,"x":160.703,"y":8.768,"island":"Malaita","scores":[],"link":"https://www.google.com/maps/place/-8.7680,160.7030/@-8.7680,160.7030,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.7680!4d160.7030","folder":"Site photos/07 Auki","notes":"Starter example - approximate location; check and edit"},{"num":8,"name":"Buala","type":"Existing wharf/jetty","lat":-8.145,"lon":159.592,"x":159.592,"y":8.145,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-8.1450,159.5920/@-8.1450,159.5920,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.1450!4d159.5920","folder":"Site photos/08 Buala","notes":"Starter example - approximate location; check and edit"},{"num":9,"name":"Kirakira","type":"Potential site","lat":-10.453,"lon":161.921,"x":161.921,"y":10.453,"island":"Makira","scores":[],"link":"https://www.google.com/maps/place/-10.4530,161.9210/@-10.4530,161.9210,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.4530!4d161.9210","folder":"Site photos/09 Kirakira","notes":"Starter example - approximate location; check and edit"},{"num":10,"name":"Lata (Graciosa Bay)","type":"Natural harbour","lat":-10.738,"lon":165.856,"x":165.856,"y":10.738,"island":"Nendo (Santa Cruz Islands)","scores":[],"link":"https://www.google.com/maps/place/-10.7380,165.8560/@-10.7380,165.8560,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.7380!4d165.8560","folder":"Site photos/10 Lata (Graciosa Bay)","notes":"Starter example - approximate location; check and edit"},{"num":11,"name":"Leleana Resort","type":"Potential site","lat":-8.107003,"lon":157.0224,"x":157.0224,"y":8.107003,"island":null,"scores":[],"link":"https://www.google.com/maps/place/-8.107003,157.022400/@-8.107003,157.022400,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.107003!4d157.022400","folder":"Site photos/11 Leleana Resort","notes":"TripAdvisor: Community waterfront lodge at the base of Kolombangara"},{"num":12,"name":"Sarah's site - S Guadalcanal (E)","type":"No mangrove (Sarah)","lat":-9.81,"lon":160.238,"x":160.238,"y":9.81,"island":"Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.810000,160.238000/@-9.810000,160.238000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.810000!4d160.238000","mangroves":"No","folder":"Site photos/12 Sarah's site - S Guadalcanal (E)","notes":"Wells et al. (2026) global mangrove study site (from Sarah's wells_sites_map.html); Central Indo-Pacific / Eastern Coral Triangle / Solomon Archipelago ecoregion; no per-site wave time series"},{"num":13,"name":"Sarah's site - S Guadalcanal (W)","type":"No mangrove (Sarah)","lat":-9.823,"lon":160.079,"x":160.079,"y":9.823,"island":"Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.823000,160.079000/@-9.823000,160.079000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.823000!4d160.079000","mangroves":"No","folder":"Site photos/13 Sarah's site - S Guadalcanal (W)","notes":"Wells et al. (2026) global mangrove study site (from Sarah's wells_sites_map.html); Central Indo-Pacific / Eastern Coral Triangle / Solomon Archipelago ecoregion; no per-site wave time series"},{"num":14,"name":"Sarah's site - W Guadalcanal","type":"No mangrove (Sarah)","lat":-9.599,"lon":159.661,"x":159.661,"y":9.599,"island":"Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.599000,159.661000/@-9.599000,159.661000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.599000!4d159.661000","mangroves":"No","folder":"Site photos/14 Sarah's site - W Guadalcanal","notes":"Wells et al. (2026) global mangrove study site (from Sarah's wells_sites_map.html); Central Indo-Pacific / Eastern Coral Triangle / Solomon Archipelago ecoregion; annual mean Hs 0.94 m, Tp 9.2 s (hindcast 2003-2023)"},{"num":15,"name":"Sarah's site - SW Bougainville (PNG)","type":"No mangrove (Sarah)","lat":-6.665,"lon":155.282,"x":155.282,"y":6.665,"island":"Bougainville (PNG)","scores":[],"link":"https://www.google.com/maps/place/-6.665000,155.282000/@-6.665000,155.282000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-6.665000!4d155.282000","mangroves":"No","folder":"Site photos/15 Sarah's site - SW Bougainville (PNG)","notes":"Wells et al. (2026) global mangrove study site (from Sarah's wells_sites_map.html); Central Indo-Pacific / Eastern Coral Triangle / Solomon Archipelago ecoregion; no per-site wave time series"},{"num":17,"name":"Maramasike Passage","type":"Potential site","lat":-9.593387,"lon":161.399889,"x":161.399889,"y":9.593387,"island":null,"scores":[],"link":"https://www.google.com/maps/place/-9.593387,161.399889/@-9.593387,161.399889,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.593387!4d161.399889","folder":"Site photos/17 Maramasike Passage"},{"num":18,"name":"Roderick Bay","type":"Potential site","lat":-9.023053,"lon":160.123061,"x":160.123061,"y":9.023053,"island":"Pijin Island","scores":[],"link":"https://www.google.com/maps/place/-9.023053,160.123061/@-9.023053,160.123061,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.023053!4d160.123061","folder":"Site photos/18 Roderick Bay"},{"num":19,"name":"Fatboys Resort","type":"Potential site","lat":-8.121645,"lon":156.894851,"x":156.894851,"y":8.121645,"island":"Mbambanga","scores":[],"link":"https://www.google.com/maps/place/-8.121645,156.894851/@-8.121645,156.894851,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.121645!4d156.894851","folder":"Site photos/19 Fatboys Resort","notes":"TripAdvisor: Overwater restaurant and bungalows near Gizo"},{"num":20,"name":"Pailongge","type":"Surf spot","lat":-8.1,"lon":156.79,"x":156.79,"y":8.1,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.100000,156.790000/@-8.100000,156.790000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.100000!4d156.790000","folder":"Site photos/20 Pailongge","notes":"Reef, right. Source: surf-forecast.com/breaks/Pailongge (coords 2 d.p., ~1 km - check on satellite)"},{"num":21,"name":"Titiana","type":"Surf spot","lat":-8.11,"lon":156.82,"x":156.82,"y":8.11,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.110000,156.820000/@-8.110000,156.820000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.110000!4d156.820000","folder":"Site photos/21 Titiana","notes":"Reef, left. Source: surf-forecast.com/breaks/Titiana (coords 2 d.p., ~1 km - check on satellite)"},{"num":22,"name":"Makuti","type":"Surf spot","lat":-8.15,"lon":156.96,"x":156.96,"y":8.15,"island":"Kolombangara","scores":[],"link":"https://www.google.com/maps/place/-8.150000,156.960000/@-8.150000,156.960000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.150000!4d156.960000","folder":"Site photos/22 Makuti","notes":"Reef, left. Source: surf-forecast.com/breaks/Makuti (coords 2 d.p., ~1 km - check on satellite)"},{"num":23,"name":"Despretes","type":"Surf spot","lat":-8.32,"lon":157.1,"x":157.1,"y":8.32,"island":"New Georgia (Vonavona)","scores":[],"link":"https://www.google.com/maps/place/-8.320000,157.100000/@-8.320000,157.100000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.320000!4d157.100000","folder":"Site photos/23 Despretes","notes":"Reef, right. Source: surf-forecast.com/breaks/Despretes (coords 2 d.p., ~1 km - check on satellite)"},{"num":24,"name":"Skull Island","type":"Surf spot","lat":-8.32,"lon":157.16,"x":157.16,"y":8.32,"island":"New Georgia (Vonavona)","scores":[],"link":"https://www.google.com/maps/place/-8.320000,157.160000/@-8.320000,157.160000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.320000!4d157.160000","folder":"Site photos/24 Skull Island","notes":"Reef, right (long right-hander). Source: surf-forecast.com/breaks/Skull-Island (coords 2 d.p., ~1 km - check on satellite)"},{"num":25,"name":"Mbirimbiri","type":"Surf spot","lat":-8.34,"lon":157.19,"x":157.19,"y":8.34,"island":"New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.340000,157.190000/@-8.340000,157.190000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.340000!4d157.190000","folder":"Site photos/25 Mbirimbiri","notes":"Reef, right. Source: surf-forecast.com/breaks/Mbirimbiri (coords 2 d.p., ~1 km - check on satellite)"},{"num":26,"name":"Lavata","type":"Surf spot","lat":-8.35,"lon":157.22,"x":157.22,"y":8.35,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.350000,157.220000/@-8.350000,157.220000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.350000!4d157.220000","folder":"Site photos/26 Lavata","notes":"Reef, left. Source: surf-forecast.com/breaks/Lavata (coords 2 d.p., ~1 km - check on satellite)"},{"num":27,"name":"Kundu Kundu","type":"Surf spot","lat":-8.37,"lon":157.23,"x":157.23,"y":8.37,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.370000,157.230000/@-8.370000,157.230000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.370000!4d157.230000","folder":"Site photos/27 Kundu Kundu","notes":"Reef, left. Source: surf-forecast.com/breaks/Kundu-Kundu (coords 2 d.p., ~1 km - check on satellite)"},{"num":28,"name":"Coves","type":"Surf spot","lat":-8.62,"lon":157.24,"x":157.24,"y":8.62,"island":"Rendova","scores":[],"link":"https://www.google.com/maps/place/-8.620000,157.240000/@-8.620000,157.240000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.620000!4d157.240000","folder":"Site photos/28 Coves","notes":"Reef, left. Source: surf-forecast.com/breaks/Coves (coords 2 d.p., ~1 km - check on satellite)"},{"num":29,"name":"Kavieng Rights","type":"Surf spot","lat":-2.56,"lon":150.79,"x":150.79,"y":2.56,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.560000,150.790000/@-2.560000,150.790000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.560000!4d150.790000","folder":"Site photos/29 Kavieng Rights","notes":"Reef. Source: surf-forecast.com/breaks/Kavieng-Rights (coords 2 d.p., ~1 km - check on satellite)"},{"num":30,"name":"Nusa","type":"Surf spot","lat":-2.57,"lon":150.78,"x":150.78,"y":2.57,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.570000,150.780000/@-2.570000,150.780000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.570000!4d150.780000","folder":"Site photos/30 Nusa","notes":"Point, left. Source: surf-forecast.com/breaks/Nusa (coords 2 d.p., ~1 km - check on satellite)"},{"num":31,"name":"Piccinniny","type":"Surf spot","lat":-2.58,"lon":150.79,"x":150.79,"y":2.58,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.580000,150.790000/@-2.580000,150.790000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.580000!4d150.790000","folder":"Site photos/31 Piccinniny","notes":"Reef / point-wharf break. Source: surf-forecast.com/breaks/Piccinniny (coords 2 d.p., ~1 km - check on satellite)"},{"num":32,"name":"Long Long","type":"Surf spot","lat":-2.59,"lon":150.77,"x":150.77,"y":2.59,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.590000,150.770000/@-2.590000,150.770000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.590000!4d150.770000","folder":"Site photos/32 Long Long","notes":"Point. Source: surf-forecast.com/breaks/Long-Long (coords 2 d.p., ~1 km - check on satellite)"},{"num":33,"name":"Nago","type":"Surf spot","lat":-2.6,"lon":150.77,"x":150.77,"y":2.6,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.600000,150.770000/@-2.600000,150.770000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.600000!4d150.770000","folder":"Site photos/33 Nago","notes":"Reef, left. Source: surf-forecast.com/breaks/Nago (coords 2 d.p., ~1 km - check on satellite)"},{"num":34,"name":"Edmago","type":"Surf spot","lat":-2.64,"lon":150.71,"x":150.71,"y":2.64,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.640000,150.710000/@-2.640000,150.710000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.640000!4d150.710000","folder":"Site photos/34 Edmago","notes":"Reef, left and right. Source: surf-forecast.com/breaks/Edmago (coords 2 d.p., ~1 km - check on satellite)"},{"num":35,"name":"Simberi Island","type":"Surf spot","lat":-2.59,"lon":151.99,"x":151.99,"y":2.59,"island":"Tabar Islands (PNG)","scores":[],"link":"https://www.google.com/maps/place/-2.590000,151.990000/@-2.590000,151.990000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-2.590000!4d151.990000","folder":"Site photos/35 Simberi Island","notes":"Reef. Source: surf-forecast.com/breaks/Simberi-Island (coords 2 d.p., ~1 km - check on satellite)"},{"num":36,"name":"Rubio","type":"Surf spot","lat":-3.45,"lon":152.2,"x":152.2,"y":3.45,"island":"New Ireland (PNG)","scores":[],"link":"https://www.google.com/maps/place/-3.450000,152.200000/@-3.450000,152.200000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-3.450000!4d152.200000","folder":"Site photos/36 Rubio","notes":"Reef. Source: surf-forecast.com/breaks/Rubio (coords 2 d.p., ~1 km - check on satellite)"},{"num":37,"name":"Tetepare Eco Lodge","type":"Eco-resort / eco-lodge","lat":-8.72176,"lon":157.44406,"x":157.44406,"y":8.72176,"island":"Tetepare Island","scores":[],"link":"https://www.google.com/maps/place/-8.721760,157.444060/@-8.721760,157.444060,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.721760!4d157.444060","folder":"Site photos/37 Tetepare Eco Lodge","notes":"OpenStreetMap node/6367567856; Tetepare Descendants' Association ecolodge (tetepare.org) | TripAdvisor: Community conservation lodge; dugongs, turtles; 3 h boat from mainland"},{"num":38,"name":"Titiru Eco Lodge","type":"Eco-resort / eco-lodge","lat":-8.42884,"lon":157.39089,"x":157.39089,"y":8.42884,"island":"Rendova","scores":[],"link":"https://www.google.com/maps/place/-8.428840,157.390890/@-8.428840,157.390890,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.428840!4d157.390890","folder":"Site photos/38 Titiru Eco Lodge","notes":"OpenStreetMap node/7161324978 | TripAdvisor: Community eco-lodge among the Rendova mangroves"},{"num":39,"name":"Imagination Island Eco Resort","type":"Eco-resort / eco-lodge","lat":-8.07922,"lon":156.86212,"x":156.86212,"y":8.07922,"island":"Gizo area","scores":[],"link":"https://www.google.com/maps/place/-8.079220,156.862120/@-8.079220,156.862120,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.079220!4d156.862120","folder":"Site photos/39 Imagination Island Eco Resort","notes":"OpenStreetMap node/13770790656; imagination-island.com | TripAdvisor: Overwater bungalows over shallow reef, minutes from Gizo"},{"num":40,"name":"Hambere Village Stay","type":"Eco-resort / eco-lodge","lat":-8.01214,"lon":156.94571,"x":156.94571,"y":8.01214,"island":"Kolombangara","scores":[],"link":"https://www.google.com/maps/place/-8.012140,156.945710/@-8.012140,156.945710,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.012140!4d156.945710","folder":"Site photos/40 Hambere Village Stay","notes":"OpenStreetMap node/3508092285; village stay (community-run)"},{"num":41,"name":"Noguna Island homestay","type":"Eco-resort / eco-lodge","lat":-7.55267,"lon":158.41734,"x":158.41734,"y":7.55267,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-7.552670,158.417340/@-7.552670,158.417340,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-7.552670!4d158.417340","folder":"Site photos/41 Noguna Island homestay","notes":"OpenStreetMap node/5629343421; homestay | TripAdvisor: Uncommercialised island homestay"},{"num":42,"name":"Uepi Island Resort","type":"Resort / lodge","lat":-8.4256,"lon":157.94776,"x":157.94776,"y":8.4256,"island":"Marovo Lagoon","scores":[],"link":"https://www.google.com/maps/place/-8.425600,157.947760/@-8.425600,157.947760,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.425600!4d157.947760","folder":"Site photos/42 Uepi Island Resort","notes":"OpenStreetMap node/6536650086; dive resort | TripAdvisor: World-class dive resort on a deep reef drop-off"},{"num":43,"name":"Zipolo Habu Resort","type":"Resort / lodge","lat":-8.30832,"lon":157.1646,"x":157.1646,"y":8.30832,"island":"Lola Island (Vonavona)","scores":[],"link":"https://www.google.com/maps/place/-8.308320,157.164600/@-8.308320,157.164600,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.308320!4d157.164600","folder":"Site photos/43 Zipolo Habu Resort","notes":"OpenStreetMap node/7161364463 | TripAdvisor: Lola Island surf, sport fishing, leaf bungalows"},{"num":44,"name":"Sanbis Resort","type":"Resort / lodge","lat":-8.11508,"lon":156.87776,"x":156.87776,"y":8.11508,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.115080,156.877760/@-8.115080,156.877760,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.115080!4d156.877760","folder":"Site photos/44 Sanbis Resort","notes":"OpenStreetMap node/7161344436 | TripAdvisor: Secluded child-free resort, private beach bungalows"},{"num":45,"name":"Gizo Hotel","type":"Resort / lodge","lat":-8.10415,"lon":156.8441,"x":156.8441,"y":8.10415,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.104150,156.844100/@-8.104150,156.844100,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.104150!4d156.844100","folder":"Site photos/45 Gizo Hotel","notes":"OpenStreetMap way/1122170924 | TripAdvisor: Waterfront town hotel opposite Gizo market"},{"num":46,"name":"Rekona Lodge","type":"Resort / lodge","lat":-8.10351,"lon":156.84032,"x":156.84032,"y":8.10351,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.103510,156.840320/@-8.103510,156.840320,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.103510!4d156.840320","folder":"Site photos/46 Rekona Lodge","notes":"OpenStreetMap node/7161336648 | TripAdvisor: Budget lodge with shared kitchen in Gizo"},{"num":47,"name":"Urilolo Eco Lodge","type":"Eco-resort / eco-lodge","lat":-8.0433,"lon":156.7753,"x":156.7753,"y":8.0433,"island":"Ranongga","scores":[],"link":"https://www.google.com/maps/place/-8.043300,156.775300/@-8.043300,156.775300,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.043300!4d156.775300","folder":"Site photos/47 Urilolo Lodge","notes":"OpenStreetMap node/5641893924 | TripAdvisor: Off-grid eco-lodge"},{"num":48,"name":"Agnes Gateway Hotel","type":"Resort / lodge","lat":-8.33014,"lon":157.27024,"x":157.27024,"y":8.33014,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.330140,157.270240/@-8.330140,157.270240,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.330140!4d157.270240","folder":"Site photos/48 Agnes Gateway Hotel","notes":"OpenStreetMap node/7143663634 | TripAdvisor: Beachfront Munda hotel popular with dive groups (Agnes Lodge)"},{"num":49,"name":"Sunset Lodge (Savo)","type":"Resort / lodge","lat":-9.12418,"lon":159.78671,"x":159.78671,"y":9.12418,"island":"Savo","scores":[],"link":"https://www.google.com/maps/place/-9.124180,159.786710/@-9.124180,159.786710,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.124180!4d159.786710","folder":"Site photos/49 Sunset Lodge (Savo)","notes":"OpenStreetMap node/13979302101 | TripAdvisor: Volcanic-island lodge; dolphin watching"},{"num":50,"name":"Tavanipupu Island Resort","type":"Resort / lodge","lat":-9.826,"lon":160.85,"x":160.85,"y":9.826,"island":"Marau Sound, Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.826000,160.850000/@-9.826000,160.850000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.826000!4d160.850000","folder":"Site photos/50 Tavanipupu Island Resort","notes":"Island-level coords from Wikipedia (Tavanipupu) - move pin to the resort | TripAdvisor: Luxury private-island resort and spa, Marau Sound"},{"num":51,"name":"Heritage Park Hotel","type":"Resort / lodge","lat":-9.42962,"lon":159.95265,"x":159.95265,"y":9.42962,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.429620,159.952650/@-9.429620,159.952650,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.429620!4d159.952650","folder":"Site photos/51 Heritage Park Hotel","notes":"OpenStreetMap node/1958123255; waterfront hotel | TripAdvisor: Executive hotel with ocean views"},{"num":52,"name":"Coral Sea Resort & Casino","type":"Resort / lodge","lat":-9.42944,"lon":159.94753,"x":159.94753,"y":9.42944,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.429440,159.947530/@-9.429440,159.947530,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.429440!4d159.947530","folder":"Site photos/52 Coral Sea Resort & Casino","notes":"OpenStreetMap node/4376635293; waterfront | TripAdvisor: 5-star beachfront resort"},{"num":53,"name":"Solomon Kitano Mendana Hotel","type":"Resort / lodge","lat":-9.43006,"lon":159.95413,"x":159.95413,"y":9.43006,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.430060,159.954130/@-9.430060,159.954130,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.430060!4d159.954130","folder":"Site photos/53 Solomon Kitano Mendana Hotel","notes":"OpenStreetMap node/693021928; waterfront | TripAdvisor: Classic waterfront hotel"},{"num":54,"name":"USS Aaron Ward (DD-483)","type":"Shipwrecks","lat":-9.17471,"lon":160.19767,"x":160.19767,"y":9.17471,"island":"Nggela (Florida Islands)","scores":[],"link":"https://www.google.com/maps/place/-9.174710,160.197670/@-9.174710,160.197670,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.174710!4d160.197670","folder":"Site photos/54 USS Aaron Ward (DD-483)","notes":"OpenStreetMap node/2651816728; WWII destroyer, sunk 1943 (~70 m)"},{"num":55,"name":"I-1 Submarine","type":"Shipwrecks","lat":-9.25077,"lon":159.68319,"x":159.68319,"y":9.25077,"island":"Guadalcanal (Kamimbo Bay)","scores":[],"link":"https://www.google.com/maps/place/-9.250770,159.683190/@-9.250770,159.683190,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.250770!4d159.683190","folder":"Site photos/55 I-1 Submarine","notes":"OpenStreetMap node/4959355321; WWII sub on Fish Reef, 14-27 m"},{"num":56,"name":"Kinugawa Maru (Bonegi II)","type":"Shipwrecks","lat":-9.378833,"lon":159.870222,"x":159.870222,"y":9.378833,"island":"Guadalcanal (Bonegi)","scores":[],"link":"https://www.google.com/maps/place/-9.378833,159.870222/@-9.378833,159.870222,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.378833!4d159.870222","folder":"Site photos/56 Kinugawa Maru (Bonegi II)","notes":"GPS from michaelmcfadyenscuba.info (beach in front of wreck); bow ~5 m, stern ~27 m; Bonegi I (Hirokawa Maru) is nearby but no reliable GPS"},{"num":57,"name":"HMNZS Moa","type":"Shipwrecks","lat":-9.095028,"lon":160.149222,"x":160.149222,"y":9.095028,"island":"Nggela (Tulagi Harbour)","scores":[],"link":"https://www.google.com/maps/place/-9.095028,160.149222/@-9.095028,160.149222,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.095028!4d160.149222","folder":"Site photos/57 HMNZS Moa","notes":"Wikipedia infobox coords; sunk 1943"},{"num":58,"name":"Kikuzuki (destroyer)","type":"Shipwrecks","lat":-9.12388,"lon":160.23767,"x":160.23767,"y":9.12388,"island":"Nggela (Tulagi)","scores":[],"link":"https://www.google.com/maps/place/-9.123880,160.237670/@-9.123880,160.237670,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.123880!4d160.237670","folder":"Site photos/58 Kikuzuki (destroyer)","notes":"OpenStreetMap way/300418155; WWII Japanese destroyer, beached"},{"num":59,"name":"LST-342","type":"Shipwrecks","lat":-9.13727,"lon":160.24931,"x":160.24931,"y":9.13727,"island":"Nggela (Tulagi)","scores":[],"link":"https://www.google.com/maps/place/-9.137270,160.249310/@-9.137270,160.249310,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.137270!4d160.249310","folder":"Site photos/59 LST-342","notes":"OpenStreetMap way/1396497840; hull showing"},{"num":60,"name":"MS World Discoverer","type":"Shipwrecks","lat":-9.02306,"lon":160.12301,"x":160.12301,"y":9.02306,"island":"Nggela (Roderick Bay)","scores":[],"link":"https://www.google.com/maps/place/-9.023060,160.123010/@-9.023060,160.123010,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.023060!4d160.123010","folder":"Site photos/60 MS World Discoverer","notes":"OpenStreetMap way/1020558162; cruise ship, grounded 2000, hull showing"},{"num":61,"name":"Unnamed wreck - Tulagi Harbour (1)","type":"Shipwrecks","lat":-9.09635,"lon":160.15511,"x":160.15511,"y":9.09635,"island":"Nggela (Tulagi)","scores":[],"link":"https://www.google.com/maps/place/-9.096350,160.155110/@-9.096350,160.155110,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.096350!4d160.155110","folder":"Site photos/61 Unnamed wreck - Tulagi Harbour (1)","notes":"OpenStreetMap way/188219988; hull showing"},{"num":62,"name":"Unnamed wreck - Tulagi Harbour (2)","type":"Shipwrecks","lat":-9.09493,"lon":160.14181,"x":160.14181,"y":9.09493,"island":"Nggela (Tulagi)","scores":[],"link":"https://www.google.com/maps/place/-9.094930,160.141810/@-9.094930,160.141810,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.094930!4d160.141810","folder":"Site photos/62 Unnamed wreck - Tulagi Harbour (2)","notes":"OpenStreetMap way/1396680084; hull showing (2 more wrecks close by: ways 1396680085, 1396680086)"},{"num":63,"name":"Unnamed wreck - Honiara E","type":"Shipwrecks","lat":-9.4154,"lon":160.01455,"x":160.01455,"y":9.4154,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.415400,160.014550/@-9.415400,160.014550,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.415400!4d160.014550","folder":"Site photos/63 Unnamed wreck - Honiara E","notes":"OpenStreetMap way/745524059 & 745524060"},{"num":64,"name":"Unnamed wreck - Honiara (Kukum)","type":"Shipwrecks","lat":-9.42858,"lon":159.99962,"x":159.99962,"y":9.42858,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.428580,159.999620/@-9.428580,159.999620,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.428580!4d159.999620","folder":"Site photos/64 Unnamed wreck - Honiara (Kukum)","notes":"OpenStreetMap way/746231255"},{"num":65,"name":"Unnamed wreck - Lunga","type":"Shipwrecks","lat":-9.40704,"lon":160.03709,"x":160.03709,"y":9.40704,"island":"Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.407040,160.037090/@-9.407040,160.037090,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.407040!4d160.037090","folder":"Site photos/65 Unnamed wreck - Lunga","notes":"OpenStreetMap node/6978279592"},{"num":66,"name":"Unnamed wreck - Lata Wharf","type":"Shipwrecks","lat":-10.72071,"lon":165.80264,"x":165.80264,"y":10.72071,"island":"Nendo (Santa Cruz Islands)","scores":[],"link":"https://www.google.com/maps/place/-10.720710,165.802640/@-10.720710,165.802640,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.720710!4d165.802640","folder":"Site photos/66 Unnamed wreck - Lata Wharf","notes":"OpenStreetMap way/205742898"},{"num":67,"name":"L'Astrolabe (La Perouse, 1788)","type":"Shipwrecks","lat":-11.68428,"lon":166.80313,"x":166.80313,"y":11.68428,"island":"Vanikoro","scores":[],"link":"https://www.google.com/maps/place/-11.684280,166.803130/@-11.684280,166.803130,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-11.684280!4d166.803130","folder":"Site photos/67 L'Astrolabe (La Perouse, 1788)","notes":"OpenStreetMap node/6103614030; historic wreck site"},{"num":68,"name":"La Boussole (La Perouse, 1788)","type":"Shipwrecks","lat":-11.7002,"lon":166.81096,"x":166.81096,"y":11.7002,"island":"Vanikoro","scores":[],"link":"https://www.google.com/maps/place/-11.700200,166.810960/@-11.700200,166.810960,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-11.700200!4d166.810960","folder":"Site photos/68 La Boussole (La Perouse, 1788)","notes":"OpenStreetMap node/6106320486; historic wreck site"},{"num":69,"name":"Lata Wharf","type":"Existing wharf/jetty","lat":-10.72088,"lon":165.80234,"x":165.80234,"y":10.72088,"island":"Nendo (Santa Cruz Islands)","scores":[],"link":"https://www.google.com/maps/place/-10.720880,165.802340/@-10.720880,165.802340,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.720880!4d165.802340","folder":"Site photos/69 Lata Wharf","notes":"OpenStreetMap way/205007047"},{"num":70,"name":"Carlisle Bay Pier","type":"Existing wharf/jetty","lat":-10.65613,"lon":166.05991,"x":166.05991,"y":10.65613,"island":"Nendo (Santa Cruz Islands)","scores":[],"link":"https://www.google.com/maps/place/-10.656130,166.059910/@-10.656130,166.059910,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.656130!4d166.059910","folder":"Site photos/70 Carlisle Bay Pier","notes":"OpenStreetMap way/205008812"},{"num":71,"name":"Lagoon Pier","type":"Existing wharf/jetty","lat":-10.77913,"lon":166.05456,"x":166.05456,"y":10.77913,"island":"Nendo (Santa Cruz Islands)","scores":[],"link":"https://www.google.com/maps/place/-10.779130,166.054560/@-10.779130,166.054560,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.779130!4d166.054560","folder":"Site photos/71 Lagoon Pier","notes":"OpenStreetMap way/205499239"},{"num":72,"name":"Susubona Wharf","type":"Existing wharf/jetty","lat":-8.30555,"lon":159.44995,"x":159.44995,"y":8.30555,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-8.305550,159.449950/@-8.305550,159.449950,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.305550!4d159.449950","folder":"Site photos/72 Susubona Wharf","notes":"OpenStreetMap way/708706493"},{"num":73,"name":"Bobokana wharf","type":"Existing wharf/jetty","lat":-8.31613,"lon":159.46793,"x":159.46793,"y":8.31613,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-8.316130,159.467930/@-8.316130,159.467930,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.316130!4d159.467930","folder":"Site photos/73 Bobokana wharf","notes":"OpenStreetMap way/554533503"},{"num":74,"name":"Mal'u Wharf","type":"Existing wharf/jetty","lat":-8.34777,"lon":160.63093,"x":160.63093,"y":8.34777,"island":"Malaita","scores":[],"link":"https://www.google.com/maps/place/-8.347770,160.630930/@-8.347770,160.630930,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.347770!4d160.630930","folder":"Site photos/74 Mal'u Wharf","notes":"OpenStreetMap way/1214433478"},{"num":75,"name":"Breakwater - Honiara E (Ranadi)","type":"Existing structure (breakwater)","lat":-9.41802,"lon":160.01155,"x":160.01155,"y":9.41802,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.418020,160.011550/@-9.418020,160.011550,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.418020!4d160.011550","folder":"Site photos/75 Breakwater - Honiara E (Ranadi)","notes":"OpenStreetMap way/706915174"},{"num":76,"name":"Breakwater - Honiara W","type":"Existing structure (breakwater)","lat":-9.4273,"lon":159.93764,"x":159.93764,"y":9.4273,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.427300,159.937640/@-9.427300,159.937640,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.427300!4d159.937640","folder":"Site photos/76 Breakwater - Honiara W","notes":"OpenStreetMap way/1238376123"},{"num":77,"name":"Breakwater - New Georgia (near Noro)","type":"Existing structure (breakwater)","lat":-8.2084,"lon":157.21159,"x":157.21159,"y":8.2084,"island":"New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.208400,157.211590/@-8.208400,157.211590,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.208400!4d157.211590","folder":"Site photos/77 Breakwater - New Georgia (near Noro)","notes":"OpenStreetMap way/717030619"},{"num":78,"name":"Breakwaters - Vella Lavella (6)","type":"Existing structure (breakwater)","lat":-7.7504,"lon":156.5813,"x":156.5813,"y":7.7504,"island":"Vella Lavella","scores":[],"link":"https://www.google.com/maps/place/-7.750400,156.581300/@-7.750400,156.581300,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-7.750400!4d156.581300","folder":"Site photos/78 Breakwaters - Vella Lavella (6)","notes":"OpenStreetMap ways 736309593-736309601 (6 short breakwaters)"},{"num":79,"name":"Breakwater - Choiseul","type":"Existing structure (breakwater)","lat":-6.59919,"lon":156.48481,"x":156.48481,"y":6.59919,"island":"Choiseul","scores":[],"link":"https://www.google.com/maps/place/-6.599190,156.484810/@-6.599190,156.484810,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-6.599190!4d156.484810","folder":"Site photos/79 Breakwater - Choiseul","notes":"OpenStreetMap way/708721192"},{"num":80,"name":"Breakwater - Rennell","type":"Existing structure (breakwater)","lat":-11.66082,"lon":160.26919,"x":160.26919,"y":11.66082,"island":"Rennell","scores":[],"link":"https://www.google.com/maps/place/-11.660820,160.269190/@-11.660820,160.269190,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-11.660820!4d160.269190","folder":"Site photos/80 Breakwater - Rennell","notes":"OpenStreetMap way/727944768"},{"num":81,"name":"Marina - Santa Isabel (NW)","type":"Marina","lat":-8.08296,"lon":159.03963,"x":159.03963,"y":8.08296,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-8.082960,159.039630/@-8.082960,159.039630,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.082960!4d159.039630","folder":"Site photos/81 Marina - Santa Isabel (NW)","notes":"OpenStreetMap node/7067112252; tagged marina, unnamed"},{"num":82,"name":"Lee Roy Wharf","type":"Existing structure (breakwater)","lat":-9.410029,"lon":160.017178,"x":160.017178,"y":9.410029,"island":"Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.410029,160.017178/@-9.410029,160.017178,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.410029!4d160.017178","folder":"Site photos/82 Lee Roy Wharf"},{"num":83,"name":"Imbu Rano Lodge","type":"Eco-resort / eco-lodge","lat":-8.03281,"lon":157.11643,"x":157.11643,"y":8.03281,"island":"Kolombangara","scores":[],"link":"https://www.google.com/maps/place/-8.032810,157.116430/@-8.032810,157.116430,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.032810!4d157.116430","folder":"Site photos/83 Imbu Rano Lodge","notes":"Highland rainforest conservation lodge for mountain trekking. Location: EXACT pin (OpenStreetMap)."},{"num":84,"name":"Evis Resort (Nggatirana Island)","type":"Resort / lodge","lat":-8.69538,"lon":157.87557,"x":157.87557,"y":8.69538,"island":"Nono Lagoon, New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.695380,157.875570/@-8.695380,157.875570,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.695380!4d157.875570","folder":"Site photos/84 Evis Resort (Nggatirana Island)","notes":"Off-grid boutique resort inside Nono Lagoon. Location: islet position (OpenStreetMap Nggatirana Island)."},{"num":85,"name":"Matikuri Lodge","type":"Eco-resort / eco-lodge","lat":-8.66282,"lon":157.86772,"x":157.86772,"y":8.66282,"island":"Nono Lagoon, New Georgia","scores":[],"link":"https://www.google.com/maps/place/-8.662820,157.867720/@-8.662820,157.867720,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.662820!4d157.867720","folder":"Site photos/85 Matikuri Lodge","notes":"Budget overwater eco-lodge for kayakers and snorkellers. Location: islet position (OpenStreetMap Matikuri)."},{"num":86,"name":"Pepele Eco-Lodge","type":"Eco-resort / eco-lodge","lat":-8.04782,"lon":156.96058,"x":156.96058,"y":8.04782,"island":"Kolombangara","scores":[],"link":"https://www.google.com/maps/place/-8.047820,156.960580/@-8.047820,156.960580,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.047820!4d156.960580","folder":"Site photos/86 Pepele Eco-Lodge","notes":"Nature lodge; snorkel over a WWII aircraft wreck, freshwater river, village. Location: APPROX - Pepele hamlet (OSM) only; move pin to the property."},{"num":87,"name":"Papatura Resort","type":"Eco-resort / eco-lodge","lat":-7.58533,"lon":158.73109,"x":158.73109,"y":7.58533,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-7.585330,158.731090/@-7.585330,158.731090,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-7.585330!4d158.731090","folder":"Site photos/87 Papatura Resort","notes":"Beachfront eco-retreat known for uncrowded surf. Location: APPROX - Suavanao airstrip (guests go by boat from here) only; move pin to the property."},{"num":88,"name":"The Wilderness Lodge","type":"Eco-resort / eco-lodge","lat":-8.75307,"lon":158.18472,"x":158.18472,"y":8.75307,"island":"Gatokae (Peava)","scores":[],"link":"https://www.google.com/maps/place/-8.753070,158.184720/@-8.753070,158.184720,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.753070!4d158.184720","folder":"Site photos/88 The Wilderness Lodge","notes":"Eco-lodge known for very clear water and diving. Location: APPROX - Gatokae island only; move pin to the property."},{"num":89,"name":"Ropiko Beach Resort","type":"Resort / lodge","lat":-8.751584,"lon":158.183098,"x":158.183098,"y":8.751584,"island":"Gatokae","scores":[],"link":"https://www.google.com/maps/place/-8.751584,158.183098/@-8.751584,158.183098,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.751584!4d158.183098","folder":"Site photos/89 Ropiko Beach Resort","notes":"Beachfront resort on Gatokae; boat tours. Location: APPROX - Gatokae island only; move pin to the property."},{"num":90,"name":"Marovo Sea Lodge","type":"Eco-resort / eco-lodge","lat":-8.48001,"lon":158.06999,"x":158.06999,"y":8.48001,"island":"Marovo Lagoon","scores":[],"link":"https://www.google.com/maps/place/-8.480010,158.069990/@-8.480010,158.069990,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.480010!4d158.069990","folder":"Site photos/90 Marovo Sea Lodge","notes":"Simple waterfront eco-bungalows. Location: APPROX - Marovo Lagoon only; move pin to the property."},{"num":91,"name":"Kajoro Sunset Lodge","type":"Eco-resort / eco-lodge","lat":-8.478524,"lon":158.068368,"x":158.068368,"y":8.478524,"island":"Marovo Lagoon","scores":[],"link":"https://www.google.com/maps/place/-8.478524,158.068368/@-8.478524,158.068368,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.478524!4d158.068368","folder":"Site photos/91 Kajoro Sunset Lodge","notes":"Quiet overwater lodge. Location: APPROX - Marovo Lagoon only; move pin to the property."},{"num":92,"name":"Seghe Accommodation","type":"Hotel / guesthouse (town)","lat":-8.575514,"lon":157.878378,"x":157.878378,"y":8.575514,"island":"New Georgia (Seghe)","scores":[],"link":"https://www.google.com/maps/place/-8.575514,157.878378/@-8.575514,157.878378,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.575514!4d157.878378","folder":"Site photos/92 Seghe Accommodation","notes":"Transit stay between Seghe flights and lagoon boats. Location: APPROX - Seghe (site #6 position) only; move pin to the property."},{"num":93,"name":"Oravae Cottage","type":"Eco-resort / eco-lodge","lat":-8.23361,"lon":157.07528,"x":157.07528,"y":8.23361,"island":"Vonavona","scores":[],"link":"https://www.google.com/maps/place/-8.233610,157.075280/@-8.233610,157.075280,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.233610!4d157.075280","folder":"Site photos/93 Oravae Cottage","notes":"Wooden eco-cottage on the water. Location: APPROX - Vonavona island (Wikipedia) only; move pin to the property."},{"num":94,"name":"Lolomo Eco Retreat","type":"Eco-resort / eco-lodge","lat":-8.23813,"lon":157.04353,"x":157.04353,"y":8.23813,"island":"Vonavona / Kohinggo","scores":[],"link":"https://www.google.com/maps/place/-8.238130,157.043530/@-8.238130,157.043530,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.238130!4d157.043530","folder":"Site photos/94 Lolomo Eco Retreat","notes":"Leaf-house structures over a calm lagoon. Location: APPROX - Lolomo Rei strait (OSM), unverified match only; move pin to the property."},{"num":95,"name":"Gizo Lodge","type":"Hotel / guesthouse (town)","lat":-8.10547,"lon":156.84136,"x":156.84136,"y":8.10547,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.105470,156.841360/@-8.105470,156.841360,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.105470!4d156.841360","folder":"Site photos/95 Gizo Lodge","notes":"Hillside units just outside Gizo town. Location: APPROX - Gizo town only; move pin to the property."},{"num":96,"name":"Kuila Village Stay","type":"Eco-resort / eco-lodge","lat":-9.11859,"lon":159.78768,"x":159.78768,"y":9.11859,"island":"Savo","scores":[],"link":"https://www.google.com/maps/place/-9.118590,159.787680/@-9.118590,159.787680,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.118590!4d159.787680","folder":"Site photos/96 Kuila Village Stay","notes":"Village stay; rivers, traditional life. Location: APPROX - Kuila village on Savo (OSM), unverified match only; move pin to the property."},{"num":97,"name":"Sika'iana Cultural Village","type":"Eco-resort / eco-lodge","lat":-8.40135,"lon":162.90884,"x":162.90884,"y":8.40135,"island":"Sikaiana atoll","scores":[],"link":"https://www.google.com/maps/place/-8.401350,162.908840/@-8.401350,162.908840,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.401350!4d162.908840","folder":"Site photos/97 Sika'iana Cultural Village","notes":"Cultural village stay. Location: APPROX - Sikaiana atoll, unverified only; move pin to the property."},{"num":98,"name":"Na Finua Island Resort","type":"Resort / lodge","lat":-10.83177,"lon":162.46702,"x":162.46702,"y":10.83177,"island":"Santa Ana (Owaraha), Makira","scores":[],"link":"https://www.google.com/maps/place/-10.831770,162.467020/@-10.831770,162.467020,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.831770!4d162.467020","folder":"Site photos/98 Na Finua Island Resort","notes":"Family-friendly island resort; grass airstrip then walk. Location: APPROX - Santa Ana island only; move pin to the property."},{"num":99,"name":"Maravagi Resort","type":"Resort / lodge","lat":-8.95348,"lon":160.04842,"x":160.04842,"y":8.95348,"island":"Mangalonga, Nggela (Florida Islands)","scores":[],"link":"https://www.google.com/maps/place/-8.953480,160.048420/@-8.953480,160.048420,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.953480!4d160.048420","folder":"Site photos/99 Maravagi Resort","notes":"Marine retreat; snorkelling off the dock (the pasted 'Lungga River' description is wrong: it is on Mangalonga, Nggela). Location: APPROX - Mangalonga island only; move pin to the property."},{"num":100,"name":"Conflict Bay Lodge","type":"Eco-resort / eco-lodge","lat":-9.80444,"lon":160.84333,"x":160.84333,"y":9.80444,"island":"Marau Sound, Guadalcanal","scores":[],"link":"https://www.google.com/maps/place/-9.804440,160.843330/@-9.804440,160.843330,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.804440!4d160.843330","folder":"Site photos/100 Conflict Bay Lodge","notes":"Nature retreat in Marau Sound. Location: APPROX - Marau Sound (Wikipedia) only; move pin to the property."},{"num":101,"name":"Raiders Hotel & Dive","type":"Resort / lodge","lat":-9.10152,"lon":160.15014,"x":160.15014,"y":9.10152,"island":"Tulagi","scores":[],"link":"https://www.google.com/maps/place/-9.101520,160.150140/@-9.101520,160.150140,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.101520!4d160.150140","folder":"Site photos/101 Raiders Hotel & Dive","notes":"Waterfront dive hotel; base for WWII wreck dives. Location: APPROX - Tulagi town only; move pin to the property."},{"num":102,"name":"Mothers Union Guest House (Tulagi)","type":"Hotel / guesthouse (town)","lat":-9.100034,"lon":160.148518,"x":160.148518,"y":9.100034,"island":"Tulagi","scores":[],"link":"https://www.google.com/maps/place/-9.100034,160.148518/@-9.100034,160.148518,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.100034!4d160.148518","folder":"Site photos/102 Mothers Union Guest House (Tulagi)","notes":"Affordable guest house near the ferry dock. Location: APPROX - Tulagi town only; move pin to the property."},{"num":103,"name":"Munda Executive Apartments","type":"Hotel / guesthouse (town)","lat":-8.32876,"lon":157.27042,"x":157.27042,"y":8.32876,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.328760,157.270420/@-8.328760,157.270420,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.328760!4d157.270420","folder":"Site photos/103 Munda Executive Apartments","notes":"1 min walk from Munda airport. Location: APPROX - Munda town only; move pin to the property."},{"num":104,"name":"Qua Roviana Accommodation","type":"Hotel / guesthouse (town)","lat":-8.327274,"lon":157.268798,"x":157.268798,"y":8.327274,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.327274,157.268798/@-8.327274,157.268798,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.327274!4d157.268798","folder":"Site photos/104 Qua Roviana Accommodation","notes":"Small hotel/motel 5 min walk from Munda airport (also listed as Qui Roviana Motel). Location: APPROX - Munda town only; move pin to the property."},{"num":105,"name":"Ravihina Home Stay","type":"Hotel / guesthouse (town)","lat":-8.331859,"lon":157.270692,"x":157.270692,"y":8.331859,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.331859,157.270692/@-8.331859,157.270692,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.331859!4d157.270692","folder":"Site photos/105 Ravihina Home Stay","notes":"Homestay; owners organise lagoon boat trips. Location: APPROX - Munda town only; move pin to the property."},{"num":106,"name":"Runway Apartment - Munda","type":"Hotel / guesthouse (town)","lat":-8.325736,"lon":157.272738,"x":157.272738,"y":8.325736,"island":"New Georgia (Munda)","scores":[],"link":"https://www.google.com/maps/place/-8.325736,157.272738/@-8.325736,157.272738,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.325736!4d157.272738","folder":"Site photos/106 Runway Apartment - Munda","notes":"Self-contained transit apartments. Location: APPROX - Munda town only; move pin to the property."},{"num":107,"name":"Gelvinas Motel","type":"Hotel / guesthouse (town)","lat":-8.329527,"lon":157.266087,"x":157.266087,"y":8.329527,"island":"New Georgia (Munda?)","scores":[],"link":"https://www.google.com/maps/place/-8.329527,157.266087/@-8.329527,157.266087,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.329527!4d157.266087","folder":"Site photos/107 Gelvinas Motel","notes":"Budget town motel. Location: APPROX - Munda town, location uncertain only; move pin to the property."},{"num":108,"name":"Rarasu Motel","type":"Hotel / guesthouse (town)","lat":-8.3314,"lon":157.274571,"x":157.274571,"y":8.3314,"island":"New Georgia (Munda?)","scores":[],"link":"https://www.google.com/maps/place/-8.331400,157.274571/@-8.331400,157.274571,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.331400!4d157.274571","folder":"Site photos/108 Rarasu Motel","notes":"Budget town motel. Location: APPROX - Munda town, location uncertain only; move pin to the property."},{"num":109,"name":"Marina Hotel","type":"Hotel / guesthouse (town)","lat":-8.323556,"lon":157.26902,"x":157.26902,"y":8.323556,"island":"New Georgia (Munda?)","scores":[],"link":"https://www.google.com/maps/place/-8.323556,157.269020/@-8.323556,157.269020,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.323556!4d157.269020","folder":"Site photos/109 Marina Hotel","notes":"Budget rooms. Location: APPROX - Munda town, location uncertain only; move pin to the property."},{"num":110,"name":"King Solomon Hotel","type":"Hotel / guesthouse (town)","lat":-9.43239,"lon":159.95365,"x":159.95365,"y":9.43239,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.432390,159.953650/@-9.432390,159.953650,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.432390!4d159.953650","folder":"Site photos/110 King Solomon Hotel","notes":"Hillside hotel with funicular. Location: EXACT pin (OpenStreetMap)."},{"num":111,"name":"Honiara Hotel","type":"Hotel / guesthouse (town)","lat":-9.43946,"lon":159.96682,"x":159.96682,"y":9.43946,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.439460,159.966820/@-9.439460,159.966820,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.439460!4d159.966820","folder":"Site photos/111 Honiara Hotel","notes":"City hotel with large pool. Location: EXACT pin (OpenStreetMap)."},{"num":112,"name":"The Ofis","type":"Hotel / guesthouse (town)","lat":-9.42374,"lon":159.91985,"x":159.91985,"y":9.42374,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.423740,159.919850/@-9.423740,159.919850,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.423740!4d159.919850","folder":"Site photos/112 The Ofis","notes":"Oceanfront B&B / cafe on the outskirts. Location: EXACT pin (OpenStreetMap)."},{"num":113,"name":"Sanalae Apartments","type":"Hotel / guesthouse (town)","lat":-9.4321,"lon":160.00031,"x":160.00031,"y":9.4321,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.432100,160.000310/@-9.432100,160.000310,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.432100!4d160.000310","folder":"Site photos/113 Sanalae Apartments","notes":"Executive apartments. Location: EXACT pin (OpenStreetMap)."},{"num":114,"name":"Rekona Flourish Lodge","type":"Hotel / guesthouse (town)","lat":-9.4345,"lon":159.96088,"x":159.96088,"y":9.4345,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.434500,159.960880/@-9.434500,159.960880,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.434500!4d159.960880","folder":"Site photos/114 Rekona Flourish Lodge","notes":"City rooms with balconies. Location: EXACT pin (OpenStreetMap)."},{"num":115,"name":"Chester Resthouse","type":"Hotel / guesthouse (town)","lat":-9.43314,"lon":159.95831,"x":159.95831,"y":9.43314,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.433140,159.958310/@-9.433140,159.958310,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.433140!4d159.958310","folder":"Site photos/115 Chester Resthouse","notes":"Central B&B. Location: EXACT pin (OpenStreetMap)."},{"num":116,"name":"Iron Bottom Sound Hotel","type":"Hotel / guesthouse (town)","lat":-9.4295,"lon":159.9459,"x":159.9459,"y":9.4295,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.429500,159.945900/@-9.429500,159.945900,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.429500!4d159.945900","folder":"Site photos/116 Iron Bottom Sound Hotel","notes":"Waterfront hotel. Location: EXACT pin (OpenStreetMap) ('Iron Bottom Sound Monarch')."},{"num":117,"name":"Rock Haven Inn","type":"Hotel / guesthouse (town)","lat":-9.43398,"lon":159.96069,"x":159.96069,"y":9.43398,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.433980,159.960690/@-9.433980,159.960690,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.433980!4d159.960690","folder":"Site photos/117 Rock Haven Inn","notes":"Family-run rest house. Location: EXACT pin (OpenStreetMap)."},{"num":118,"name":"St Agnes Mothers Union Guest House","type":"Hotel / guesthouse (town)","lat":-9.4348,"lon":159.96145,"x":159.96145,"y":9.4348,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.434800,159.961450/@-9.434800,159.961450,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.434800!4d159.961450","folder":"Site photos/118 St Agnes Mothers Union Guest House","notes":"Church-run guest house. Location: EXACT pin (OpenStreetMap)."},{"num":119,"name":"United Church Rest House","type":"Hotel / guesthouse (town)","lat":-9.43398,"lon":159.95906,"x":159.95906,"y":9.43398,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.433980,159.959060/@-9.433980,159.959060,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.433980!4d159.959060","folder":"Site photos/119 United Church Rest House","notes":"Church-run rest house. Location: EXACT pin (OpenStreetMap)."},{"num":120,"name":"Red Mansion Comfort Inn","type":"Hotel / guesthouse (town)","lat":-9.43045,"lon":160.0041,"x":160.0041,"y":9.43045,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.430450,160.004100/@-9.430450,160.004100,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.430450!4d160.004100","folder":"Site photos/120 Red Mansion Comfort Inn","notes":"Mid-range city inn. Location: EXACT pin (OpenStreetMap)."},{"num":121,"name":"Tanuli Royal Plains Motel","type":"Hotel / guesthouse (town)","lat":-9.43733,"lon":159.97716,"x":159.97716,"y":9.43733,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.437330,159.977160/@-9.437330,159.977160,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.437330!4d159.977160","folder":"Site photos/121 Tanuli Royal Plains Motel","notes":"Suburban motel. Location: APPROX - Tanuli suburb (OSM) only; move pin to the property."},{"num":122,"name":"Pacific Crown Hotel","type":"Hotel / guesthouse (town)","lat":-9.43451,"lon":159.97949,"x":159.97949,"y":9.43451,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.434510,159.979490/@-9.434510,159.979490,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.434510!4d159.979490","folder":"Site photos/122 Pacific Crown Hotel","notes":"Large business hotel on Kukum Highway. Location: APPROX - Kukum (Kukum Highway) only; move pin to the property."},{"num":123,"name":"Xiaos Henderson Hotel","type":"Hotel / guesthouse (town)","lat":-9.42944,"lon":160.04988,"x":160.04988,"y":9.42944,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.429440,160.049880/@-9.429440,160.049880,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.429440!4d160.049880","folder":"Site photos/123 Xiaos Henderson Hotel","notes":"Airport transit hotel. Location: APPROX - Honiara International Airport (hotel is across the road) only; move pin to the property."},{"num":124,"name":"Access Units","type":"Hotel / guesthouse (town)","lat":-9.427954,"lon":160.048258,"x":160.048258,"y":9.427954,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.427954,160.048258/@-9.427954,160.048258,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.427954!4d160.048258","folder":"Site photos/124 Access Units","notes":"Apartments near the airport. Location: APPROX - near Honiara airport only; move pin to the property."},{"num":125,"name":"The Penthouse","type":"Hotel / guesthouse (town)","lat":-9.43108,"lon":159.95526,"x":159.95526,"y":9.43108,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.431080,159.955260/@-9.431080,159.955260,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.431080!4d159.955260","folder":"Site photos/125 The Penthouse","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":126,"name":"Grace Hotel","type":"Hotel / guesthouse (town)","lat":-9.429594,"lon":159.953638,"x":159.953638,"y":9.429594,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.429594,159.953638/@-9.429594,159.953638,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.429594!4d159.953638","folder":"Site photos/126 Grace Hotel","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":127,"name":"Outback Holiday Resort","type":"Hotel / guesthouse (town)","lat":-9.434179,"lon":159.955532,"x":159.955532,"y":9.434179,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.434179,159.955532/@-9.434179,159.955532,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.434179!4d159.955532","folder":"Site photos/127 Outback Holiday Resort","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":128,"name":"Prestige Apartments","type":"Hotel / guesthouse (town)","lat":-9.428056,"lon":159.957578,"x":159.957578,"y":9.428056,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.428056,159.957578/@-9.428056,159.957578,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.428056!4d159.957578","folder":"Site photos/128 Prestige Apartments","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":129,"name":"Hibiscus Apartments","type":"Hotel / guesthouse (town)","lat":-9.431847,"lon":159.950927,"x":159.950927,"y":9.431847,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.431847,159.950927/@-9.431847,159.950927,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.431847!4d159.950927","folder":"Site photos/129 Hibiscus Apartments","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":130,"name":"Marine Apartments","type":"Hotel / guesthouse (town)","lat":-9.43372,"lon":159.959411,"x":159.959411,"y":9.43372,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.433720,159.959411/@-9.433720,159.959411,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.433720!4d159.959411","folder":"Site photos/130 Marine Apartments","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":131,"name":"Fresh Winds Guest House","type":"Hotel / guesthouse (town)","lat":-9.425876,"lon":159.95386,"x":159.95386,"y":9.425876,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.425876,159.953860/@-9.425876,159.953860,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.425876!4d159.953860","folder":"Site photos/131 Fresh Winds Guest House","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":132,"name":"The Hilltop","type":"Hotel / guesthouse (town)","lat":-9.436246,"lon":159.952579,"x":159.952579,"y":9.436246,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.436246,159.952579/@-9.436246,159.952579,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.436246!4d159.952579","folder":"Site photos/132 The Hilltop","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":133,"name":"Phoebe's Rest House","type":"Hotel / guesthouse (town)","lat":-9.428944,"lon":159.961104,"x":159.961104,"y":9.428944,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.428944,159.961104/@-9.428944,159.961104,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.428944!4d159.961104","folder":"Site photos/133 Phoebe's Rest House","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":134,"name":"Hibiscus Homestay","type":"Hotel / guesthouse (town)","lat":-9.428564,"lon":159.949158,"x":159.949158,"y":9.428564,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.428564,159.949158/@-9.428564,159.949158,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.428564!4d159.949158","folder":"Site photos/134 Hibiscus Homestay","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":135,"name":"Skyline Apartments","type":"Hotel / guesthouse (town)","lat":-9.43738,"lon":159.958211,"x":159.958211,"y":9.43738,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.437380,159.958211/@-9.437380,159.958211,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.437380!4d159.958211","folder":"Site photos/135 Skyline Apartments","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":136,"name":"TR Apartments","type":"Hotel / guesthouse (town)","lat":-9.424117,"lon":159.957441,"x":159.957441,"y":9.424117,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.424117,159.957441/@-9.424117,159.957441,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.424117!4d159.957441","folder":"Site photos/136 TR Apartments","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":137,"name":"Mermaid N2","type":"Hotel / guesthouse (town)","lat":-9.434904,"lon":159.948668,"x":159.948668,"y":9.434904,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.434904,159.948668/@-9.434904,159.948668,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.434904!4d159.948668","folder":"Site photos/137 Mermaid N2","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":138,"name":"Holiday Resort","type":"Hotel / guesthouse (town)","lat":-9.432779,"lon":159.963008,"x":159.963008,"y":9.432779,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.432779,159.963008/@-9.432779,159.963008,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.432779!4d159.963008","folder":"Site photos/138 Holiday Resort","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":139,"name":"Happy Day Inn","type":"Hotel / guesthouse (town)","lat":-9.424348,"lon":159.950522,"x":159.950522,"y":9.424348,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.424348,159.950522/@-9.424348,159.950522,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.424348!4d159.950522","folder":"Site photos/139 Happy Day Inn","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":140,"name":"Guest House KIRARI","type":"Hotel / guesthouse (town)","lat":-9.439531,"lon":159.95417,"x":159.95417,"y":9.439531,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.439531,159.954170/@-9.439531,159.954170,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.439531!4d159.954170","folder":"Site photos/140 Guest House KIRARI","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":141,"name":"BH Family Lodge","type":"Hotel / guesthouse (town)","lat":-9.425405,"lon":159.961986,"x":159.961986,"y":9.425405,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.425405,159.961986/@-9.425405,159.961986,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.425405!4d159.961986","folder":"Site photos/141 BH Family Lodge","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":142,"name":"Dolphin View Beach","type":"Hotel / guesthouse (town)","lat":-9.430711,"lon":159.946197,"x":159.946197,"y":9.430711,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.430711,159.946197/@-9.430711,159.946197,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.430711!4d159.946197","folder":"Site photos/142 Dolphin View Beach","notes":"Honiara accommodation (TripAdvisor list). Location: APPROX - Honiara town only; move pin to the property."},{"num":143,"name":"Construction site - Vanikoro","type":"Conctruction (reclammation, dredging)","lat":-11.667098,"lon":166.91868,"x":166.91868,"y":11.667098,"island":"Vanikoro","scores":[],"link":"https://maps.app.goo.gl/Nm23oGTSNVwpS3N89","cost":"Unknown","folder":"Site photos/143 Construction site - Vanikoro"},{"num":144,"name":"Honiara Port - International Berth 1 redevelopment","type":"Conctruction (reclammation, dredging)","lat":-9.4258,"lon":159.95816,"x":159.95816,"y":9.4258,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.425800,159.958160/@-9.425800,159.958160,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.425800!4d159.958160","cost":"Not published separately - part of ADB Land & Maritime Connectivity Project (US$148.9 M total, roads + 3 wharves); due end-2027","folder":"Site photos/144 Honiara Port - International Berth 1 redevelopment","notes":"Berth 1 rebuild, groundbreaking Dec 2025, ~2 yr build (ADB Land & Maritime Connectivity Project, contractor CCECC). Source: sipa.com.sb port news Dec 2025. Location: APPROX - Point Cruz (OSM)"},{"num":145,"name":"Honiara Port - Domestic Jetty 3 extension & seawall","type":"Conctruction (reclammation, dredging)","lat":-9.42934,"lon":159.95774,"x":159.95774,"y":9.42934,"island":"Guadalcanal (Honiara)","scores":[],"link":"https://www.google.com/maps/place/-9.429340,159.957740/@-9.429340,159.957740,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-9.429340!4d159.957740","cost":"Not published","folder":"Site photos/145 Honiara Port - Domestic Jetty 3 extension & seawall","notes":"50 m extension of Domestic Jetty No. 3 plus seawall/embankment at the domestic port (2025-26). Source: sipa.com.sb port news Dec 2025. Location: APPROX - SIPA domestic port entry (OSM)"},{"num":146,"name":"Kirakira Wharf (new)","type":"Conctruction (reclammation, dredging)","lat":-10.45529,"lon":161.91974,"x":161.91974,"y":10.45529,"island":"Makira","scores":[],"link":"https://www.google.com/maps/place/-10.455290,161.919740/@-10.455290,161.919740,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-10.455290!4d161.919740","cost":"SBD 21.9 M (ADB via SI Government; contractor CCECC)","folder":"Site photos/146 Kirakira Wharf (new)","notes":"New provincial wharf, ADB LMCP / CCECC; ~90% complete in 2026, due mid-2026. Source: theislandsun.com.sb, indepthsolomons.com.sb. Location: APPROX - Kirakira town (OSM); move pin to the wharf"},{"num":147,"name":"Ahanga Wharf (new), Bellona","type":"Conctruction (reclammation, dredging)","lat":-11.29,"lon":159.757,"x":159.757,"y":11.29,"island":"Bellona","scores":[],"link":"https://www.google.com/maps/place/-11.290000,159.757000/@-11.290000,159.757000,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-11.290000!4d159.757000","cost":"SBD 55.8 M (ADB LMCP; contractor CCECC)","folder":"Site photos/147 Ahanga Wharf (new), Bellona","notes":"New wharf at Ahanga Beach (Ngango), west end of Bellona; ADB LMCP / CCECC, SBD 55.8 M, piling 2025-26, due July 2026. Source: theislandsun.com.sb, sundayisles.islesmedia.net. Location: APPROX - west end of Bellona island; move pin"},{"num":148,"name":"Noro - marina & port redevelopment","type":"Conctruction (reclammation, dredging)","lat":-8.23436,"lon":157.19671,"x":157.19671,"y":8.23436,"island":"New Georgia (Noro)","scores":[],"link":"https://www.google.com/maps/place/-8.234360,157.196710/@-8.234360,157.196710,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.234360!4d157.196710","cost":"Not published (port design funded by Australia's SIIP)","folder":"Site photos/148 Noro - marina & port redevelopment","notes":"Marina started Nov 2024 (phase 1: 5 superyacht moorings, later travel lift), est. completion ~2028 (noonsite.com, community report); Noro International Port redevelopment design funded by Australia's SIIP (solomontimes.com). Location: APPROX - Noro wharf (OSM)"},{"num":149,"name":"Gizo cruise jetty","type":"Conctruction (reclammation, dredging)","lat":-8.10355,"lon":156.84421,"x":156.84421,"y":8.10355,"island":"Ghizo Island","scores":[],"link":"https://www.google.com/maps/place/-8.103550,156.844210/@-8.103550,156.844210,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.103550!4d156.844210","cost":"SBD 300,000 contract (local contractor Sam Galo); SBD 1 M earlier allocated by SI Government","folder":"Site photos/149 Gizo cruise jetty","notes":"~SBD 300k cruise-ship/tourist jetty under construction (solomonstarnews.com). Location: APPROX - Gizo waterfront pier (OSM)"},{"num":150,"name":"Buala new wharf","type":"Conctruction (reclammation, dredging)","lat":-8.14502,"lon":159.59628,"x":159.59628,"y":8.14502,"island":"Santa Isabel","scores":[],"link":"https://www.google.com/maps/place/-8.145020,159.596280/@-8.145020,159.596280,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.145020!4d159.596280","cost":"Not published (design stage, 2023)","folder":"Site photos/150 Buala new wharf","notes":"New inter-island ship wharf; design tendered Sept 2023 by the Solomon Islands Infrastructure Program - construction status unknown. Location: APPROX - existing Buala pier (OSM)"},{"num":151,"name":"Bina Harbour tuna port (proposed)","type":"Conctruction (reclammation, dredging)","lat":-8.93119,"lon":160.7614,"x":160.7614,"y":8.93119,"island":"Malaita","scores":[],"link":"https://www.google.com/maps/place/-8.931190,160.761400/@-8.931190,160.761400,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.931190!4d160.761400","cost":"Estimate > SBD 1 bn (~US$202 M); not yet financed","folder":"Site photos/151 Bina Harbour tuna port (proposed)","notes":"Proposed tuna-processing port, >SBD 1 bn; concept design done, awaiting finance; NZ funds the project office (trade.gov, solomonstarnews.com). Location: APPROX - Bina village pier (OSM)"},{"num":152,"name":"Ringgi Wharf (upgraded)","type":"Conctruction (reclammation, dredging)","lat":-8.11448,"lon":157.11743,"x":157.11743,"y":8.11448,"island":"Kolombangara","scores":[],"link":"https://www.google.com/maps/place/-8.114480,157.117430/@-8.114480,157.117430,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.114480!4d157.117430","cost":"Not published (ADB/NZ Domestic Maritime Support Project)","folder":"Site photos/152 Ringgi Wharf (upgraded)","notes":"Rural wharf upgrade under the ADB/NZ Domestic Maritime Support Project (completed ~2015; with Keru, Ngasini, Susubona, Tatamba). Source: adb.org. Location: APPROX - pier near Ringgi (OSM)"},{"num":153,"name":"Afio Wharf","type":"Existing wharf/jetty","lat":-9.5961228,"lon":161.3998625,"x":161.3998625,"y":9.5961228,"island":"Malaita (Maramasike Passage)","scores":[],"link":"https://www.google.com/maps/place/Afio+Wharf/@-9.5961228,161.3998625,3a,75y/data=!3m8!1e2!3m6!1sCIABIhCezUwmKekI7YV6I58u0ime!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fgps-cs-s%2FANWiy9QY6V-3C7h6R7BtRppn2rguM5c3yE_KSWM3kz9EWTRaOjwYi_7Pl0epApcVeaPcKIKT-aFbt0r7WI18mVM3auIlOp7N4YgFmcD2H97bGYwsG07gNbNsv7-LbP4EPugg8UVbdfwL0K8t218%3Dw203-h270-k-no!7i3456!8i4608!4m15!1m7!3m6!1s0x6f271a351471815d:0x7369f9d7b2a15257!2sMaramasike+Island!8m2!3d-9.5458515!4d161.4536835!16zL20vMDhjMmxt!3m6!1s0x6f27111d521a666f:0x64e882f7535b6026!8m2!3d-9.5961228!4d161.3998625!10e5!16s%2Fg%2F11t6yrb61g","folder":"Site photos/153 Afio Wharf"},{"num":154,"name":"Maramasike Passage (NE of Afio)","type":"Potential site","lat":-9.590299366846038,"lon":161.4076637503904,"x":161.4076637503904,"y":9.590299366846038,"island":"Malaita (Maramasike Passage)","scores":[],"link":"https://www.google.com/maps/place/-9.590299366846038,161.4076637503904","folder":"Site photos/154 Maramasike Passage (NE of Afio)"},{"num":155,"name":"Maramasike Passage (N of Afio)","type":"Potential site","lat":-9.580726255786221,"lon":161.41161956227572,"x":161.41161956227572,"y":9.580726255786221,"island":"Malaita (Maramasike Passage)","scores":[],"link":"https://www.google.com/maps/place/-9.580726255786221,161.41161956227572","folder":"Site photos/155 Maramasike Passage (N of Afio)"},{"num":156,"name":"Small jetty - Maramasike Passage (N of Afio Wharf)","type":"Existing wharf/jetty","lat":-9.592778,"lon":161.39825,"x":161.39825,"y":9.592778,"island":"Malaita (Maramasike Passage)","scores":[],"link":"https://www.google.com/maps/place/-9.592778,161.398250","folder":"Site photos/156 Small jetty - Maramasike Passage (N of Afio Wharf)"},{"num":157,"name":"Maramasike Passage - potential location","type":"Potential site","lat":-9.5884681,"lon":161.4058992,"x":161.4058992,"y":9.5884681,"island":"Malaita (Maramasike Passage)","scores":[],"link":"https://www.google.com/maps/@-9.5884681,161.4058992,176m/data=!3m1!1e3","folder":"Site photos/157 Maramasike Passage - potential location","notes":"Position is the centre of the shared Google Maps view (no pin dropped) - check and move if needed"},{"num":158,"name":"Maramasike Passage - potential location (N)","type":"Potential site","lat":-9.5774867,"lon":161.4074002,"x":161.4074002,"y":9.5774867,"island":"Malaita (Maramasike Passage)","scores":[],"link":"https://www.google.com/maps/place/-9.577487,+161.407400/@-9.5773984,161.4084438,418m/data=!3m1!1e3!4m5!3m4!7e2!8m2!3d-9.5774867!4d161.4074002","folder":"Site photos/158 Maramasike Passage - potential location (N)"},{"num":159,"name":"Auki","type":"Potential site","lat":-8.775758,"lon":160.693889,"x":160.693889,"y":8.775758,"island":"Malaita","scores":[],"link":"https://www.google.com/maps/place/-8.775758,160.693889/@-8.775758,160.693889,1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d-8.775758!4d160.693889","folder":"Site photos/159 Auki"}];
+const CSV_FILE = "sites.csv";
+
+// Esri's tiles stop at z19 in most places; past that Leaflet upscales the z19 tile so you
+// can keep zooming in (blurrier, but the markers/measurements stay usable).
+const MAX_ZOOM = 22;
+const MAX_NATIVE_ZOOM = 19;
+
+const map = L.map('map', { zoomControl: false, worldCopyJump: true, maxZoom: MAX_ZOOM }).setView([-8.8, 160.5], 7);
+
+// contour pane sits BELOW the tile pane, so the basemap (land included) draws over the wave map
+map.createPane('contourPane');
+map.getPane('contourPane').style.zIndex = 150;
+
+// How deep Esri's imagery goes varies by place (z19 around Suva, only z17 at Savusavu
+// or Kadavu), and past that its servers return a "Map data not yet available"
+// placeholder image rather than an error, so Leaflet never falls back on its own.
+// This layer asks the server's tilemap which tiles really exist and, for missing
+// ones, shows the deepest real ancestor tile enlarged (blurrier, but real imagery).
+// tilemapFor(tileUrlTemplate) gives the matching tilemap URL template.
+const TILEMAP_MIN_ZOOM = 16; // coverage is complete below this, so skip the lookups
+const TILEMAP_BLOCK = 8;     // one lookup answers for an 8x8 block of tiles
+const tilemapCache = new Map();
+function tileExists(tilemapTemplate, z, x, y) {
+  const left = x - x % TILEMAP_BLOCK, top = y - y % TILEMAP_BLOCK;
+  const url = L.Util.template(tilemapTemplate, { z, y: top, x: left }) + `/${TILEMAP_BLOCK}/${TILEMAP_BLOCK}`;
+  if (!tilemapCache.has(url)) {
+    tilemapCache.set(url, fetch(url).then(r => r.json()).then(j => j.data || null)
+      .catch(() => null)); // lookup failed: just request the tile as usual
+  }
+  return tilemapCache.get(url).then(data => !data || data[(y - top) * TILEMAP_BLOCK + (x - left)] !== 0);
+}
+const FallbackTileLayer = L.TileLayer.extend({
+  // resolves to the deepest tile at or above coords that has real imagery
+  tileSource: async function(coords, url) {
+    url = url || this._url;
+    const tilemapTemplate = this.options.tilemapFor(url);
+    let { x, y, z } = coords;
+    while (z > TILEMAP_MIN_ZOOM && !(await tileExists(tilemapTemplate, z, x, y))) {
+      x = Math.floor(x / 2); y = Math.floor(y / 2); z--;
+    }
+    return { x, y, z, src: L.Util.template(url, { x, y, z }) };
+  },
+  createTile: function(coords, done) {
+    const size = this.getTileSize();
+    const tile = document.createElement('div');
+    tile.style.overflow = 'hidden';
+    const img = document.createElement('img');
+    img.alt = '';
+    img.style.position = 'absolute';
+    img.onload = () => done(null, tile);
+    img.onerror = e => done(e, tile);
+    tile.appendChild(img);
+    this.tileSource(coords).then(t => {
+      const scale = 2 ** (coords.z - t.z);
+      img.style.width = size.x * scale + 'px';
+      img.style.height = size.y * scale + 'px';
+      img.style.left = -(coords.x - t.x * scale) * size.x + 'px';
+      img.style.top = -(coords.y - t.y * scale) * size.y + 'px';
+      img.src = t.src;
+    });
+    return tile;
+  },
+});
+
+const BASEMAP_DEFAULT_OPACITY = 0.75;
+const streets = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri — Source: Esri, HERE, Garmin, FAO, NOAA, USGS, and the GIS User Community',
+  maxNativeZoom: MAX_NATIVE_ZOOM,
+  maxZoom: MAX_ZOOM,
+  opacity: BASEMAP_DEFAULT_OPACITY
+});
+const satellite = new FallbackTileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+  tilemapFor: url => url.replace('/tile/', '/tilemap/'),
+  maxNativeZoom: MAX_NATIVE_ZOOM,
+  maxZoom: MAX_ZOOM,
+  opacity: 1
+});
+
+// Esri World Imagery Wayback: dated historical satellite snapshots, 2014-02-20 to present
+const WAYBACK = [["2014-02-20","10"],["2014-03-26","4230"],["2014-04-30","19819"],["2014-05-14","16513"],["2014-06-11","31144"],["2014-06-25","11033"],["2014-07-02","3026"],["2014-07-30","5232"],["2014-09-17","25586"],["2014-10-01","22692"],["2014-10-29","11019"],["2014-11-12","30195"],["2014-12-03","23383"],["2014-12-18","14720"],["2014-12-30","5844"],["2015-01-21","20222"],["2015-02-18","10443"],["2015-03-18","15084"],["2015-03-25","2730"],["2015-04-15","9203"],["2015-04-30","23880"],["2015-05-13","19930"],["2015-06-24","11952"],["2015-07-08","24007"],["2015-08-19","28219"],["2015-09-02","30584"],["2015-09-16","1431"],["2015-09-30","3630"],["2015-10-14","10850"],["2015-10-28","11092"],["2015-11-18","8781"],["2015-12-16","28163"],["2016-01-13","3515"],["2016-02-04","6354"],["2016-02-17","11262"],["2016-03-02","20443"],["2016-03-16","19085"],["2016-04-20","388"],["2016-04-28","5769"],["2016-05-11","8551"],["2016-06-13","11509"],["2016-07-06","13240"],["2016-07-20","5097"],["2016-08-11","23601"],["2016-08-31","9175"],["2016-09-14","6984"],["2016-10-12","13770"],["2016-10-25","4222"],["2016-11-16","21750"],["2016-12-07","6678"],["2016-12-20","18966"],["2017-01-11","577"],["2017-01-25","9486"],["2017-02-08","27946"],["2017-02-27","31026"],["2017-03-15","29387"],["2017-03-29","5205"],["2017-04-19","1052"],["2017-05-03","784"],["2017-05-17","20365"],["2017-05-31","14342"],["2017-06-14","14765"],["2017-06-27","4073"],["2017-07-14","3319"],["2017-08-10","14035"],["2017-08-30","25379"],["2017-09-13","18358"],["2017-10-04","15212"],["2017-10-25","23264"],["2017-11-16","25521"],["2018-01-08","13161"],["2018-01-18","13045"],["2018-01-31","10768"],["2018-02-23","13067"],["2018-03-14","8255"],["2018-03-28","7072"],["2018-04-11","20399"],["2018-04-25","1296"],["2018-05-16","32337"],["2018-06-06","8249"],["2018-06-27","11334"],["2018-07-25","14829"],["2018-08-15","1858"],["2018-09-06","2168"],["2018-09-26","14426"],["2018-10-17","18820"],["2018-11-07","3201"],["2018-11-29","239"],["2018-12-14","23448"],["2019-01-09","6036"],["2019-01-31","25944"],["2019-02-21","17677"],["2019-03-13","4383"],["2019-04-03","18691"],["2019-04-24","18063"],["2019-05-15","9598"],["2019-06-05","12576"],["2019-06-26","645"],["2019-07-17","16681"],["2019-08-07","17216"],["2019-08-28","30442"],["2019-09-18","9892"],["2019-10-09","11351"],["2019-10-30","11060"],["2019-12-12","4756"],["2020-01-08","23001"],["2020-01-30","21485"],["2020-02-20","8495"],["2020-03-23","16062"],["2020-04-08","26751"],["2020-04-29","15045"],["2020-05-20","32645"],["2020-06-10","11135"],["2020-07-01","18289"],["2020-07-22","9549"],["2020-08-12","6049"],["2020-09-02","9181"],["2020-09-23","19187"],["2020-10-14","119"],["2020-11-18","20753"],["2020-12-16","29260"],["2021-01-13","1049"],["2021-02-24","9812"],["2021-03-17","5359"],["2021-04-08","6863"],["2021-04-28","27659"],["2021-05-19","15423"],["2021-06-09","48376"],["2021-06-30","13534"],["2021-07-21","8432"],["2021-08-11","51423"],["2021-09-01","47568"],["2021-09-28","51313"],["2021-10-13","16749"],["2021-11-03","42403"],["2021-11-30","48624"],["2021-12-21","26120"],["2022-01-12","42663"],["2022-02-02","26083"],["2022-02-24","10312"],["2022-03-16","10321"],["2022-04-06","48232"],["2022-04-27","16245"],["2022-05-18","5314"],["2022-06-08","44710"],["2022-06-29","4905"],["2022-07-21","13851"],["2022-08-10","17825"],["2022-08-31","45441"],["2022-09-21","47471"],["2022-10-12","44988"],["2022-11-02","7110"],["2022-12-14","45134"],["2023-01-11","11475"],["2023-02-23","57965"],["2023-03-15","44873"],["2023-04-05","37890"],["2023-05-03","46399"],["2023-06-13","25982"],["2023-06-29","47963"],["2023-08-10","17632"],["2023-08-31","64776"],["2023-10-11","1034"],["2023-11-01","12457"],["2023-12-07","56102"],["2024-01-18","41468"],["2024-02-08","37965"],["2024-03-07","60013"],["2024-03-28","13968"],["2024-05-09","52930"],["2024-06-06","12428"],["2024-06-27","39767"],["2024-08-15","32553"],["2024-09-19","20337"],["2024-10-10","56450"],["2024-11-18","49849"],["2024-12-12","16453"],["2025-01-30","36557"],["2025-02-27","34007"],["2025-03-27","6543"],["2025-04-24","27982"],["2025-05-29","25285"],["2025-06-26","48925"],["2025-07-31","49999"],["2025-09-04","52304"],["2025-09-25","58924"],["2025-10-23","20512"],["2025-11-20","51127"],["2025-12-18","13192"],["2026-01-29","22252"],["2026-02-26","64001"],["2026-03-26","22869"],["2026-04-30","49059"],["2026-05-28","10842"],["2026-06-30","32246"],["2026-08-05","26334"]];
+function waybackUrl(release) {
+  return `https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/default028mm/MapServer/tile/${release}/{z}/{y}/{x}`;
+}
+const historic = new FallbackTileLayer(waybackUrl(WAYBACK[WAYBACK.length - 1][1]), {
+  attribution: 'Tiles &copy; Esri — World Imagery Wayback archive',
+  // .../WMTS/1.0.0/default028mm/MapServer/tile/<release>/... -> .../MapServer/tilemap/<release>/...
+  tilemapFor: url => url.replace('/WMTS/1.0.0/default028mm/MapServer/tile/', '/MapServer/tilemap/'),
+  maxNativeZoom: MAX_NATIVE_ZOOM,
+  maxZoom: MAX_ZOOM,
+  opacity: 1
+});
+
+// Bathymetry (seafloor depth/relief), rendered by make_layers.py from the GEBCO 2020 grid
+// as one Web-Mercator image (so it lines up exactly with the tiles).
+const BATHY_BOUNDS = [[-12.5, 155.0], [-4.8, 170.5042]];
+const bathymetry = L.imageOverlay('gebco_bathymetry.jpg', BATHY_BOUNDS, {
+  attribution: 'Bathymetry &copy; <a href="https://www.gebco.net/">GEBCO</a> Compilation Group',
+});
+
+// Rendered directly from the raw GEBCO depth grid, colour scaled 0..-10m and clipped
+// beyond that, to pick out the very shallow fringing reef/lagoon right at the coastline.
+const bathymetryShallow = L.imageOverlay('gebco_bathymetry_shallow10.jpg', BATHY_BOUNDS, {
+  attribution: 'Bathymetry &copy; <a href="https://www.gebco.net/">GEBCO</a> Compilation Group',
+});
+
+// Global Mangrove Watch extent over satellite imagery, as on globalmangrovewatch.org.
+// Pre-rendered local tiles (gmw_tiles/, made by make_gmw_tiles.py), cut to the Solomons from the open GMW datasets on Zenodo:
+// 2020 10 m Sentinel-2 extent (v4.0.19, dark teal) and the 2025 annual extent (v4.1.12, light teal).
+const GMW_ATTRIBUTION = 'Mangroves &copy; <a href="https://www.globalmangrovewatch.org/">Global Mangrove Watch</a> (Aberystwyth Univ., CC BY 4.0)';
+const gmwTiles = (dir) => L.tileLayer(`gmw_tiles/${dir}/{z}/{x}/{y}.png`, {
+  attribution: GMW_ATTRIBUTION, minZoom: 0, minNativeZoom: 6, maxNativeZoom: 14, maxZoom: MAX_ZOOM,
+  errorTileUrl: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+});
+const mangroves = L.layerGroup([
+  new FallbackTileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    tilemapFor: url => url.replace('/tile/', '/tilemap/'),
+    maxNativeZoom: MAX_NATIVE_ZOOM,
+    maxZoom: MAX_ZOOM,
+    opacity: 1
+  }),
+  gmwTiles('hires2020'),
+  gmwTiles('extent2025'),
+]);
+
+// Cyclone tracks over satellite imagery: NOAA IBTrACS v04r01 best tracks, 1969/70 season onward,
+// at cyclone strength within 500 km of Solomon Islands land.
+// cyclone_tracks.js (made by make_cyclone_tracks.py) only loads the first time this basemap is chosen.
+const CYCLONE_CATS = [  // Fiji/Australian scale on 10-min wind (kt), same colours as the cyclone map
+  { min: 108, color: '#a855f7', label: 'Category 5' },
+  { min: 86, color: '#e8508a', label: 'Category 4' },
+  { min: 64, color: '#dc4a28', label: 'Category 3' },
+  { min: 48, color: '#ec8a3a', label: 'Category 2' },
+  { min: 34, color: '#e3b52f', label: 'Category 1' },
+  { min: 0, color: '#b8c7cd', label: 'Below cyclone' },
+];
+const cycloneCat = (w) => w == null ? null : CYCLONE_CATS.find(c => w >= c.min);
+const cycloneRenderer = L.canvas({ padding: 0.5 });
+// Direction arrowheads along a whole storm track, drawn on the canvas a fixed number of
+// screen pixels apart (so they stay evenly spaced at every zoom), each coloured by the
+// track's intensity at that point. The layer draws no line itself and ignores the mouse.
+const ARROW_SPACING_PX = 80;
+const ArrowHeads = L.Polyline.extend({
+  options: { stroke: false, fill: false, interactive: false, noClip: true, smoothFactor: 0 },
+  _updatePath: function () {
+    const r = this._renderer;
+    if (!r._drawing || !r._ctx || !this.options.opacity) return;
+    const ctx = r._ctx, size = 4.5 + this.options.weight * 1.4, colors = this.options.colors;
+    const part = this._parts[0] || [];
+    ctx.save();
+    ctx.globalAlpha = this.options.opacity;
+    let next = ARROW_SPACING_PX / 2, walked = 0; // distance along the track to the next arrow
+    for (let i = 1; i < part.length; i++) {
+      const a = part[i - 1], b = part[i];
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      while (len > 0 && walked + len >= next) {
+        const f = (next - walked) / len;
+        const x = a.x + (b.x - a.x) * f, y = a.y + (b.y - a.y) * f;
+        const ang = Math.atan2(b.y - a.y, b.x - a.x);
+        ctx.fillStyle = colors[i];
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(ang) * size, y + Math.sin(ang) * size);
+        ctx.lineTo(x + Math.cos(ang + 2.5) * size, y + Math.sin(ang + 2.5) * size);
+        ctx.lineTo(x + Math.cos(ang - 2.5) * size, y + Math.sin(ang - 2.5) * size);
+        ctx.closePath();
+        ctx.fill();
+        next += ARROW_SPACING_PX;
+      }
+      walked += len;
+    }
+    ctx.restore();
+  },
+});
+const cycloneTracks = L.layerGroup();
+const cyclones = L.layerGroup([
+  new FallbackTileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    tilemapFor: url => url.replace('/tile/', '/tilemap/'),
+    maxNativeZoom: MAX_NATIVE_ZOOM,
+    maxZoom: MAX_ZOOM,
+    opacity: 1
+  }),
+  gmwTiles('hires2020'),
+  gmwTiles('extent2025'),
+  cycloneTracks,
+]);
+function fmtCycloneDate(d) {
+  const [y, m, day] = d.split('-').map(Number);
+  return `${day} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1]} ${y}`;
+}
+const allStorms = []; // every storm, shown or not (cycloneTracks holds the shown ones)
+function buildCycloneTracks() {
+  for (const s of window.CYCLONE_TRACKS) {
+    // split the track into runs of one intensity category; a fix with no wind keeps the previous category
+    const runs = [];
+    const pointColors = []; // intensity colour at each fix, for the arrowheads
+    let last = null;
+    s.pts.forEach(([lat, lon, w], i) => {
+      const cat = cycloneCat(w) || last || CYCLONE_CATS[CYCLONE_CATS.length - 1];
+      last = cat;
+      pointColors.push(cat.color);
+      if (!runs.length || runs[runs.length - 1].cat !== cat) {
+        runs.push({ cat, pts: i ? [[s.pts[i - 1][0], s.pts[i - 1][1]]] : [] });
+      }
+      runs[runs.length - 1].pts.push([lat, lon]);
+    });
+    const peak = cycloneCat(s.wind);
+    const tip = `<b>${s.name}</b> ${s.start.slice(0, 4)}<br>${peak ? peak.label : 'Intensity unknown'} at peak`;
+    const popup = `<b>Cyclone ${s.name}</b><br>${fmtCycloneDate(s.start)} – ${fmtCycloneDate(s.end)}` +
+      `<br>Peak wind: ${s.wind != null ? (s.est ? '≈' : '') + s.wind + ' kt (' + Math.round(s.wind * 1.852) + ' km/h)' : 'n/a'}` +
+      (s.pres != null ? `<br>Min pressure: ${s.pres} hPa` : '') +
+      `<br>Closest to Solomon Islands land: ${s.km} km` +
+      (s.prov ? '<br><i>Provisional track (recent storm, not yet final IBTrACS best track)</i>' : '') +
+      `<br>${s.wiki ? `<a href="${s.wiki}" target="_blank" rel="noopener">Wikipedia search</a> · ` : ''}` +
+      `<a href="https://ncics.org/ibtracs/index.php?name=v04r01-${s.sid}" target="_blank" rel="noopener">IBTrACS</a>`;
+    const lines = runs.filter(r => r.pts.length > 1).map(r => L.polyline(r.pts, {
+      renderer: cycloneRenderer, color: r.cat.color, weight: 2, opacity: 0.8, lineCap: 'round',
+    }));
+    lines.push(new ArrowHeads(s.pts.map(p => [p[0], p[1]]), {
+      renderer: cycloneRenderer, colors: pointColors, weight: 2, opacity: 0.8,
+    }));
+    const storm = L.featureGroup(lines).bindTooltip(tip, { sticky: true }).bindPopup(popup);
+    storm.on('mouseover', () => { storm.setStyle({ weight: 4.5, opacity: 1 }); storm.bringToFront(); });
+    storm.on('mouseout', () => storm.setStyle({ weight: 2, opacity: 0.8 }));
+    storm._peak = peak ? peak.label : null;
+    storm._name = `${s.name} ${s.start.slice(0, 4)}`;
+    // clicking a track shows only that storm (see isolateStorm)
+    storm.on('click', () => isolateStorm(storm));
+    allStorms.push(storm);
+  }
+  // storms per peak category, for the legend
+  CYCLONE_CATS.forEach(c => {
+    const el = document.getElementById('cyc-count-' + c.label.slice(-1));
+    if (el) el.textContent = '(' + allStorms.filter(st => st._peak === c.label).length + ')';
+  });
+  applyCycloneFilter();
+}
+// which peak categories to show (legend rows with data-on="1")
+let isolatedStorm = null;
+function isolateStorm(storm) {
+  isolatedStorm = storm;
+  allStorms.forEach(st => { if (st !== storm) cycloneTracks.removeLayer(st); });
+  const el = document.getElementById('cyc-shown');
+  if (el) el.textContent = `${storm._name} only (Esc or click map for all)`;
+}
+function showAllStorms() {
+  if (!isolatedStorm) return;
+  isolatedStorm = null;
+  map.closePopup();
+  applyCycloneFilter();
+}
+// Esc: first closes the storm's info popup (track stays alone), second brings all storms back.
+// Capture phase, so this runs before Leaflet's own Esc handling.
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !isolatedStorm) return;
+  if (isolatedStorm.isPopupOpen()) map.closePopup(); else showAllStorms();
+  e.stopPropagation();
+}, true);
+// clicking empty map also brings all storms back
+map.on('click', showAllStorms);
+function applyCycloneFilter() {
+  isolatedStorm = null;
+  const on = new Set([...document.querySelectorAll('.cyc-toggle')].filter(r => r.dataset.on === '1').map(r => r.dataset.cat));
+  let shown = 0;
+  allStorms.forEach(st => {
+    const visible = on.has(st._peak);
+    if (visible) { shown++; cycloneTracks.addLayer(st); } else cycloneTracks.removeLayer(st);
+  });
+  const el = document.getElementById('cyc-shown');
+  if (el) el.textContent = !allStorms.length ? 'all' : shown === allStorms.length ? `all ${shown}` : `${shown} of ${allStorms.length}`;
+  document.getElementById('cyc-all').classList.toggle('off', shown === allStorms.length);
+}
+function setCycloneCats(cats) {
+  document.querySelectorAll('.cyc-toggle').forEach(r => {
+    const on = cats.has(r.dataset.cat);
+    r.dataset.on = on ? '1' : '0';
+    r.classList.toggle('off', !on);
+  });
+  applyCycloneFilter();
+}
+let cycClickTimer = null;
+document.querySelectorAll('.cyc-toggle').forEach(row => {
+  row.addEventListener('click', () => {
+    clearTimeout(cycClickTimer); // wait a moment so a double-click doesn't also toggle
+    cycClickTimer = setTimeout(() => {
+      const on = new Set([...document.querySelectorAll('.cyc-toggle')].filter(r => r.dataset.on === '1').map(r => r.dataset.cat));
+      if (on.has(row.dataset.cat)) on.delete(row.dataset.cat); else on.add(row.dataset.cat);
+      setCycloneCats(on);
+    }, 220);
+  });
+  row.addEventListener('dblclick', () => { clearTimeout(cycClickTimer); setCycloneCats(new Set([row.dataset.cat])); });
+});
+document.getElementById('cyc-all').addEventListener('click', e => {
+  e.preventDefault();
+  setCycloneCats(new Set(CYCLONE_CATS.map(c => c.label)));
+});
+cyclones.on('add', () => {
+  if (window.CYCLONE_TRACKS || cyclones._loading) return;
+  cyclones._loading = true;
+  const script = document.createElement('script');
+  script.src = 'cyclone_tracks.js';
+  script.onload = buildCycloneTracks;
+  script.onerror = () => { cyclones._loading = false; alert('Could not load cyclone_tracks.js - is it next to this page?'); };
+  document.head.appendChild(script);
+});
+
+// Wave height basemap: the street map, lighter, over the WAVERYS Hs bands
+const waveBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri — Source: Esri, HERE, Garmin, FAO, NOAA, USGS | Waves: E.U. Copernicus Marine Service (WAVERYS)',
+  maxNativeZoom: MAX_NATIVE_ZOOM, maxZoom: MAX_ZOOM, opacity: 0.4
+});
+L.control.layers({ 'Streets (Esri)': streets, 'Satellite (Esri)': satellite, 'Satellite (Historic)': historic, 'Bathymetry (GEBCO)': bathymetry, '-10 &lt; Bathymetry &lt; 0': bathymetryShallow, 'Mangroves (GMW)': mangroves, 'Wave height (WAVERYS)': waveBase, 'Cyclones (1970–2026)': cyclones }, null, { position: 'bottomleft', collapsed: false }).addTo(map);
+
+const INITIAL_BOUNDS = [[-12.4, 155.4], [-5.0, 170.0]];
+map.fitBounds(INITIAL_BOUNDS);
+
+// Right-click anywhere to open that exact spot in Google Maps (new tab) for scouting/naming.
+// Shift+right-click instead stages the point for batch-adding (see batch-panel below).
+// Ctrl+right-click opens the same spot, at the same zoom, in the i-Boating nautical chart viewer.
+map.on('contextmenu', (e) => {
+  const { lat, lng } = e.latlng;
+  if (e.originalEvent.ctrlKey) {
+    const zoom = map.getZoom().toFixed(2);
+    window.open(`https://fishing-app.gpsnauticalcharts.com/i-boating-fishing-web-app/fishing-marine-charts-navigation.html#${zoom}/${lat.toFixed(4)}/${lng.toFixed(4)}`, '_blank');
+  } else if (e.originalEvent.shiftKey) {
+    addStagedPoint(lat, lng);
+  } else {
+    window.open(`https://www.google.com/maps/@${lat},${lng},19z`, '_blank');
+  }
+});
+
+// --- batch add: shift+right-click stages points, then generate `add` commands for all at once ---
+const stagingGroup = L.layerGroup().addTo(map);
+const stagedPoints = []; // { lat, lon, name, marker }
+
+function stagedIcon(n) {
+  return L.divIcon({
+    className: 'dot-icon',
+    html: `<div style="width:20px;height:20px;border-radius:50%;background:rgba(34,211,238,0.25);border:2px dashed var(--accent);color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;">${n}</div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}
+
+function addStagedPoint(lat, lon) {
+  // once you've named the first staged point, default the rest to the same
+  // name too - you can still edit any individual one afterward
+  const defaultName = stagedPoints.length ? stagedPoints[0].name : '';
+  const point = { lat, lon, name: defaultName };
+  const marker = L.marker([lat, lon], { icon: stagedIcon(stagedPoints.length + 1) });
+  marker.bindTooltip('Click to remove', { direction: 'top', offset: [0, -8] });
+  marker.on('click', () => removeStagedPoint(point));
+  marker.addTo(stagingGroup);
+  point.marker = marker;
+  stagedPoints.push(point);
+  renderBatchPanel();
+}
+
+function removeStagedPoint(point) {
+  stagingGroup.removeLayer(point.marker);
+  const i = stagedPoints.indexOf(point);
+  if (i !== -1) stagedPoints.splice(i, 1);
+  // renumber remaining staged pins
+  stagedPoints.forEach((p, idx) => p.marker.setIcon(stagedIcon(idx + 1)));
+  renderBatchPanel();
+}
+
+function renderBatchPanel() {
+  const panel = document.getElementById('batch-panel');
+  panel.classList.toggle('visible', stagedPoints.length > 0);
+  document.getElementById('batch-count').textContent = stagedPoints.length;
+  const list = document.getElementById('batch-list');
+  list.innerHTML = '';
+  stagedPoints.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.className = 'batch-item';
+    row.innerHTML = `<span class="batch-item-label">#${idx + 1}</span><input type="text" placeholder="Name" value="${p.name.replace(/"/g, '&quot;')}"><button title="Remove">&times;</button>`;
+    const nameInput = row.querySelector('input');
+    nameInput.addEventListener('input', (e) => { p.name = e.target.value; });
+    nameInput.addEventListener('focus', (e) => e.target.select());
+    row.querySelector('button').addEventListener('click', () => removeStagedPoint(p));
+    list.appendChild(row);
+  });
+  document.getElementById('batch-output').style.display = 'none';
+}
+
+function applyNameToAll() {
+  const name = document.getElementById('batch-name-all').value;
+  stagedPoints.forEach(p => { p.name = name; });
+  renderBatchPanel();
+}
+document.getElementById('batch-name-apply').addEventListener('click', applyNameToAll);
+document.getElementById('batch-name-all').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') applyNameToAll();
+});
+
+document.getElementById('batch-generate').addEventListener('click', () => {
+  const type = document.getElementById('batch-type').value.trim();
+  const island = document.getElementById('batch-island').value.trim();
+  const missing = stagedPoints.some(p => !p.name.trim());
+  const lines = stagedPoints.map(p => {
+    const link = googleMapsLink(p.lat, p.lon);
+    const name = (p.name.trim() || 'UNNAMED').replace(/"/g, '\\"');
+    // leave out blank --type/--island: Windows PowerShell drops empty "" arguments, which breaks the command
+    return `python solomon_sites_tool.py add ${CSV_ARG} --link "${link}" --name "${name}"` +
+      (type ? ` --type "${type.replace(/"/g, '\\"')}"` : '') + (island ? ` --island "${island.replace(/"/g, '\\"')}"` : '');
+  });
+  const out = document.getElementById('batch-output');
+  out.value = (missing ? '# fill in any UNNAMED entries before running\n' : '') + lines.join('\n');
+  out.style.display = 'block';
+  out.focus();
+  out.select();
+});
+
+document.getElementById('batch-clear').addEventListener('click', () => {
+  stagedPoints.forEach(p => stagingGroup.removeLayer(p.marker));
+  stagedPoints.length = 0;
+  renderBatchPanel();
+});
+
+// The CSV this map was built from (CSV_FILE is written next to SITES by
+// "solomon_sites_tool.py update"), quoted for the copy-paste commands below.
+const CSV_ARG = `"${typeof CSV_FILE !== 'undefined' ? CSV_FILE : 'sites.csv'}"`;
+
+// Core categories keep fixed colors/labels. Anything else found in the CSV's
+// "type" column (e.g. a brand-new "Coastal mangroves recent loss") is picked
+// up automatically below: it gets its own legend row, a stable auto-generated
+// color, and a toggle - no code changes needed when a new category appears.
+const FIXED_CLASS = {
+  'Marina': 'marina',
+  'Natural harbour': 'harbour',
+  'Proposed NbS Seawall': 'seawall',
+  'Existing wharf/jetty': 'wharf',
+  'Coastal mangroves present': 'mangrove-present',
+  'Coastal mangroves absent': 'mangrove-absent',
+  'Coastal mangroves recent loss': 'mangrove-loss',
+  'Mangrove restoration': 'mangrove-restoration',
+  'Conctruction (reclammation, dredging)': 'construction',
+  'Shipwrecks': 'shipwreck',
+};
+const FIXED_COLOR = { harbour: '#49b6d6', marina: '#f2c14e', seawall: '#6ea85c', wharf: '#c15fd0', other: '#22d3ee', muzammil: '#ef6b4d', 'mangrove-present': '#22c55e', 'mangrove-absent': '#ef4444', 'mangrove-loss': '#3b82f6', 'mangrove-restoration': '#14b8a6', construction: '#f59e0b', shipwreck: '#ff69b4' };
+const PLANT_BUCKETS = new Set(['mangrove-present', 'mangrove-absent', 'mangrove-loss', 'mangrove-restoration']);
+const TOOL_BUCKETS = new Set(['construction']);
+const SHIP_BUCKETS = new Set(['shipwreck']);
+const LEAF_PATH = 'M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 2,11.5 2,13.5C2,15.5 3.75,17.25 3.75,17.25C7,8 17,8 17,8Z';
+const WRENCH_PATH = 'M22.7,19l-9.1-9.1c0.9-2.3,0.4-5-1.5-6.9c-2-2-5-2.4-7.4-1.3L9,6l-3,3L1.6,4.7C0.4,7.1,0.9,10.1,2.9,12.1c1.9,1.9,4.6,2.4,6.9,1.5l9.1,9.1c0.4,0.4,1,0.4,1.4,0l2.3-2.3C23.1,20,23.1,19.4,22.7,19z';
+function leafIcon(color) {
+  return L.divIcon({
+    className: 'plant-icon',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"><path fill="${color}" stroke="rgba(8,20,25,0.7)" stroke-width="0.6" d="${LEAF_PATH}"/></svg>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 16],
+  });
+}
+function toolIcon(color) {
+  return L.divIcon({
+    className: 'plant-icon',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"><path fill="${color}" stroke="rgba(8,20,25,0.7)" stroke-width="0.6" d="${WRENCH_PATH}"/></svg>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}
+function shipwreckIcon(color) {
+  return L.divIcon({
+    className: 'plant-icon',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20">
+      <g transform="rotate(20 12 12)">
+        <line x1="9" y1="13" x2="9" y2="3" stroke="${color}" stroke-width="1.1"/>
+        <polygon points="9,4 15,10 9,10" fill="${color}"/>
+        <polygon points="3,13 21,13 17,19 7,19" fill="${color}" stroke="rgba(8,20,25,0.7)" stroke-width="0.6"/>
+      </g>
+      <path d="M1,19 Q3.5,16.5 6,19 T11,19 T16,19 T21,19 T23,19" stroke="${color}" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    </svg>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 14],
+  });
+}
+// picture icons for particular CSV types (anything not listed here keeps a plain dot)
+const OUTLINE = 'stroke="rgba(8,20,25,0.75)" stroke-width="0.7"';
+const SEEDLING = c => `
+  <path d="M12 21.5V11.5" stroke="rgba(8,20,25,0.75)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M12 21.5V11.5" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>
+  <path ${OUTLINE} fill="${c}" d="M12 13C12 8.5 8.5 6 3 6C3 10.8 6.5 13 12 13Z"/>
+  <path ${OUTLINE} fill="${c}" d="M12 11.5C12 6.5 15.2 3.2 21 3.2C21 8.4 17.6 11.5 12 11.5Z"/>
+  <path d="M6.5 21.5H17.5" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`;
+const TYPE_ICON_SVG = {
+  // surfer riding a wave
+  'Surf spot': c => `
+    <path ${OUTLINE} fill="#38bdf8" d="M0.8 23V19.5C4.5 19.5 6 12.2 12.8 11.2C18 10.4 21.6 13.4 19.8 16.6C18.4 19 15.3 18.2 15.9 15.9C13.4 16.6 11.6 21.6 7.8 23Z"/>
+    <path d="M4.6 12.9L14.6 10.2" stroke="rgba(8,20,25,0.8)" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M4.6 12.9L14.6 10.2" stroke="#facc15" stroke-width="1.5" stroke-linecap="round"/>
+    <g stroke="rgba(8,20,25,0.85)" stroke-width="2.9" stroke-linecap="round" fill="none">
+      <path d="M10.6 4.9L9.6 8.4M9.6 8.4L7.4 11.6M9.6 8.4L11.9 10.9M6.2 5.6L13.6 4.6"/></g>
+    <g stroke="${c}" stroke-width="1.6" stroke-linecap="round" fill="none">
+      <path d="M10.6 4.9L9.6 8.4M9.6 8.4L7.4 11.6M9.6 8.4L11.9 10.9M6.2 5.6L13.6 4.6"/></g>
+    <circle cx="11.2" cy="2.6" r="1.7" fill="${c}" ${OUTLINE}/>`,
+  'No mangrove (Sarah)': SEEDLING,
+  'Mangrove present (Sarah)': SEEDLING,
+  // leaf-roofed hut
+  'Eco-resort / eco-lodge': c => `
+    <path ${OUTLINE} fill="${c}" d="M1.5 12L12 3L22.5 12Z"/>
+    <rect ${OUTLINE} fill="${c}" x="5" y="12" width="14" height="9.5"/>
+    <rect x="10.2" y="15" width="3.6" height="6.5" fill="rgba(8,20,25,0.75)"/>
+    <path ${OUTLINE} fill="#bef264" d="M12 6.5C12 3.5 14.5 1.5 18.5 1.5C18.5 4.6 16 6.5 12 6.5Z"/>`,
+  // beach bungalow with palm
+  'Resort / lodge': c => `
+    <path ${OUTLINE} fill="${c}" d="M1.5 13L9 6.5L16.5 13Z"/>
+    <rect ${OUTLINE} fill="${c}" x="4" y="13" width="10" height="8.5"/>
+    <rect x="7.6" y="16" width="2.8" height="5.5" fill="rgba(8,20,25,0.75)"/>
+    <path d="M19.5 22V9" stroke="rgba(8,20,25,0.8)" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M19.5 22V9" stroke="#d6a160" stroke-width="1.3" stroke-linecap="round"/>
+    <path ${OUTLINE} fill="#22c55e" d="M19.5 9C17.5 6.5 15 6.5 13.5 8C15.5 7 17.5 8 19.5 9ZM19.5 9C21.5 6.5 23.5 7 23.8 8.8C22.5 7.8 21 8 19.5 9ZM19.5 9C19 6 20.5 4 22.5 3.8C21 5.5 20.3 7 19.5 9Z"/>`,
+  // bed
+  'Hotel / guesthouse (town)': c => `
+    <rect ${OUTLINE} fill="${c}" x="1.5" y="6" width="2.6" height="15" rx="0.6"/>
+    <rect ${OUTLINE} fill="${c}" x="1.5" y="13" width="21" height="5" rx="0.8"/>
+    <rect ${OUTLINE} fill="${c}" x="19.9" y="13" width="2.6" height="8" rx="0.6"/>
+    <circle cx="7.4" cy="10.6" r="2.1" fill="${c}" ${OUTLINE}/>
+    <rect ${OUTLINE} fill="${c}" x="10.5" y="9.4" width="12" height="3.6" rx="1.2"/>`,
+  // stacked armour blocks
+  'Existing structure (breakwater)': c => `
+    <rect ${OUTLINE} fill="${c}" x="1.5" y="15" width="6.5" height="6"/>
+    <rect ${OUTLINE} fill="${c}" x="8.75" y="15" width="6.5" height="6"/>
+    <rect ${OUTLINE} fill="${c}" x="16" y="15" width="6.5" height="6"/>
+    <rect ${OUTLINE} fill="${c}" x="5" y="8.5" width="6.5" height="6"/>
+    <rect ${OUTLINE} fill="${c}" x="12.5" y="8.5" width="6.5" height="6"/>
+    <path d="M1 6.5Q3.5 4 6 6.5T11 6.5T16 6.5T21 6.5" stroke="#38bdf8" stroke-width="1.4" fill="none" stroke-linecap="round"/>`,
+};
+function typeIcon(type, color) {
+  const size = 22;
+  return L.divIcon({
+    className: 'plant-icon',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}">${TYPE_ICON_SVG[type](color)}</svg>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+function dotIcon(color) {
+  return L.divIcon({
+    className: 'dot-icon',
+    html: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"><circle cx="7" cy="7" r="6" fill="${color}" stroke="rgba(8,20,25,0.6)" stroke-width="1.2"/></svg>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+function googleMapsLink(lat, lon) {
+  const la = lat.toFixed(6), lo = lon.toFixed(6);
+  return `https://www.google.com/maps/place/${la},${lo}/@${la},${lo},1214m/data=!3m2!1e3!4b1!4m4!3m3!8m2!3d${la}!4d${lo}`;
+}
+
+function slugify(s) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function hashColor(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360}, 65%, 55%)`;
+}
+function siteClass(type) {
+  if (FIXED_CLASS[type]) return FIXED_CLASS[type];
+  if (type && type.startsWith("Muzammil's List")) return 'muzammil';
+  if (!type || type === 'Potential site') return 'other';
+  return 'dyn-' + slugify(type);
+}
+
+// discover dynamic categories actually present in this data, in first-seen order
+const dynamicTypes = new Map(); // bucket -> label
+SITES.forEach(s => {
+  const cls = siteClass(s.type);
+  if (cls.startsWith('dyn-') && !dynamicTypes.has(cls)) dynamicTypes.set(cls, s.type);
+});
+
+const CLASS_COLOR = { ...FIXED_COLOR };
+// chosen colours for particular CSV types; any other new type gets an automatic one
+// Sarah's sites (Wells et al. 2026): orange = her map's "no mangrove" colour; lime for present (her blue matches Natural harbour here)
+const TYPE_COLOR = { 'Experimental site': '#ff69b4', 'Surf spot': '#f8fafc', 'Resort / lodge': '#fb7185', 'Eco-resort / eco-lodge': '#65a30d', 'Existing structure (breakwater)': '#94a3b8', 'Hotel / guesthouse (town)': '#a78bfa', 'Mangrove present (Sarah)': '#a3e635', 'No mangrove (Sarah)': '#ef4444' };
+dynamicTypes.forEach((label, cls) => { CLASS_COLOR[cls] = TYPE_COLOR[label] || hashColor(label); });
+
+// inject a legend row for each dynamic category, right before the fixed rows'
+// "Click a type above..." caveat, so the existing generic toggle-wiring below
+// picks them up automatically
+const dynamicLegendAnchor = document.getElementById('dynamic-legend-rows');
+dynamicTypes.forEach((label, cls) => {
+  const row = document.createElement('div');
+  row.className = 'legend-row type-toggle';
+  row.dataset.bucket = cls;
+  row.dataset.on = '1';
+  const swatch = TYPE_ICON_SVG[label]
+    ? `<svg class="legend-swatch icon-swatch" viewBox="0 0 24 24">${TYPE_ICON_SVG[label](CLASS_COLOR[cls])}</svg>`
+    : `<span class="legend-swatch" style="background:${CLASS_COLOR[cls]}"></span>`;
+  row.innerHTML = `${swatch}<span>${label}</span><span class="legend-count" id="count-${cls}"></span>`;
+  dynamicLegendAnchor.appendChild(row);
+});
+
+// populate the batch-add panel's type/island suggestion lists from the data already on the map
+const knownTypes = new Set(Object.keys(FIXED_CLASS).concat(["Muzammil's List", 'Mangrove present (Sarah)', 'No mangrove (Sarah)']));
+dynamicTypes.forEach(label => knownTypes.add(label));
+document.getElementById('batch-type-options').innerHTML =
+  [...knownTypes].sort((a, b) => a.localeCompare(b)).map(t => `<option value="${t}">`).join('');
+const knownIslands = new Set(SITES.map(s => s.island).filter(Boolean));
+document.getElementById('batch-island-options').innerHTML =
+  [...knownIslands].sort((a, b) => a.localeCompare(b)).map(i => `<option value="${i}">`).join('');
+
+const layerGroups = { harbour: L.layerGroup(), marina: L.layerGroup(), seawall: L.layerGroup(), wharf: L.layerGroup(), other: L.layerGroup(), muzammil: L.layerGroup(), 'mangrove-present': L.layerGroup(), 'mangrove-absent': L.layerGroup(), 'mangrove-loss': L.layerGroup(), 'mangrove-restoration': L.layerGroup(), construction: L.layerGroup(), shipwreck: L.layerGroup() };
+dynamicTypes.forEach((label, cls) => { layerGroups[cls] = L.layerGroup(); });
+let VISIBLE = new Set(Object.keys(layerGroups));
+
+// a site whose pin is an estimate: its notes say APPROX / island-level / unverified.
+// Moving the pin to the real spot and clearing that wording from the notes makes it a normal pin again.
+function isUnverified(s) {
+  return /\bAPPROX\b|island-level|unverified/i.test(s.notes || '');
+}
+function popupHtml(s) {
+  const cls = CLASS_COLOR[siteClass(s.type)];
+  let scoreRow = '';
+  if (s.scores && s.scores.length === 2) {
+    scoreRow = `<div class="tt-row">Scores: <b>${s.scores[0]}</b> / <b>${s.scores[1]}</b></div>`;
+  } else if (s.scores && s.scores.length === 1) {
+    scoreRow = `<div class="tt-row">Score: <b>${s.scores[0]}</b></div>`;
+  }
+  let extraRows = '';
+  if (s.distance) extraRows += `<div class="tt-row">Distance: <b>${s.distance}</b></div>`;
+  if (s.structures) extraRows += `<div class="tt-row">Structures: <b>${s.structures}</b></div>`;
+  if (s.mangroves) extraRows += `<div class="tt-row">Mangroves present: <b>${s.mangroves}</b></div>`;
+  if (s.cost) extraRows += `<div class="tt-row">Cost: <b>${s.cost}</b></div>`;
+  if (isUnverified(s)) extraRows += `<div class="tt-row" style="color:#fbbf24;">⚠ Location unverified - pin is an estimate (island / town / nearby feature)</div>`;
+  if (s.notes) extraRows += `<div class="tt-row">Notes: <b>${s.notes}</b></div>`;
+  if (s.folder) {
+    const folderIsUrl = /^https?:\/\//i.test(s.folder);
+    // local folders are paths relative to this map, e.g. "Site photos/01 Port Denarau Marina"
+    const folderHref = folderIsUrl ? s.folder : s.folder.split('/').map(encodeURIComponent).join('/') + '/';
+    extraRows += `<div class="tt-row"><a href="${folderHref}" target="_blank" rel="noopener">Photos/videos folder →</a></div>`;
+  }
+  return `
+    <div class="tt-title"><span class="tt-dot" style="background:${cls}"></span>${s.num ? '#' + s.num + ' ' : ''}${s.name}</div>
+    <div class="tt-row">${s.type || ''}${s.island ? ' — ' + s.island : ''}</div>
+    <div class="tt-row">${s.lat.toFixed(4)}°, ${s.lon > 180 ? (360 - s.lon).toFixed(4) + '°W' : s.lon.toFixed(4) + '°E'}</div>
+    ${scoreRow}
+    ${extraRows}
+    ${s.link ? `<div class="tt-row"><a href="${s.link}" target="_blank" rel="noopener">Open in Google Maps →</a></div>` : ''}
+    ${s.num ? `<button class="edit-btn" data-num="${s.num}">Edit fields</button><button class="delete-btn" data-num="${s.num}">Delete this site</button>` : ''}
+  `;
+}
+
+const allMarkers = [];
+const unverifiedMarkers = []; // { marker, cls } for pins whose position is only an estimate
+const markerByNum = {}; // num -> { s, marker, cls }, for the popup's delete button
+SITES.forEach(s => {
+  if (typeof s.lat !== 'number' || typeof s.lon !== 'number') return;
+  const cls = siteClass(s.type);
+  const icon = TYPE_ICON_SVG[s.type] ? typeIcon(s.type, CLASS_COLOR[cls]) : PLANT_BUCKETS.has(cls) ? leafIcon(CLASS_COLOR[cls]) : TOOL_BUCKETS.has(cls) ? toolIcon(CLASS_COLOR[cls]) : SHIP_BUCKETS.has(cls) ? shipwreckIcon(CLASS_COLOR[cls]) : dotIcon(CLASS_COLOR[cls]);
+  const marker = L.marker([s.lat, s.lon], { icon, draggable: false });
+  marker.bindTooltip(s.name, { direction: 'top', offset: [0, -6] });
+  marker.bindPopup(popupHtml(s), { maxWidth: 280 });
+  marker.on('dragend', () => {
+    marker._spread = null; // a moved marker no longer belongs to its shared-spot fan
+    const ll = marker.getLatLng();
+    s.lat = ll.lat;
+    s.lon = ll.lng;
+    s.link = googleMapsLink(ll.lat, ll.lng);
+    const cmd = `python solomon_sites_tool.py move ${CSV_ARG} --num ${s.num} --lat ${ll.lat.toFixed(6)} --lon ${ll.lng.toFixed(6)}`;
+    marker.setPopupContent(popupHtml(s) +
+      `<div class="tt-row" style="margin-top:8px;"><b>Moved.</b> Run this to save it to the CSV:</div>` +
+      `<input class="move-cmd" readonly value="${cmd.replace(/"/g, '&quot;')}" onclick="this.select()">`);
+    marker.openPopup();
+  });
+  if (isUnverified(s)) {
+    marker.setOpacity(0.45);
+    marker.setTooltipContent(`${s.name} (location unverified)`);
+    unverifiedMarkers.push({ marker, cls });
+  }
+  marker.addTo(layerGroups[cls]);
+  allMarkers.push(marker);
+  if (s.num) markerByNum[s.num] = { s, marker, cls };
+  marker._site = s;
+});
+
+// sites listed more than once at the same coordinates (e.g. one spot that is both
+// "Coastal mangroves present" and "recent loss") would sit exactly on top of each
+// other, so fan them out in a small ring around the true point, a fixed number of
+// screen pixels at every zoom. Popups still show the real coordinates.
+const SPREAD_PX = 14;
+(function () {
+  const groups = new Map();
+  allMarkers.forEach(m => {
+    const key = m._site.lat.toFixed(6) + ',' + m._site.lon.toFixed(6);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  });
+  groups.forEach(group => {
+    if (group.length < 2) return;
+    group.forEach((m, i) => {
+      const angle = 2 * Math.PI * i / group.length - Math.PI / 2;
+      m._spread = { lat: m._site.lat, lon: m._site.lon, dx: Math.cos(angle), dy: Math.sin(angle) };
+      const others = group.filter(o => o !== m).map(o => '#' + o._site.num).join(', ');
+      m.setPopupContent(m.getPopup().getContent() +
+        `<div class="tt-row" style="margin-top:6px;"><i>Same location as ${others}</i></div>`);
+    });
+  });
+})();
+function spreadCoLocated() {
+  const z = map.getZoom();
+  allMarkers.forEach(m => {
+    if (!m._spread) return;
+    const { lat, lon, dx, dy } = m._spread;
+    m.setLatLng(map.unproject(map.project([lat, lon], z).add([dx * SPREAD_PX, dy * SPREAD_PX]), z));
+  });
+}
+spreadCoLocated();
+map.on('zoomend', spreadCoLocated);
+
+document.getElementById('toggle-move-mode').addEventListener('change', function() {
+  allMarkers.forEach(m => this.checked ? m.dragging.enable() : m.dragging.disable());
+});
+
+Object.keys(layerGroups).forEach(k => layerGroups[k].addTo(map));
+
+// hide legend rows for categories with no sites (e.g. a type deleted from the CSV)
+function hideEmptyLegendRows() {
+  document.querySelectorAll('.type-toggle').forEach(row => {
+    const group = layerGroups[row.dataset.bucket];
+    if (!group || group.getLayers().length === 0) row.style.display = 'none';
+  });
+}
+hideEmptyLegendRows();
+
+// "Delete this site" button in each popup: removes the marker from the map and
+// shows the command that removes it from the CSV. Deletions accumulate, so one
+// command covers every site deleted since the page was loaded.
+// "Edit fields" button in each popup: swaps the popup for a form, applies the
+// changes to the map straight away, and shows the command that saves them to the CSV.
+const EDIT_FIELDS = [ // [CSV column, label]
+  ['name', 'Name'], ['type', 'Type'], ['island', 'Island'],
+  ['score_1', 'Score 1'], ['score_2', 'Score 2'],
+  ['distance', 'Distance'], ['structures', 'Structures'], ['mangroves', 'Mangroves present'],
+  ['cost', 'Cost'], ['folder', 'Photos/videos folder or link'], ['notes', 'Notes'],
+];
+function siteField(s, col) {
+  if (col === 'score_1') return s.scores && s.scores[0] != null ? String(s.scores[0]) : '';
+  if (col === 'score_2') return s.scores && s.scores[1] != null ? String(s.scores[1]) : '';
+  return s[col] == null ? '' : String(s[col]);
+}
+const escAttr = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+function fieldInput(s, col) {
+  const list = col === 'type' ? ' list="batch-type-options"' : col === 'island' ? ' list="batch-island-options"' : '';
+  return col === 'notes'
+    ? `<textarea data-col="notes" rows="2">${escAttr(siteField(s, col))}</textarea>`
+    : `<input type="text" data-col="${col}"${list} value="${escAttr(siteField(s, col))}">`;
+}
+const EDIT_WIDE = new Set(['name', 'folder', 'notes']); // full-width; the rest sit two per row
+function editFormHtml(s) {
+  const cells = EDIT_FIELDS.map(([col, label]) =>
+    `<div${EDIT_WIDE.has(col) ? ' class="wide"' : ''}><label>${label}</label>${fieldInput(s, col)}</div>`);
+  return `<div class="tt-title">Edit #${s.num}</div><div class="edit-form" data-num="${s.num}"><div class="edit-grid">${cells.join('')}</div>` +
+    `<button class="edit-btn edit-save" data-num="${s.num}">Save</button><button class="edit-btn edit-cancel" data-num="${s.num}">Cancel</button></div>`;
+}
+function applyEdit(s, changes) {
+  Object.entries(changes).forEach(([col, v]) => {
+    if (col === 'score_1' || col === 'score_2') return;
+    if (v) s[col] = v; else delete s[col];
+  });
+  if ('score_1' in changes || 'score_2' in changes) {
+    const toNum = v => (v !== '' && !isNaN(Number(v)) ? Number(v) : v);
+    const s1 = 'score_1' in changes ? changes.score_1 : siteField(s, 'score_1');
+    const s2 = 'score_2' in changes ? changes.score_2 : siteField(s, 'score_2');
+    s.scores = [s1, s2].filter(v => v !== '').map(toNum);
+  }
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.edit-btn');
+  if (!btn) return;
+  const entry = markerByNum[btn.dataset.num];
+  if (!entry) return;
+  const { s, marker } = entry;
+  const popupEl = () => marker.getPopup().getElement();
+  // reopening after swapping the content makes Leaflet pan the whole popup into view
+  const showPopup = html => { marker.setPopupContent(html); marker.closePopup(); marker.openPopup(); };
+
+  if (btn.classList.contains('edit-cancel')) { showPopup(popupHtml(s)); return; }
+
+  if (btn.classList.contains('edit-save')) {
+    const changes = {};
+    popupEl().querySelectorAll('.edit-form [data-col]').forEach(el => {
+      const v = el.value.trim();
+      if (v !== siteField(s, el.dataset.col)) changes[el.dataset.col] = v;
+    });
+    if (!Object.keys(changes).length) { showPopup(popupHtml(s)); return; }
+    const typeChanged = 'type' in changes;
+    applyEdit(s, changes);
+    marker.setTooltipContent(s.name);
+    const sets = Object.entries(changes).map(([col, v]) => `--set "${col}=${v.replace(/"/g, '\\"')}"`).join(' ');
+    const cmd = `python solomon_sites_tool.py edit ${CSV_ARG} --num ${s.num} ${sets}`;
+    showPopup(popupHtml(s) +
+      `<div class="tt-row" style="margin-top:8px;"><b>Edited.</b> Run this to save it to the CSV` +
+      (typeChanged ? ', then rerun update to refresh its colour and legend entry' : '') + `:</div>` +
+      `<input class="move-cmd" readonly value="${escAttr(cmd)}" onclick="this.select()">`);
+    return;
+  }
+
+  // open the form
+  showPopup(editFormHtml(s));
+  const form = popupEl().querySelector('.edit-form');
+  // keep typing in the form from reaching the map (e.g. "-" or "+" would zoom it)
+  form.addEventListener('keydown', ev => {
+    ev.stopPropagation();
+    if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') form.querySelector('.edit-save').click();
+  });
+  form.querySelector('[data-col="name"]').focus();
+});
+
+const deletedNums = [];
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.delete-btn');
+  if (!btn) return;
+  const entry = markerByNum[btn.dataset.num];
+  if (!entry) return;
+  const { s, marker, cls } = entry;
+  if (!confirm(`Delete #${s.num} ${s.name} from the map?`)) return;
+
+  marker.closePopup();
+  layerGroups[cls].removeLayer(marker);
+  allMarkers.splice(allMarkers.indexOf(marker), 1);
+  delete markerByNum[s.num];
+  deletedNums.push(s.num);
+  updateCounts();
+  hideEmptyLegendRows();
+
+  const cmd = `python solomon_sites_tool.py delete ${CSV_ARG} --num ${deletedNums.join(' ')}`;
+  L.popup({ maxWidth: 280 })
+    .setLatLng([s.lat, s.lon])
+    .setContent(
+      `<div class="tt-row"><b>Deleted #${s.num} ${s.name}.</b> Run this to save ` +
+      (deletedNums.length > 1 ? `all ${deletedNums.length} deletions` : 'it') + ` to the CSV:</div>` +
+      `<input class="move-cmd" readonly value="${cmd.replace(/"/g, '&quot;')}" onclick="this.select()">`)
+    .openOn(map);
+});
+
+function updateCounts() {
+  Object.keys(layerGroups).forEach(k => {
+    document.getElementById('count-' + k).textContent = layerGroups[k].getLayers().length;
+  });
+  const shown = Object.keys(layerGroups).reduce((n, k) => n + (VISIBLE.has(k) ? layerGroups[k].getLayers().length : 0), 0);
+  document.getElementById('shown-count').textContent = shown;
+}
+updateCounts();
+
+// show/hide every pin whose location is only an estimate, across all types
+document.getElementById('count-unverified').textContent = unverifiedMarkers.length;
+document.getElementById('unverified-toggle').addEventListener('click', ev => {
+  const row = ev.currentTarget;
+  const show = row.dataset.on !== '1';
+  row.dataset.on = show ? '1' : '0';
+  row.style.opacity = show ? '' : '0.45';
+  document.getElementById('unverified-state').textContent = show ? 'shown' : 'hidden';
+  unverifiedMarkers.forEach(({ marker, cls }) => {
+    if (show) marker.addTo(layerGroups[cls]); else layerGroups[cls].removeLayer(marker);
+  });
+  updateCounts();
+});
+
+document.querySelectorAll('.type-toggle').forEach(row => {
+  row.addEventListener('click', () => {
+    const bucket = row.dataset.bucket;
+    const on = row.dataset.on === '1';
+    row.dataset.on = on ? '0' : '1';
+    row.classList.toggle('off', on);
+    if (on) { VISIBLE.delete(bucket); map.removeLayer(layerGroups[bucket]); }
+    else { VISIBLE.add(bucket); layerGroups[bucket].addTo(map); }
+    updateCounts();
+  });
+});
+
+document.getElementById('zoom-in').addEventListener('click', () => map.zoomIn());
+document.getElementById('zoom-out').addEventListener('click', () => map.zoomOut());
+document.getElementById('zoom-reset').addEventListener('click', () => map.fitBounds(INITIAL_BOUNDS));
+
+// Annual mean Hs bands (Copernicus WAVERYS climatology), from hs_layer.js (made by make_layers.py).
+// Drawn in contourPane, below the tiles, so the (semi-transparent) street map sits over them.
+const VIRIDIS = ['#440154','#482878','#3e4989','#31688e','#26828e','#1f9e89','#35b779','#6ece58','#b5de2b','#fde725'];
+function viridis(t) {
+  t = Math.min(1, Math.max(0, t)) * (VIRIDIS.length - 1);
+  const i = Math.min(VIRIDIS.length - 2, Math.floor(t)), f = t - i;
+  const a = VIRIDIS[i].match(/\w\w/g).map(x => parseInt(x, 16)), b = VIRIDIS[i + 1].match(/\w\w/g).map(x => parseInt(x, 16));
+  return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',')})`;
+}
+const HS_MIN = window.HS_LEVELS[0], HS_MAX = window.HS_LEVELS[window.HS_LEVELS.length - 1];
+const contourRenderer = L.svg({ pane: 'contourPane' });
+const contourOverlay = L.layerGroup(window.HS_BANDS.map(b => L.polygon(b.polys, {
+  renderer: contourRenderer, pane: 'contourPane', stroke: false, fillOpacity: 1, interactive: false,
+  fillColor: viridis((b.lo + 0.05 - HS_MIN) / (HS_MAX - HS_MIN)),
+})));
+map.getPane('contourPane').style.opacity = 0.9;
+
+// Hs at the cursor, read from the WAVERYS grid (nearest sea cell)
+const hsReadout = document.getElementById('hs-readout');
+function hsAt(lat, lon) {
+  const g = window.HS_GRID;
+  const i0 = Math.round((lat - g.lat0) / g.step), j0 = Math.round((lon - g.lon0) / g.step);
+  for (let r = 0; r <= 2; r++) for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) {
+    const i = i0 + di, j = j0 + dj;
+    if (i < 0 || j < 0 || i >= g.nlat || j >= g.nlon) continue;
+    const v = g.v[i * g.nlon + j];
+    if (v != null) return v;
+  }
+  return null;
+}
+map.on('mousemove', e => {
+  if (!map.hasLayer(contourOverlay)) { hsReadout.textContent = ''; return; }
+  const v = hsAt(e.latlng.lat, e.latlng.lng);
+  hsReadout.innerHTML = v == null ? '' : `Annual mean H<sub>s</sub> here: <b>${v.toFixed(2)} m</b>`;
+});
+map.on('mouseout', () => { hsReadout.textContent = ''; });
+
+// the wave (Hs) overlay only applies to the Streets and Wave height basemaps
+let activeBase = cyclones;
+function updateContourVisibility() {
+  const wanted = document.getElementById('toggle-contours').checked && (activeBase === streets || activeBase === waveBase);
+  document.getElementById('contour-legend').style.opacity = wanted ? '1' : '0.35';
+  if (wanted) contourOverlay.addTo(map); else { map.removeLayer(contourOverlay); hsReadout.textContent = ''; }
+}
+updateContourVisibility();
+map.on('baselayerchange', (e) => {
+  activeBase = e.layer;
+  updateContourVisibility();
+  const showingHistoric = activeBase === historic;
+  document.getElementById('timelapse-bar').classList.toggle('visible', showingHistoric);
+  document.getElementById('cyclone-bar').classList.toggle('visible', activeBase === cyclones);
+  if (showingHistoric) prefetchAround(Number(timelapseSlider.value), true);
+});
+// open on the Cyclones basemap (the layer control picks up the selection)
+cyclones.addTo(map);
+map.fire('baselayerchange', { layer: cyclones, name: 'Cyclones (1970–2026)' });
+document.getElementById('toggle-contours').addEventListener('change', updateContourVisibility);
+
+// historic satellite timelapse
+const timelapseSlider = document.getElementById('timelapse-slider');
+const timelapseDate = document.getElementById('timelapse-date');
+const timelapsePlay = document.getElementById('timelapse-play');
+timelapseSlider.max = WAYBACK.length - 1;
+timelapseSlider.value = WAYBACK.length - 1;
+timelapseDate.textContent = WAYBACK[WAYBACK.length - 1][0];
+
+// The Wayback tile server throttles to ~12 tiles/sec per client no matter how many requests
+// are fired at once (a per-origin connection cap, not bandwidth) — so prefetching the full
+// 196-date archive up front can't keep up with playback. Instead, always keep a small window
+// of dates AROUND the current position warm in the browser's HTTP cache (tiles are served with
+// Cache-Control: max-age=86400), so whichever frame you're about to see is already loading well
+// before you reach it.
+function lonLatToTile(lon, lat, z) {
+  const n = 2 ** z;
+  const x = Math.floor((lon + 180) / 360 * n);
+  const latRad = lat * Math.PI / 180;
+  const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n);
+  return [x, y];
+}
+let historicTiles = null;
+function getHistoricTiles() {
+  if (historicTiles) return historicTiles;
+  // clamp to the deepest zoom Wayback actually serves - above that Leaflet
+  // renders upscaled z19 tiles, so those are the tiles worth prefetching
+  const z = Math.min(Math.round(map.getZoom()), MAX_NATIVE_ZOOM);
+  const b = map.getBounds();
+  const [xMin, yMin] = lonLatToTile(b.getWest(), b.getNorth(), z);
+  const [xMax, yMax] = lonLatToTile(b.getEast(), b.getSouth(), z);
+  const tiles = [];
+  for (let x = xMin; x <= xMax; x++) for (let y = yMin; y <= yMax; y++) tiles.push([x, y]);
+  historicTiles = { z, tiles };
+  return historicTiles;
+}
+
+const prefetchedDates = new Set();
+// the view changed: forget the old tile list and queued tiles, and warm the
+// dates around the current frame for the new view instead
+map.on('moveend', () => {
+  historicTiles = null;
+  prefetchedDates.clear();
+  prefetchQueue.length = 0;
+  if (activeBase === historic) prefetchAround(Number(timelapseSlider.value), true);
+});
+const PREFETCH_CONCURRENCY = 12; // matches the server's real achievable throughput
+let prefetchActive = 0;
+const prefetchQueue = [];
+function pumpPrefetchQueue() {
+  while (prefetchActive < PREFETCH_CONCURRENCY && prefetchQueue.length) {
+    const url = prefetchQueue.shift();
+    const img = new Image();
+    prefetchActive++;
+    img.onload = img.onerror = () => { prefetchActive--; pumpPrefetchQueue(); };
+    img.src = url;
+  }
+}
+function prefetchDate(i) {
+  if (i < 0 || i > WAYBACK.length - 1 || prefetchedDates.has(i)) return;
+  prefetchedDates.add(i);
+  const { z, tiles } = getHistoricTiles();
+  const url = waybackUrl(WAYBACK[i][1]);
+  // prefetch whatever tile the layer will really show (the deepest one with
+  // imagery for that date), each only once
+  const queued = new Set();
+  tiles.forEach(([x, y]) => {
+    historic.tileSource({ x, y, z }, url).then(t => {
+      if (queued.has(t.src)) return;
+      queued.add(t.src);
+      prefetchQueue.push(t.src);
+      pumpPrefetchQueue();
+    });
+  });
+}
+const PREFETCH_RADIUS = 4;
+function prefetchAround(i, forward) {
+  // prioritize the direction of travel so playback stays ahead of the loader
+  for (let d = 1; d <= PREFETCH_RADIUS; d++) prefetchDate(i + (forward ? d : -d));
+  for (let d = 1; d <= PREFETCH_RADIUS; d++) prefetchDate(i + (forward ? -d : d));
+  prefetchDate(i);
+}
+
+function setTimelapseFrame(i, forward) {
+  const [date, release] = WAYBACK[i];
+  historic.setUrl(waybackUrl(release));
+  timelapseDate.textContent = date;
+  timelapseSlider.value = i;
+  prefetchAround(i, forward !== false);
+}
+timelapseSlider.addEventListener('input', () => setTimelapseFrame(Number(timelapseSlider.value)));
+
+let timelapseTimer = null;
+function stopTimelapse() {
+  clearInterval(timelapseTimer);
+  timelapseTimer = null;
+  timelapsePlay.innerHTML = '&#9654;';
+  timelapsePlay.title = 'Play';
+}
+timelapsePlay.addEventListener('click', () => {
+  if (timelapseTimer) { stopTimelapse(); return; }
+  timelapsePlay.innerHTML = '&#10074;&#10074;';
+  timelapsePlay.title = 'Pause';
+  timelapseTimer = setInterval(() => {
+    let i = Number(timelapseSlider.value) + 1;
+    if (i > WAYBACK.length - 1) i = 0;
+    setTimelapseFrame(i, true);
+  }, 1200);
+});
+
+const hsOpacitySlider = document.getElementById('hs-opacity');
+const hsOpacityValue = document.getElementById('hs-opacity-value');
+hsOpacitySlider.addEventListener('input', () => {
+  const v = Number(hsOpacitySlider.value);
+  hsOpacityValue.textContent = v + '%';
+  map.getPane('contourPane').style.opacity = v / 100;
+});
+</script>
+</body>
+</html>
