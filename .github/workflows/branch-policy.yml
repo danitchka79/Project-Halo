@@ -1,0 +1,13 @@
+name: Enforce Branch Policy (Dev → Main Preset)
+
+# Uses the preset workflow that enforces:
+# dev → main
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  enforce-dev-main:
+    name: Enforce dev → main
+    uses: unsw-edu-au/isssr.workflows/.github/workflows/enforce-branch-policy-dev-main.yml@main

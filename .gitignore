@@ -1,0 +1,6 @@
+
+# Ignores files created by Windows when downloading files from the internet
+# this mainly happens when you copy files from Windows to WSL
+# see https://ryanrhode.com/understanding-zone-identifier-files-what-they-are-and-how-to-handle-them/
+*:Zone.Identifier
+
