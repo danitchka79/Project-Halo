@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en-AU"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Marina design checks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: clinical engineering calc sheet, terse, every number tied to a clause
+   IDEA: a marina design check sheet / navigation chart, marker-yellow on deep harbour water
+   PICTURE: live pontoon cross-section heeling under stability load; gangway elevation across tide levels
+   COLOUR and TYPE: harbour blue #0d3b54 field, chart white, marker yellow #f2c230, port red #d8492f; Barlow Condensed + Barlow
+   LAYOUT: deep band with title + tabs, then inputs column beside large live results per check */
+:root{color-scheme:light dark;--bg:light-dark(#f7f8f6,#0a1820);--ink:light-dark(#102430,#e6eef2);--mute:light-dark(#566b76,#93a8b3);--line:light-dark(#d6dee2,#21384a);--card:light-dark(#fff,#0f2330);--sea:#0d3b54;--sea2:light-dark(#d9e8ef,#123448);--mk:#f2c230;--bad:#d8492f;--ok:light-dark(#1f7a8c,#5cc3d4);--water:light-dark(#9cc6da,#1f5a78)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Barlow,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:'Barlow Condensed',Barlow,sans-serif;line-height:1.05;text-wrap:balance;margin:0}
+.band{padding:clamp(24px,4vw,52px) max(5vw,16px)}
+.top{background:var(--sea);color:#eef5f8;padding-bottom:0}
+.top h1{font-size:clamp(32px,5vw,50px);font-weight:700}
+.top p{max-width:70ch;color:#b9d0db;margin:.5em 0 1.2em}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav a{flex:none;color:#cfe0e8;text-decoration:none;padding:12px 16px;font-weight:600;border-radius:8px 8px 0 0;min-height:44px}
+nav a[aria-current]{background:var(--bg);color:var(--ink)}
+nav a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--mk);outline-offset:2px}
+main{max-width:1240px;margin:0 auto}
+section{display:none}section.one.on{display:block;max-width:900px}section.on:not(.one){display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:clamp(20px,3vw,44px)}
+@media(max-width:820px){section.on{grid-template-columns:minmax(0,1fr)}.res{order:-1}}
+h2{font-size:32px;margin-bottom:.3em}.lede{color:var(--mute);margin:0 0 1em;max-width:70ch}
+fieldset{border:0;margin:0 0 18px;padding:0}legend{font-weight:600;color:var(--mute);font-size:14px;margin-bottom:6px}
+label{display:grid;grid-template-columns:minmax(0,1fr) 112px;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line);font-size:15px}
+label small{color:var(--mute);font-size:13px;display:block;line-height:1.3}
+input,select{font:16px Barlow,sans-serif;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px;min-height:44px;width:100%;text-align:right}
+select{text-align:left}input[type=checkbox]{width:24px;min-height:24px;justify-self:end}
+.big{display:flex;flex-wrap:wrap;gap:12px 32px;margin:6px 0 16px}
+.big div{font-size:14px;color:var(--mute)}.big b{display:block;font:700 clamp(30px,4.4vw,46px)/1 'Barlow Condensed',sans-serif;color:var(--ink);white-space:nowrap}
+.fig{position:relative;min-height:300px;background:var(--sea2);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th{text-align:left;font-weight:600;color:var(--mute);font-size:13px;border-bottom:2px solid var(--line);padding:6px 8px}
+td{border-bottom:1px solid var(--line);padding:8px;vertical-align:top}
+td.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+td.r{color:var(--mute);font-size:13px;white-space:nowrap}
+.s{display:inline-block;font-size:13px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.s.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.s.no{background:var(--bad);color:#fff}.s.na{color:var(--mute);border:1px solid var(--line)}
+.s.ex{background:var(--mk);color:#1b1b1b}
+.note{font-size:14px;color:var(--mute);border-left:3px solid var(--mk);padding:4px 0 4px 12px;margin:14px 0;max-width:75ch}
+h3{font-size:22px;margin:22px 0 6px}
+.scroll{overflow-x:auto}
+footer{color:var(--mute);font-size:13px}
+.src{display:inline-block;font:700 11px/1.5 Barlow,sans-serif;padding:0 6px;border-radius:4px;margin-right:6px;vertical-align:1px}
+.src.as{background:var(--sea);color:#fff}.src.rf{background:var(--line);color:var(--ink)}.src.sr{background:#c8893a;color:#1b1b1b}
+.ck{border-top:1px solid var(--line);padding-top:6px}.ckl{grid-template-columns:28px minmax(0,1fr) auto;align-items:start;font-size:15px}.ckl input{width:22px;min-height:22px;justify-self:start;margin-top:2px}.ckl .r{font-size:13px;color:var(--mute);white-space:normal;max-width:12em;text-align:right}.ckc{font-weight:400;margin-left:6px}
+.proj{border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:28px;background:var(--card)}.pgrid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:clamp(16px,3vw,40px)}@media(max-width:820px){.pgrid{grid-template-columns:minmax(0,1fr)}}.proj .big{margin:0 0 8px}
+.legend{font-size:14px;color:#cfe0e8;margin-top:-.6em}
+#tip{position:fixed;z-index:20;max-width:min(420px,90vw);background:var(--ink);color:var(--bg);font:500 14px/1.4 Barlow,sans-serif;padding:9px 12px;border-radius:8px;box-shadow:0 6px 20px #0005;pointer-events:none;display:none}
+abbr.ac{text-decoration:underline dotted color-mix(in srgb,currentColor 45%,transparent);text-underline-offset:3px;cursor:help}
+.s[data-tip],td[data-tip],label[data-tip]>span:first-child{cursor:help}
+tr.sr td:first-child{box-shadow:inset 3px 0 #c8893a;padding-left:12px}
+td.r{white-space:normal;min-width:7.5em}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute);font-weight:400}.stack td:empty{display:none}label{grid-template-columns:minmax(0,1fr) 96px}}
+@media(prefers-reduced-motion:no-preference){#hull{transition:transform .35s ease}}
+</style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head>
+<body>
+<header class="band top"><h1>Marina design checks: AS 3962 vs SRSA</h1>
+<p>Live calculators for the numeric criteria in two marina codes. Each result is tagged with its source and clause. Where both codes set a criterion, the SRSA row sits directly under the AS row so the numbers can be compared.</p>
+<p class="legend"><span class="src as">AS</span> AS 3962:2020 Marina design (Standards Australia) &nbsp; <span class="src sr">SRSA</span> Marina Planning and Design Code v1, Feb 2024 (Saudi Red Sea Authority) &nbsp; <span class="src rf">Ref</span> other references: Tobiasson &amp; Kollmeyer <i>Marinas and Small Craft Harbors</i>, PIANC 149, Top Marine, AS 4100, statics</p>
+<nav id="nav"><a href="#stability">Pontoon stability</a><a href="#layout">Layout &amp; depths</a><a href="#waves">Wave climate</a><a href="#loads">Loads</a><a href="#mooring">Pontoon mooring</a><a href="#vessel">Vessel mooring</a><a href="#gangway">Gangway &amp; access</a><a href="#ramps">Boat ramps</a><a href="#services">Services &amp; safety</a><a href="#aqua">Aquaculture</a><a href="#checklist">Project checklist</a></nav></header>
+<main class="band"><div class="proj"><h2 style="font-size:24px">Project basis</h2><div class="pgrid"><div id="f-project"></div><div id="out-project"></div></div></div>
+<section id="stability"><div><h2>Pontoon flotation &amp; stability</h2><p class="lede">Rectilinear unit, metacentric method of Appendix A. Stability load applied over half the deck width (worst eccentricity), flotation load over the full deck.</p><div id="f-stability"></div></div>
+<div class="res"><div class="big" id="big-st"></div><div class="fig" id="figst"><svg id="svgst" role="img" aria-label="Pontoon cross-section under stability load"></svg></div><div id="out-stability"></div></div></section>
+<section id="layout"><div><h2>Channels, berths &amp; depths</h2><p class="lede">Minimum and preferred dimensions from the design vessel. Beam and draft default from Tables 3.1 and 3.2 (95th percentile); override with surveyed fleet data.</p><div id="f-layout"></div></div><div class="res"><div class="big" id="big-la"></div><div id="out-layout"></div></div></section>
+<section id="waves"><div><h2>Harbour wave climate</h2><p class="lede">Enter significant wave heights inside the basin for each direction and period class. Leave blank where the condition does not occur.</p><div id="f-waves"></div></div><div class="res"><div class="big" id="big-wv"></div><div id="out-waves"></div></div></section>
+<section id="loads"><div><h2>Wind, current &amp; berthing loads</h2><p class="lede">Horizontal design actions per berth pair and per metre of structure, combined with the suggested strength factors of Cl. 4.2.</p><div id="f-loads"></div></div><div class="res"><div class="big" id="big-ld"></div><div id="out-loads"></div></div></section>
+<section id="mooring"><div><h2>Pontoon restraint: guide piles or chains</h2><p class="lede">Holds the floating walkway itself in place (not the piles between boats, which are on the Vessel mooring tab). Takes the design horizontal load for a pontoon section (from the Loads tab, or entered by hand) and checks two restraint options: cantilever guide piles, and chains to gravity blocks.</p><div id="f-mooring"></div></div><div class="res"><div class="big" id="big-mo"></div><div class="fig" id="figmo" style="min-height:300px"><svg id="svgmo" role="img" aria-label="Guide pile and chain mooring elevation"></svg></div><div id="out-mooring"></div></div></section>
+<section id="vessel"><div><h2>Vessel mooring: lines, cleats &amp; intermediate piles</h2><p class="lede">Beam-on wind and current on a berthed vessel, line tension, cleat provision, and the freestanding mooring pile that separates boats in a double berth.</p><div id="f-vessel"></div></div><div class="res"><div class="big" id="big-vm"></div><div id="out-vessel"></div></div></section>
+<section id="gangway"><div><h2>Gangway, walkways &amp; access</h2><p class="lede">Slope from geometry at three water levels, checked against Table 3.5; widths from Tables 3.3 and 3.4.</p><div id="f-gangway"></div></div><div class="res"><div class="big" id="big-gw"></div><div class="fig" id="figgw" style="min-height:240px"><svg id="svggw" role="img" aria-label="Gangway elevation at three water levels"></svg></div><div id="out-gangway"></div></div></section>
+<section id="services"><div><h2>Services, safety &amp; amenities</h2><p class="lede">Firefighting, life-safety equipment, power, water and amenity counts from the berth numbers. AS 3962 Section 6 and SRSA Sections 10–12 side by side.</p><div id="f-services"></div></div><div class="res"><div class="big" id="big-sv"></div><div id="out-services"></div></div></section>
+<section id="ramps"><div><h2>Boat ramps</h2><p class="lede">Public or marina launching ramps for trailered boats: gradient, toe depth, lane width, manoeuvring space, shelter and parking (AS 3962 Section 7, SRSA 10.7).</p><div id="f-ramps"></div></div><div class="res"><div class="big" id="big-pl"></div><div id="out-ramps"></div></div></section>
+<section id="aqua"><div><h2>Offshore aquaculture</h2><p class="lede">Design criteria for floating fish farms from classification rules (DNV, ABS, BV) and national standards (NS 9415, Marine Scotland, ISO 16488), as reviewed by Chu et al. (2023): design life, current, wind, net drag with shielding, load combinations, marine growth and mooring safety factors.</p><div id="f-aqua"></div></div><div class="res"><div class="big" id="big-aq"></div><div id="out-aqua"></div></div></section>
+<section id="checklist" class="one"><div><h2>Project checklist</h2><p class="lede">Whole-of-project requirements from approvals through site investigation, modelling, design, landside facilities and utilities to commissioning. Based on SRSA Appendix I (minimum requirements for an SRSA permit) and SRSA Sections 1–11, with matching AS 3962 clauses. Ticks are saved in this browser.</p><div class="big" id="big-ck"></div><div id="out-checklist"></div></div></section>
+</main>
+<div id="tip" role="tooltip"></div>
+<footer class="band">Values transcribed from AS 3962:2020 (OCR of a licensed scanned copy) and the SRSA Marina Planning and Design Code v1 (Feb 2024). Verify against both documents before relying on a result. SRSA criteria apply within SRSA jurisdiction (Red Sea, KSA); here they are shown for comparison. Defaults are sample values, not a real design. Berthing energy coefficients are not given in AS 3962 and are user inputs (see AS 4997 / PIANC). Inputs are remembered in this browser only. Keep sharing within the Standard's licence terms.</footer>
+<script>
+{
+const EX=[
+["Return period needed for your", "Turns your acceptable risk into a return period. If the installation lasts N years and you accept a chance P that the design event is exceeded at least once in that time, the return period needed is R = 1 / (1 \u2212 (1 \u2212 P)^(1/N)). If the return period you use is at least this, the target is met. Example: 25 years at 10 % needs about 1 in 238; a 1-in-100 event gives 22 %."],
+["Steel structures under ABS / DNV class", "ABS and DNV classification target at least 20 years for steel fish-farm structures, with corrosion allowances to match. If the farm must last longer without dry-docking, the corrosion allowance must be increased. Plastic (HDPE) collars designed to NS 9415 sit outside classification."],["Combined wind, wave and current: ", "ABS (Table 7) combines wind, waves and current at the same return period: 100 years for manned floating fish farms, 50 years for unmanned. A manned farm may use 50 years if the coastal state accepts it. Set manned or unmanned on the Aquaculture tab."],["AS 3962 and the SRSA marina code do not cover", "Neither marina code addresses fish farms, so their design-life and return-period rules are not used for this installation type. Fish-farm criteria come from classification rules (DNV, ABS, BV) and NS 9415, Marine Scotland and ISO 16488."],
+["Floating collar design life","NS 9415 (Norway) requires the floating collar of a fish farm to be designed for at least 10 years."],["Steel structures (ABS, DNV","ABS and DNV classification target at least 20 years for steel fish-farm structures. If the farm must last longer without dry-docking, the corrosion allowance on steel thickness must be increased."],["Extreme-load return period \u2265 2.5","NS 9415 links return period to design life: the extreme load should have about a 2 % chance per year, so the return period is at least 2.5 \u00d7 the design life (20-yr life \u2192 50-yr event)."],["Combined wind, wave and current return period","ABS combines wind, wave and current at the same return period: 100 years for manned farms, 50 years for unmanned. A manned farm may use 50 years if the coastal state accepts it."],["1-yr current","NS 9415 Table 3: measure current for at least four weeks, then multiply the largest value by 1.40, 1.65, 1.85 or 2.00 to estimate the 1-, 10-, 50- or 100-year current."],["10-yr current","NS 9415 Table 3: four-week maximum current \u00d7 1.65 gives the 10-year current."],["50-yr current","NS 9415 Table 3: four-week maximum current \u00d7 1.85 gives the 50-year current."],["100-yr current","NS 9415 Table 3: four-week maximum current \u00d7 2.00 gives the 100-year current."],["Default uniform current","Bureau Veritas: without site current data, classification assumes a uniform 0.5 m/s circulation plus tide, plus a wind-driven part of 2 % of the 10-m wind speed."],["Design current from at least 8","Marine Scotland technical standard: assess current from at least eight directions, including the direction of the strongest current."],["Use the most unfavourable current","NS 9415: design for the current direction that gives the highest load, unless the farm is moored aligned with the prevailing current."],["Design wind","NS 9415: design wind is the 50-year, 10-minute mean at 10 m, from at least three months of measurement extrapolated statistically; 35 m/s if no data exist."],["1-min wind at 10 m","Bureau Veritas minimum 1-minute wind at 10 m: 36 m/s for normal working and transit, 51.5 m/s for the severe storm."],["Wind pressure P","ABS wind pressure in pascals: 0.61 \u00d7 shape coefficient \u00d7 height coefficient \u00d7 V\u00b2, with V the 1-hour mean wind at 10 m. Multiply by the exposed area for force."],["Always state averaging time","DNV: a wind speed means nothing without its averaging time (1 min, 10 min, 1 h) and reference height; 1-minute winds are much higher than 1-hour winds."],["Net drag coefficient","Empirical drag coefficient of a flexible net panel (Lader & Enerhaug) from its solidity Sn (fraction blocked by twine) and inflow angle. Fouling raises Sn and drag sharply."],["Velocity reduction behind one panel","L\u00f8land: each net panel slows the current behind it by r = 0.46 \u00d7 CD, so downstream pens see less current (shielding)."],["Panel ","Current reaching this panel after passing the panels upstream, u = U(1 \u2212 r)^(i\u22121), and its drag \u00bd\u03c1\u00b7CD\u00b7A\u00b7u\u00b2."],["Total net drag on the row","Sum of drag on all net panels in the row. Nets are outside class scope, so this check is the designer\u2019s responsibility."],["Floating unit strength (ULS), case A", "DNV Table 6. Strength means the ultimate limit state: the structure must not fail under the extreme design environment. Wind, waves and current rarely peak together, so DNV checks two cases at the same overall probability and you design for the worse. Case A is the storm case: 100-year wind, waves and sea level with only a 10-year current. It usually governs hull, collar and connection strength at exposed sites."],["Floating unit strength (ULS), case B", "DNV Table 6, the second strength (ultimate limit state) case. It is the current case: 100-year current and sea level with only 10-year wind and waves. It governs at sites with strong tidal currents, and for parts dominated by drag such as nets, submerged members and moorings. Check both A and B and design for whichever gives the larger load effect."],["Floating unit accidental (ALS)", "DNV Table 6 accidental limit state: after damage such as a flooded compartment, a collision or a lost mooring line, the damaged unit must still survive. DNV assumes immediate repair, so it only needs to resist the 1-year (most probable annual maximum) wind, waves, current and sea level."],["Nets and their supports, case 1", "DNV fish-escape guidance (Table 8). Net pens are the fish nets and the ropes, weights and sinker tubes that hold them in shape. Unlike the floating collar, nets are loaded mostly by current drag, not waves, so they get their own pairings. Case 1 is the current case: at least the 50-year current with only 10-year wind and waves. It usually governs net strength and net deformation (volume loss)."],["Nets and their supports, case 2", "DNV fish-escape guidance (Table 8), second net case: at least the 10-year current with 100-year wind and waves. It covers storms, when wave-driven collar motion jerks the net and its weights. Check both cases and design the net and supports for the worse. Nets are outside class scope, so this check is the designer\u2019s responsibility."],["Moorings, case 1", "Marine Scotland technical standard (Table 9). Case 1 is the current case: 50-year current with 10-year waves. Mooring lines are checked for both case 1 and case 2 and sized for the worse."],["Moorings, case 2", "Marine Scotland technical standard (Table 9). Case 2 is the wave case: 10-year current with 50-year waves. Where waves are not modelled at all, the mooring is checked for the 50-year current alone."],["Moorings: 100-yr of one","ABS position mooring guide: take the 100-year value of each of waves, wind and current in turn, with associated values of the others."],["Moorings ULS and ALS","DNV mooring standard: at least 100-year wind, wave and current for the ultimate and accidental checks; Norway and UK may use 100/100/10 except at strong-current sites."],["Mass M = ","DNV: mass per metre of marine growth on a mooring line, from the growth thickness, density 1325 kg/m\u00b3 and a factor 2 for chain (links) or 1 for rope."],["Submerged weight W","Weight of the growth in water: its mass less buoyancy, M(1 \u2212 \u03c1seawater/\u03c1growth)g."],["Drag coefficient CD \u00d7","DNV: growth makes the line thicker, so drag rises in proportion to (D + 2\u0394t)/D. Base CD from DNV Table 11 by line type."],["Include marine growth","Marine growth adds mass, drag and net solidity; include it on any part not regularly cleaned."],["DNV ULS","DNV ultimate check: factored mean plus dynamic tension (or a single factor in quasi-static analysis) must not exceed the line\u2019s minimum breaking load. Factors rise for consequence class 2."],["DNV ALS","DNV accidental check after losing one line: lower factors, but the remaining lines must still hold."],["ABS all intact","ABS safety factor on total tension for an intact system: 2.25 dynamic, 2.7 quasi-static. With one line broken: 1.57/1.8 at the new equilibrium, 1.22/1.4 during the transient."],["Class 1: failure","DNV consequence classes: 1 \u2013 mooring failure is unlikely to cause loss of life, collision, pollution or sinking (pen empty); 2 \u2013 failure could (fish on board)."],["Single-point mooring","A single-point mooring has no redundancy, so DNV skips the ALS check but multiplies factors by 1.2 and requires an emergency disconnect."],["Synthetic fibre ropes","Fibre ropes stretch and creep nonlinearly; DNV requires the manufacturer to test samples (DNV-OS-E303) to establish properties."],["Classification rules for fish farms","DNV, ABS and Bureau Veritas have rules to class offshore fish farms, mainly steel or metallic structures; BV also covers nearshore submerged pens."],["Ship-shaped","Class design codes for ship-shaped fish farm units."],["Column-stabilised","Class design codes for column-stabilised (semi-submersible) fish farms."],["Spar / deep draught","Class design codes for spar or deep-draught fish farms."],["NS 9415 Marine fish farms","Norwegian standard for design, dimensioning, installation and operation of floating fish farms \u2013 the first of its kind, mainly for nearshore sites."],["Marine Scotland technical standard","Scottish technical standard for finfish farm equipment, written to minimise fish escapes."],["ISO 16488","International standard for systematic analysis, design and operation of open net cage finfish farms, aimed at reducing escapes."],["Analysis: diffraction panels","Large hulls need radiation\u2013diffraction (panel) analysis; slender members (diameter < wavelength/5) use the Morison equation. Newman\u2019s approximation speeds slow-drift calculation but can underestimate vertical modes and shallow-water effects."],["Pre-service (load-out","Besides operation, check lifting, towing and installation, plus accidents: flotation loss, vessel collision, line or connector failure, slamming and sloshing."],
+['mm: φMs','Bending capacity of the intermediate pile after corrosion loss: 0.9 × yield stress × elastic section modulus. Utilisation = design moment / capacity must be ≤ 100 %.'],
+['Finger width ≥ 10 %','SRSA 8.3.7: finger width at least 10 % of berth length, rounded up to the nearest 0.25 m, and 3 m for superyachts (> 24 m). For larger boats this is wider than AS.'],
+// ---- project
+['Defaults for','The values the page uses when you leave Design life or Return period blank. They come from the code minimums for the installation type you picked: AS 3962 Cl. 4.16 (25 yr for marina structures) and SRSA 7.1 (50 yr permanent, 20–30 yr floating, ≤ 5 yr temporary; 1 in 100 yr events for permanent works).'],
+['Marina structures, gangways and piling ≥ 25','AS 3962 Cl. 4.16 requires marina structures, gangways and piling to be designed to last at least 25 years. Parts that are easy to swap (pile guides, rollers, rubbing strips) are excluded. A shorter life is only defensible for a genuinely temporary installation, and AS gives no rule for that, so it is a documented project decision.'],
+['Floating elements typically','SRSA 7.1.1 gives a design-life band for each kind of element: floating elements 20–30 yr, permanent civil works, pipework and plant at least 50 yr, temporary works 5 yr or less. The check compares your design life against the band for the installation type selected.'],
+['Permanent facilities, civil','SRSA 7.1.1 expects permanent marina facilities, civil structures, pipework and mechanical plant to be designed for at least 50 years.'],
+['Temporary works ≤ 5','SRSA 7.1.1 allows temporary works a design life of 5 years or less. Beyond that the works are treated as permanent.'],
+['Extreme events (wave, surge, flood)','AS 3962 Cl. 4.1: strength design for waves, storm surge and flooding uses at least the 1-in-50-year event; wind follows AS/NZS 1170.0 for the structure’s importance level. The return period is the average time between events of that size, not a guarantee they are that far apart.'],
+['Permanent structures and facilities ≥ 1 in 100','SRSA 7.1.2 uses at least a 1-in-100-year event for the ultimate (strength) design of permanent marina structures. It is stricter than AS 3962 (1 in 50).'],
+['Temporary works: 1 in 20','SRSA 7.1.2 lets temporary works use a return period between 20 and 50 years, chosen in proportion to their life and the risk the client accepts.'],
+['Risk-based return period','Turns an acceptable risk into a return period. If the structure lasts N years and you accept a chance P that the design event is exceeded at least once in that time, the return period needed is R = 1 / (1 − (1 − P)^(1/N)). Example: 25 years and 10 % risk needs about a 1-in-238-year event; the common 1-in-100 gives a 22 % chance instead.'],
+['Chance of exceedance in design life','The probability that an event of the given return period happens at least once during the design life: 1 − (1 − 1/R)^N. It shows why a "1-in-100-year" event is not rare over a long life: over 50 years it has a 39 % chance.'],
+['Sea-level rise and storm changes','AS 3962 Cl. 2.3.2.6 and SRSA 6.7.2 require climate change (sea-level rise, storm intensity and frequency) to be considered over each structure’s design life. The sea-level-rise allowance is entered on the Pontoon mooring tab and raises the design water level used for pile heights and restraint geometry.'],
+// ---- stability
+['Waterplane area','The area of the float cut by the water surface: length × float width. Every 1 m of sinkage displaces A m³ of water, so A sets how much the unit sinks under load (draft = mass / (ρ·A)).'],
+['Second moment I','The second moment of area of the waterplane about the pontoon’s long axis, I = L·b³/12. It measures how strongly the waterplane resists rolling: because width is cubed, a slightly wider float is much more stable.'],
+['Dead-load draft','How deep the unit floats under its own weight only (structure, deck, services full of water): draft = dead mass / (ρ·A). AS 3962 App. A Eq. A.3(2).'],
+['Dead-load freeboard in range','SRSA 9.4.3: pontoons for small boats usually have 0.40–0.50 m freeboard (deck height above water); for vessels over 20 m, 0.60–0.75 m so the boat deck is easier to reach. Freeboard should also stop waves washing over the deck.'],
+['Dead-load freeboard','Height from the water to the top of the flotation unit with no live load. If it is negative the unit sinks under its own weight.'],
+['Flotation load','AS 3962 Table 4.1 flotation load: a uniform live load spread over the whole deck (3 kPa unrestricted, 2 kPa restricted access) used to size the buoyancy. Under it the unit must still keep at least 50 mm of freeboard (reserve buoyancy) – Cl. 4.7.1(b).'],
+['Freeboard under flotation load','Freeboard remaining when the full flotation load is on the deck. AS 3962 Cl. 4.7.1(b) requires at least 50 mm, so the unit never floats flush with the water under a crowd.'],
+['Stability load','AS 3962 Table 4.1 stability load (2 kPa unrestricted, 1.5 kPa restricted, 1.0 kPa rowing pontoons) placed on half the deck width only, so it tilts the unit. This is the worst case for heel: e.g. everyone standing along one edge.'],
+['Heeling moment','The tilting moment from the stability load: the load on half the deck acts at a quarter of the deck width from the centreline, so moment = load × b/4. App. A Cl. A.3(d).'],
+['Loaded draft','Draft with dead load + stability load + any gangway load: total mass / (ρ·A). App. A Eq. A.3(4).'],
+['VCG above keel','Height of the centre of gravity above the bottom of the float. As printed, App. A divides only the dead-load moments by the total weight, which effectively puts the live load at keel level (unconservative). Tick "Live load CG at deck level" to put people at deck height instead.'],
+['BM = I/V','Metacentric radius: the height of the metacentre M above the centre of buoyancy B, = I / displaced volume. App. A Eq. A.3(5). A wide, shallow-floating unit has a large BM.'],
+['GM = BM','Metacentric height: how far the metacentre M sits above the centre of gravity G. GM = BM + (draft/2) − hg (B is taken at half the draft). If GM is positive the unit returns upright after tilting; if negative it capsizes. App. A Eq. A.3(6), Cl. 4.13.1.'],
+['Heel angle','The angle the unit tilts under the stability load: tan φ = moment / (weight × GM). App. A Eq. A.3(7). The metacentric method is only valid up to 15° (Cl. A.1).'],
+['Freeboard to top of flotation, low side','The governing stability check. On the low (heeled) side, freeboard = depth − (draft + ½·width·tan φ). AS 3962 Cl. 4.13.2.1 wants at least 50 mm here (125 mm for rowing pontoons, Cl. 4.13.2.2).'],
+['Opposite chine immersion','The chine is the bottom outside edge of the float. On the high side it rises by ½·width·tan φ. Cl. 4.13.2.1 requires it to stay under water; if it lifts out, the waterplane suddenly shrinks and stability drops sharply.'],
+['Waterplane ≥ 85','Rowing and launching pontoons (Cl. 4.13.2.2) may use a reduced 1.0 kPa stability load and skip the stability calculation, but only if the floats cover at least 85 % of the deck area, run up to the deck, and freeboard is 125 mm.'],
+['Flotation narrower than deck','If the float is narrower than the deck, the reserve buoyancy must be checked with the maximum float width × 50 mm (Cl. 4.7.1(b)), because the deck edge can reach the water before the float runs out of buoyancy.'],
+['Design life (Project basis','The design life you set in Project basis at the top of the page. Change it there; it is shown here for reference.'],
+['Stability and buoyancy method','SRSA does not give its own stability method: it points to AS 3962 (this calculation), PIANC WG 149 Part IV, BS 6349 and the Saudi Building Code.'],
+['Heave, no added mass','Natural period of bobbing up and down, ignoring the water that moves with the float: T = 2π√(m / (ρ·g·A)). Mass m resists motion; the waterplane stiffness ρ·g·A pulls it back. This underestimates the real period.'],
+['Heave incl. added mass','Heave period including the water dragged along with the float ("added mass"). For a flat rectangular section it is roughly ρ·π·b²·L/8 (a strip-theory approximation) and is often larger than the pontoon itself, so the real period is much longer than the no-added-mass value. The multiplier lets you tune it from model tests or diffraction analysis.'],
+['Roll:','Natural period of rocking side to side: T = 2π·k·√((1 + added inertia)/(g·GM)), with k the roll radius of gyration (about 0.35 × float width for a uniform box). A large GM gives a short, snappy roll. If it matches the wave period, roll motion is amplified.'],
+['Pitch:','Natural period of rocking end to end, using the longitudinal metacentric height GM_L (very large for a long unit) and a gyradius of L/√12. Long units pitch with short periods and rarely resonate with harbour waves.'],
+['Wave period compared','The peak period of the waves at the berth (Waves tab, or the override in Stability inputs). A natural period within ±20 % of it is flagged because the pontoon may resonate, giving large motions and uncomfortable decks.'],
+['Static response: sinkage','How much the deck sinks per 1 kPa of people spread over it: 1000 / (ρ·g) × deck width / float width. AS 3962 Cl. 4.13.2.3 warns that lightly built pontoons can respond so fast and so much to pedestrians that they feel unsafe, which is why minimum live loads are used for buoyancy.'],
+['Standard pontoons only','SRSA 9.4.3: standard pontoon systems are generally not suitable where waves exceed about 1 m in height or 5 s in period; beyond that a bespoke design (or wave protection) is needed.'],
+// ---- layout
+['Entrance channel, minimum: max','AS 3962 Cl. 3.1.1.2: minimum entrance width is the largest of 20 m, (longest vessel + 2 m) and 5 × the beam of the broadest monohull. Wind, waves and currents reduce manoeuvrability, so the entrance needs room for two-way traffic.'],
+['Entrance, minimum two-way','SRSA 8.3.1: minimum two-way entrance width is the larger of 20 m and 5B, and at least 6B for superyachts over 24 m. Unlike AS it has no (L + 2) term.'],
+['Entrance narrowing at breakwater','AS 3962 Cl. 3.1.1.2: to limit wave penetration the entrance may be narrowed over a short length at the breakwater heads, to no less than max(15 m, 3B). If narrower, "Narrow Channel" warning signs are required.'],
+['Entrance narrowing: max','SRSA 8.3.1: the same short narrowed section, max(15 m, 3B), treated as one-way traffic.'],
+['Entrance channel, preferred','AS 3962 Cl. 3.1.1.3: preferred entrance width max(30 m, 6B). Widen further where the channel changes direction.'],
+['Entrance preferred max','SRSA 8.3.1: preferred max(30 m, 6B); widen to 8–9B if the entrance is used in storms or has strong cross winds or currents; and, where possible, make it wider than the longest vessel so a disabled boat cannot block it.'],
+['Internal channel min','AS 3962 Cl. 3.1.2(a): channels inside the marina linking the entrance to the fairways. Minimum max(20 m, 1.5L), preferred max(25 m, 1.75L), L = longest vessel using the channel.'],
+['Interior channel min','SRSA 8.3.3: interior channels sized for two-way traffic unless one-way is planned: minimum max(20 m, 1.5L), preferred max(25 m, 1.75L).'],
+['Fairway min 1.5L / preferred 1.75L','AS 3962 Cl. 3.1.2(b): the fairway is the water between rows of berths that boats use to reach their berth. Minimum 1.5L, preferred 1.75L, L = longest vessel berthed on that fairway.'],
+['Fairway min 1.5L / preferred 1.75–2L','SRSA 8.3.4: 1.5L is fine for finger berthing in calm conditions; use 1.75–2L where wind or current is strong, boats lack bow thrusters, or berthing is stern-to.'],
+['Current in fairways','AS 3962 Cl. 3.1.2: where currents exceed 0.5 m/s, channels and fairways must be widened because the current pushes boats sideways while they turn into berths.'],
+['Current > 0.5 m/s','SRSA 8.3.3–8.3.4 gives a number for the AS "widen" rule: above 0.5 m/s current, use 2L.'],
+['Turning circle','SRSA 8.3.5: a clear basin for turning, at least 1.5L in diameter. Superyachts with thrusters may manage with 1.3L; vessels without thrusters can need up to 3.5L.'],
+['Multihull share','AS 3962 Cl. 3.1.2: catamarans and trimarans are wide and catch more wind, so if they are more than 25 % of the fleet, channels and fairways should be widened.'],
+['Design draft','Draft of the design vessel from AS 3962 Table 3.1 (average or 95th percentile by type and length), unless you enter a surveyed value. Yachts draw most; Table 3.1 gives no catamaran drafts above 30 m.'],
+['+ ½ Hs','Allowance for the boat moving up and down in waves and wake: half the significant wave height (AS 3962 Cl. 3.2.1.2(a); SRSA 8.3.2).'],
+['+ siltation allowance (input)','Extra depth for sediment settling between maintenance dredging campaigns (AS 3962 Cl. 3.2.1.2(b)). Depends on sediment supply and how often you plan to dredge.'],
+['+ siltation allowance, typically','SRSA 8.3.2 uses a siltation allowance of typically 0.3 m, more where siltation risk is high.'],
+['+ under-keel clearance (','AS 3962 Cl. 3.2.1.2(c)/(d): clear water left under the keel: max(0.3 m, 10 % of draft) over soft bed, 0.5 m over hard bed (stiff clay, gravel, rock) because touching hard ground damages hulls.'],
+['+ UKC:','SRSA 8.3.2 under-keel clearance: the larger of 10 % of draft and a value that grows with vessel length (0.3 m ≤ 8 m, 0.5 m ≤ 35 m, 0.75 m ≤ 60 m, 1.0 m above), and at least 0.3 m soft / 0.5 m hard bed.'],
+['Entrance channel depth','Required depth below chart datum = draft + ½Hs + siltation + under-keel clearance. AS 3962 Cl. 3.2.1.2 and SRSA 8.3.2 use the same build-up with different allowances; both rows are shown so you can see the difference.'],
+['Berth depth at low tide','AS 3962 Cl. 3.2.3: the deepest-draft boat using a berth must never touch bottom at low tide. Same build-up without siltation. Base it on yacht drafts unless a bridge or similar keeps yachts out.'],
+['Powerboats ≥ 24 m','SRSA 8.3.2: for power vessels 24 m and longer, check the entrance depth against PIANC WG 134 (superyacht guidance), and check air draft (height above water) under any fixed bridge at HAT plus surge plus sea-level rise.'],
+['Vessel beam','Beam of the berth design vessel from AS 3962 Table 3.2 (95 % of vessels are narrower), unless overridden.'],
+['Single berth: B + 1 m','AS 3962 Cl. 3.3.2(b): clear width between fingers or piles for one boat: beam + 1 m up to 20 m long, beam + 1.5 m above. Increase for large fenders.'],
+['Single berth: B + 1.5 m','SRSA 8.3.9: single berth = beam + 1.5 m up to 20 m, beam + 2 m above – wider than AS. Over 24 m, verify against PIANC WG 134.'],
+['Double berth: 2B + 1','AS 3962 Cl. 3.3.2(a): two boats side by side between fingers: 2 × beam + 1 m (≤ 20 m), + 1.5 m (20–30 m), + 2 m (30–50 m). Add the pile width if an intermediate pile sits between them (Cl. 3.3.3).'],
+['Double berth: 2B + 2 m','SRSA 8.3.9: double berth = 2 × beam + 2 m up to 20 m, + 3 m above – wider than AS.'],
+['Vessels > 24 m: verify','SRSA 8.3.9: for superyachts (> 24 m) the simple berth formulae are only a start; verify widths with PIANC WG 134.'],
+['Berth length','AS 3962 Cl. 3.3.2: berth length is taken as the vessel length. Mark the maximum boat length for each berth on the layout drawing.'],
+['Finger length ≥ 0.8L','AS 3962 Cl. 3.5.4: without a mooring pile at its end, a finger must be at least 0.8 × the longest boat using the berth so the crew can step off and tie lines. With an end pile it may be shorter or omitted.'],
+['Finger length min 0.8L','SRSA 8.3.7: minimum 0.8L; ideally the full boat length (1.0L) for access along the whole hull and to the stern lines.'],
+['Finger > 12 m','SRSA 8.3.7: fingers longer than 12 m should have an end restraint pile or mooring, so a boat hitting the finger end doesn’t overload the finger–walkway joint.'],
+['Finger width','AS 3962 Cl. 3.5.4: wide enough to board safely: 0.9 m uniform, or tapered to 0.6 m at the tip.'],
+['Finger width ≥ 10 %','SRSA 8.3.7: finger width at least 10 % of berth length, rounded up to the nearest 0.25 m, and 3 m for superyachts (> 24 m). For larger boats this is wider than AS.'],
+['Alongside gap','AS 3962 Cl. 3.3.2: boats moored end to end along a walkway need a gap of at least 0.2 × the longer boat (preferred 0.25×) for lines and manoeuvring.'],
+['Alongside spacing ≥ 3 m','SRSA 8.3.9: at least 3 m between boats moored alongside, adapted for superyacht mooring-line needs.'],
+['Mooring points, floating berth','AS 3962 Cl. 3.5.5: at least three mooring points (cleats) along each side of a floating berth, and two more on the walkway for the two boats of a double berth.'],
+['Cleats per finger side','SRSA 10.5.2: cleats per side of finger by finger length (≤ 7.5 m: 2, ≤ 12 m: 3, > 12 m: 4); one on the main walkway between boats in a double berth; alongside berths every 3 m.'],
+['Intermediate mooring pile between','AS 3962 Cl. 3.3.3: a freestanding pile at the outer end of a double berth, between the two boats, so each boat ties to its own finger and the pile rather than leaning on its neighbour. Needed where wake or wind waves exceed 0.3 m or there are strong cross winds or currents. It is not a pontoon guide pile. Sized on the Vessel mooring tab.'],
+// ---- waves
+['Head seas, Tp < 2','AS 3962 Table 4.2: waves arriving within 22.5° of the boats’ centrelines (bow or stern on) with a peak period under 2 s (short chop, wake). Only the once-a-year limit applies (0.3 m); a 50-year event of this type is not expected.'],
+['Head seas, Tp > 2','Head seas with period over 2 s (longer wind waves, swell). Good limits: 1-yr Hs < 0.3 m, 50-yr Hs < 0.6 m. Boats pitch less than they roll, so head seas are tolerated best.'],
+['Oblique seas','Waves arriving between head and beam (22.5°–67.5° to the centreline), period over 2 s. Good limits: 1-yr Hs < 0.3 m, 50-yr Hs < 0.4 m.'],
+['Beam seas, Tp < 2','Waves arriving within 22.5° of abeam (side-on), short period. Good limit: 1-yr Hs < 0.3 m.'],
+['Beam seas, Tp > 2','Side-on waves with period over 2 s – the worst case because boats roll. Tightest limits: 1-yr Hs < 0.15 m, 50-yr Hs < 0.25 m. Excellent = 0.75 × these, Moderate = 1.25 ×.'],
+['Fleet requirement','Table 4.2 note: for vessels under 20 m the worst wave climate must be moderate or better (≤ 1.25 × the good limits). Larger vessels can accept a more severe climate.'],
+['Head sea 50-yr Hs > 0.4','AS 3962 Cl. 4.8.2.1: if the 50-year head-sea Hs exceeds 0.4 m, you must consider intermediate mooring piles in double berths – freestanding piles between the two boats so they don’t surge into each other.'],
+['Max wave height','Table 4.2 note: the maximum individual wave must not exceed 1.5 × the moderate Hs limit. Hmax is roughly 1.8 × Hs (C4.8.2.2).'],
+['Minimum horizontal wave force','AS 3962 Cl. 4.8.2.3: without a detailed analysis, design every floating element for at least 2 kN per metre of length horizontally under the Table 4.2 wave conditions.'],
+['Standard pontoons: H','SRSA 9.4.3: off-the-shelf pontoons are generally unsuitable where waves exceed 1 m or 5 s period. The check uses the largest 50-yr Hs or Hmax and the wave period you entered.'],
+['Wave criteria: SRSA adopts','SRSA 9.1 uses the same ASCE Manual 50 "tranquillity" criteria that AS 3962 Table 4.2 and PIANC are based on, so the limits above apply to both.'],
+['Design return period for structures','AS 3962 Cl. 4.1: waves, surge and flooding for strength design use at least the 1-in-50-year event.'],
+['Design return period, permanent','SRSA 7.1.2: permanent structures are designed for at least the 1-in-100-year event (ultimate limit state).'],
+['Operational (SLS) condition','SRSA 7.1.2: day-to-day (serviceability) conditions are taken from conditions exceeded 1–3 % of the time each year, which set acceptable downtime at the berths.'],
+// ---- loads
+['q = 0.0006','AS 3962 Eq. 4.8.3.3(1): wind pressure in kPa from the design wind speed V (m/s): q = 0.0006·V² (≈ ½ρ_air·V²). V is the 30-second steady ultimate wind at up to 3 m height (Cl. 4.8.3.1–2).'],
+['Vessel area, beam','AS 3962 Table 4.4: minimum windage area of a moored vessel seen side-on (beam) and end-on (head), by length and type. Motor boats have more superstructure than yachts.'],
+['Force per vessel, beam','Wind force on one boat broadside: F = Cd × A × q (Eq. 4.8.3.3(2)), Cd from Table 4.3 (0.9–1.1 beam on).'],
+['Force per vessel, head','Wind force with the wind on the bow: Cd ≈ 0.8 (Table 4.3: 0.7–0.9) times the head area.'],
+['Row of','AS 3962 Cl. 4.8.3.3: for boats each side of a walkway, the windward boats take the full wind force and the sheltered leeward boats 20 % of it. Total = n × F × 1.2.'],
+['Structure: Cd','Wind on the marina structure itself (gangway trusses, shelters, piles above water): Cd 2.0 rectangular, 1.2 round.'],
+['Total wind on section','Sum of wind on all boats in the row plus the structure – the wind term W used in the load combinations.'],
+['p = ½ρ','AS 3962 Eq. 4.8.4.3(1): current pressure p = ½·ρ·Cd·v². Water is about 800× denser than air, so even 1 m/s gives ~1 kPa on a flat face. Minimum design current 1.0 m/s in estuaries and rivers (Cl. 4.8.4.2).'],
+['Force on element','Current force = pressure × projected area facing the flow.'],
+['Debris mat depth','AS 3962 Cl. 4.8.4.4: in floods, logs and rubbish pile up against structures. Design for a debris mat at least 2 × pontoon draft deep (1.2 m for fixed structures).'],
+['Debris load per metre','Debris mat force per metre of structure: current pressure (Cd 2.0) × mat depth, but at least 10 kN/m (Cl. 4.8.4.4).'],
+['Negative lift','AS 3962 Cl. 4.8.4.5: flow under a pontoon in a flood creates suction on the leading edge that can pull it under. It grows with velocity squared.'],
+['Wave force used','Horizontal wave force on the section: your analysis value, or the 2 kN/m minimum × exposed length (Cl. 4.8.2.3).'],
+['W + 1.5 C + 1.5 Wv','AS 3962 Cl. 4.2(a)(i) strength combination for pontoon piling: wind (already ultimate) + 1.5 × current + 1.5 × wave, with piles checked at HAT (and at LAT where depths vary).'],
+['0.8 W + 1.25 C','Cl. 4.2(a)(iii): where floods or surges occur, a second combination at the maximum water level: 0.8 × wind + 1.25 × current + 1.25 × wave.'],
+['Marina itself: add 1.5','Cl. 4.2(b): for the marina structure (pontoons, connections) add 1.5 × the vertical effect of waves (pontoons lifted and dropped).'],
+['Return period: waves, surge, flood','AS 3962 Cl. 4.1: at least 1 in 50 years for waves, surge and flood; wind to AS/NZS 1170.'],
+['Return period, permanent structures ≥ 1 in 100','SRSA 7.1.2: 1 in 100 years for permanent structures, 20–50 years for temporary.'],
+['Seismic loads','SRSA 9.5: earthquake loads on marine structures and foundations must be considered per the Saudi Building Code. AS 3962 does not address seismic loads.'],
+['Load cases: full occupancy','SRSA 9.5: consider all actions together for realistic scenarios, including a fully occupied marina, and record the design criteria and where they came from.'],
+['Fixed jetty deck','SRSA 9.4.2: a fixed jetty deck must sit above the design high water + sea-level rise + wave crest so it is not submerged, and uplift from waves under the deck must be designed for.'],
+['Access category','AS 3962 Cl. 4.3: "restricted access" applies only to private facilities for two vessels or fewer; everything else is "unrestricted" and uses the higher live loads.'],
+['Gangway, unrestricted','AS 3962 Cl. 4.5.1: design gangways for 4 kPa over the clear width and length, or a 4.5 kN point load on a 100 × 100 mm patch, whichever is worse.'],
+['Gangway, restricted','AS 3962 Cl. 4.5.2: private gangways: 3 kPa plus a handrail load to AS 1170.1, or the 4.5 kN point load.'],
+['Fixed walkways and fingers, unrestricted','AS 3962 Cl. 4.6.1: fixed (piled) walkways and fingers: 5 kPa, or 4.5 kN point load.'],
+['Fixed walkways and fingers, restricted','AS 3962 Cl. 4.6.2: private fixed walkways: 3 kPa, or 4.5 kN point load.'],
+['Floating structures: 3 kPa','AS 3962 Cl. 4.7.2: floating structure strength: 3 kPa over the deck (excluding under gangways) or over the worst part, or the 4.5 kN point load, plus the reaction from any gangway landing on it.'],
+['Flotation / stability loads','AS 3962 Table 4.1 buoyancy loads, checked on the Stability tab.'],
+['Dead load includes','AS 3962 Cl. 4.4: dead load includes the structure plus services – cables, and water pipes and fittings full of water.'],
+['Gangway and connections: loads','AS 3962 Cl. 4.12: the pontoon moves sideways under load; the gangway and its hinges and rollers must be designed for the forces that movement causes.'],
+['SRSA: no separate values','SRSA 9.5 does not set its own live loads; it refers to AS 3962, PIANC 149 Part IV, BS 6349 and the Saudi Building Code.'],
+['Design displacement','AS 3962 Table 4.6: minimum vessel mass for berthing energy, by length (95 % of vessels are lighter).'],
+['Berthing velocity','AS 3962 Cl. 4.9: speed of the boat moving sideways into the berth: at least 0.3 m/s; 0.2 m/s for 25–34 m yachts; 0.15 m/s above 34 m.'],
+['E = ½ M v²','Berthing energy the structure must absorb: ½ × mass × velocity² × Ce × Cm. Ce (eccentricity, ≈ 0.5 for quarter-point impact) and Cm (added mass of water moving with the boat, ≈ 1.5) are not given in AS 3962 – your inputs, e.g. from AS 4997 or PIANC.'],
+['Factored impact','AS 3962 Cl. 4.2(c): the vessel impact load is factored by 1.25 and taken alone, without wind, wave or current.'],
+// ---- mooring (pontoon)
+['From Loads tab','The total horizontal design load on the pontoon section, taken from the Loads tab combination W + 1.5C + 1.5Wv (Cl. 4.2(a)(i)), or the value you entered manually. This is what the restraints must hold.'],
+['Manual design load','The total horizontal design load on the pontoon section that you entered, used instead of the Loads tab value.'],
+['Most-loaded restraint share','Restraints never share load perfectly: some are stiffer, nearer the load, or pretensioned differently. This factor scales the average load up to the most-loaded restraint (1.2–1.5 is common without analysis).'],
+['Design water level range','From the lowest still water level to the 1-in-100-year still water level plus sea-level rise. Every restraint must work over this whole range.'],
+['Anchorage elasticity','AS 3962 Cl. 4.11: stretchy anchorages (chains, elastic rodes) let the structure move and change how load reaches each attachment point; design the connections for that.'],
+['Pile top ≥ design level','AS 3962 Cl. 4.14: pile height must suit at least a 1-in-100 ARI water level plus waves and sea-level rise, so the pontoon cannot float off the top. Pile top ≥ design still water + wave crest + freeboard + guide height; otherwise fit a tether.'],
+['Load on most-loaded pile','Total design load × share factor ÷ number of guide piles. The load is applied where the guide (roller collar) bears on the pile, at deck level.'],
+['Lever: guide level','The cantilever length used for bending: from the guide at the highest design level down to the point of fixity below the seabed (soil does not fully grip at the mudline). Tobiasson Ch. 17.1.'],
+['Design moment M*','Bending moment at the point of fixity: pile load × lever. This is the maximum moment in a cantilever pile.'],
+['Steel pipe','Elastic section modulus Ze of the pipe after corrosion wall loss: π(D⁴ − d⁴)/(32D). Bending capacity is proportional to it.'],
+['φMs = 0.9','Design bending capacity of the steel pipe (AS 4100 style): 0.9 × yield stress × section modulus. Utilisation = M* / φMs must be ≤ 100 %. The elastic modulus is used, which is conservative for compact pipes.'],
+['Pontoon excursion at guide','How far the top of the pile – and so the pontoon – moves sideways under the design load, treating the pile as a cantilever fixed at the fixity point: δ = P·L³ / (3·E·I), with P the pile load, L the lever, E = 200 GPa steel stiffness and I the pipe’s second moment of area. Because L is cubed, deeper water or deeper fixity makes the pile much more flexible. The movement matters for gangway rollers, service pipes and cables crossing to the shore, and finger connections (AS 3962 Cl. 4.12). There is no code limit; check it against what those connections can take.'],
+['Smallest standard round pipe','The smallest pipe from a list of common steel pipe sizes whose bending capacity (after corrosion loss) is at least M*. A sizing aid: confirm availability and do a full design.'],
+['Depth to fixity','Tobiasson Ch. 17.1 and App. 2: a laterally loaded pile bends about a point below the seabed, usually 0.6–3 m down; 0.9–1.5 m is a common trial value without soil data. Very weak soils give no fixity and must be ignored or load-tested.'],
+['Embedment ≥ about 4.5','Tobiasson App. 2: piles generally need at least 15 ft (≈ 4.5 m) embedment in competent soil, often 20–40 ft (6–12 m). Confirm by geotechnical analysis or a pile load test.'],
+['Pile height build-up','Tobiasson Fig. 17-3: pile height = low water + depth + half the storm wave + float freeboard + extra pile above the float. Covered here by the pile-top check.'],
+['Use round pipe, not H-piles','Tobiasson Ch. 13: marina piles are loaded from any direction; a round pipe is equally strong every way and needs no orientation when driven. H-piles are weak sideways and corrode on a larger surface.'],
+['Between pile arrays change the diameter','Tobiasson Ch. 17.1: if different areas need different piles, change the diameter, not just the wall thickness, so piles that look alike can’t be swapped on site.'],
+['Corrosion: extra wall thickness','Tobiasson Ch. 11, 13: add sacrificial wall thickness or coat the pile (coal-tar epoxy, fusion-bonded epoxy, galvanising). Seal both ends of hollow pipes – the trapped air loses its oxygen and internal corrosion stops; concrete fill adds eccentric load as the pile bends.'],
+['Pile splices','Tobiasson Ch. 13: splice pipe piles with full-penetration butt welds on a backing ring. Never weld used or unknown pipe (often high-strength oil casing) with mild-steel rod: the weld fails under load.'],
+['Group piles of similar','Tobiasson Ch. 17.1: divide the marina into arrays with similar boats, soil and water depth, and design the piles for each array separately.'],
+['Guides: rollers','Tobiasson Ch. 17.2: use rubber or plastic rollers on stainless axles rather than sliding collars, which wear flat and jam. Guides must take the full pile load in any horizontal direction and be welded or through-bolted to the pontoon frame.'],
+['Place piles along main walkway','Tobiasson Ch. 17.2: put piles along the main walkway, not at finger ends (which would load the finger joints), and arrange them so the prevailing load pushes the pontoon onto the pile (compression on the frame), not pulling the hoop.'],
+['Also check piles at LAT','AS 3962 Cl. 4.2 Note 2: where depth varies along the section, piles in shallower water are stiffer and attract more load, so check at LAT too.'],
+['Water depth at design level','Depth of water from the design still water level to the seabed – what the chain must span.'],
+['Horizontal load per leg','Total design load × share factor ÷ number of mooring legs resisting it.'],
+['Chain submerged weight','Weight per metre of chain in water (0.87 × air weight in sea water). The chain’s own weight makes it hang in a curve (catenary), which is what keeps the pull at the anchor horizontal.'],
+['Minimum suspended length','The length of chain that hangs between the pontoon and where the chain touches the seabed, when the chain is tangent to the bottom (no uplift on the anchor): s = √(h² + 2·h·H/w). More pull H or lighter chain needs much longer chain.'],
+['Scope s / h','Chain length ÷ water depth. Tobiasson shows the old 3:1–5:1 rules lift the anchor under real loads; the needed scope grows with the pull.'],
+['Horizontal distance pontoon','Plan distance from the pontoon to the chain touchdown point – the footprint the mooring needs on the seabed, which must stay clear of fairways.'],
+['Top tension T','Tension at the pontoon end of the chain: horizontal pull + chain weight × depth. Compare with the chain’s minimum breaking load ÷ safety factor.'],
+['Block holding','Sliding resistance of a concrete gravity block: friction coefficient × submerged weight (concrete loses 1026/2400 of its weight in sea water). Must exceed the horizontal pull.'],
+['Pretension opposing legs','Tobiasson Ch. 17.4: pretensioning opposing chains removes most slack movement, and matching their lengths stops the dock shifting sideways as the tide changes. Large tidal ranges need computer analysis.'],
+['Chain weight hangs','The hanging chain weight pulls the pontoon down; include it in buoyancy and freeboard.'],
+['Mushroom anchor','Tobiasson Ch. 17.5: a mushroom anchor holds about 3× its air weight in sand and 2× in mud only if its shank stays flat and the dish half-buries; 3–6° uplift cuts that by ~30 %, more by 50 %+.'],
+['Rode length to anchor','Straight-line length from the pontoon fairlead to the anchor at low and high water. The difference is what the elastic section has to stretch.'],
+['Non-elastic part','Length of rope, chain and fittings in series with the elastic, chosen so the elastic is slightly stretched (pretensioned) at low water and never goes slack.'],
+['Elastic stretch at design high','How much the elastic section is stretched at the highest design level. It must stay within the manufacturer’s allowable working stretch.'],
+['Rode angle above horizontal','Angle of the rode at high water. The steeper the rode, the less of its tension resists sideways load and the more it pulls the pontoon down.'],
+['Tension needed for H','Tension the rode must carry so its horizontal part equals the design pull: T = H / cos θ. Must be within the elastic units’ capacity.'],
+['Tension from tide stretch','Tension created just by the tide rising and stretching the elastic, with no other load.'],
+['Vertical pull-down','Downward component of the rode tension, T × sin θ. It eats into the pontoon’s reserve buoyancy (Cl. 4.7.1(b)) – check freeboard with it applied.'],
+['Anchor capacity ≥ FoS','The anchor (helix/screw anchor or block) must hold the rode tension times a safety factor. Helix anchors suit soft or poor seabeds where blocks don’t found well.'],
+['Keeps position over the tide','Elastic rodes keep the pontoon in place over a large tidal range without the long seabed footprint of chain catenaries. Example: the Richards Bay floating breakwater used elastic lines with helix anchors.'],
+['Check UV, abrasion','Elastic elements age: check UV exposure, abrasion, marine growth and fatigue life, and plan inspection and replacement.'],
+['Guide length ≥ water level range','The H-beam must be long enough that the pontoon’s rollers stay engaged from the lowest to the highest design level: range + roller bracket height + margin.'],
+['Supplier range 1–12','Published supplier data for a roller-guided aluminium H-beam: 6061-T6, nominal 250 × 250 mm, lengths 1–12 m. No design loads are published, so they must be confirmed.'],
+['Load per guide','Total design load × share factor ÷ number of guides.'],
+['Bending between wall fixings','With the roller at mid-span between two wall fixings, bending in the H-beam is P × spacing / 4. More fixings shorten the span.'],
+['Moment capacity Z','Bending capacity of the H-beam = section modulus × design stress. Welded aluminium loses strength near welds (heat-affected zone), so use the reduced HAZ stress (AS/NZS 1664).'],
+['Wall fixing: worst','When the roller sits right at a bracket, that one fixing takes the whole guide load – check the anchors and the wall for it.'],
+['Welded aluminium','Welding 6061-T6 roughly halves its strength next to the weld; design with heat-affected-zone strength from AS/NZS 1664, not the parent metal.'],
+['Do not lock fixed and floating','Fixed and floating parts must not be rigidly joined: the interface has to take the full tide and surge range, freeboard changes, wave movement, impact, friction and wear, and uplift, while still holding the pontoon sideways.'],
+['Flexible utility crossings','Power, water and fire lines crossing from the fixed wall to the pontoon need flexible connections with enough slack, and the walking surface needs an accessible transition.'],
+['Arm horizontal at mid-range','A strut hinged on the wall and on the pontoon swings as the tide changes. Set horizontal at mid-tide, its angle at the extremes is asin(range ÷ 2 ÷ arm length). Steep angles mean large forces and movement.'],
+['Horizontal excursion of the dock','As the arm swings, the pontoon moves towards and away from the wall by L − √(L² − (range/2)²). Gangways and services must allow it.'],
+['Axial force per arm','Each arm carries its share of the design load along its length, increased by 1/cos α when tilted. Arms in compression must also be checked for buckling.'],
+['Arms take the full design load','Tobiasson Ch. 17.3: arms cannot be mixed with outboard piles, because the dock moves horizontally as the arms swing; the arms must carry the whole load.'],
+['Suits small level change','Tobiasson Ch. 17.3: cantilever arms suit short docks parallel to a wall with small water-level change; check hinge bending, torsion and uneven wave motion.'],
+['Guide piles','Restraint by piles driven into the seabed with roller guides on the pontoon. Gives a fixed position; needs firm ground and becomes tall and heavy in big tidal ranges or deep water.'],
+['Chains / cables','Restraint by chains or cables to seabed anchors. Works in deep water and poor ground; needs a large seabed footprint and lets the dock move with the tide unless carefully pretensioned.'],
+['Elastic rodes (Seaflex','Restraint by elastic rubber rodes to anchors. Compact footprint and works over large tidal ranges; proprietary, with stiffness, fatigue and pull-down to check.'],
+['Roller H-beam on fixed wall','Restraint by vertical guide beams fixed to a wall or jetty with rollers on the pontoon. No piles in the water; guide length and wall strength govern.'],
+['Articulated struts / cantilever arms','Restraint by hinged arms from a wall. Suits small level changes and short docks along a wall; the dock moves sideways as the arms swing.'],
+['Fixed jetty instead','SRSA 9.4.2: where the tidal range is under about 1 m and depth up to 7 m, or waves are larger, a fixed piled jetty may suit better than a pontoon.'],
+['This site: tidal range','HAT − LAT from the Gangway tab. SRSA 9.4.3: pontoons suit sites with more than about 0.5 m range.'],
+// ---- vessel
+['Windage area, AS','AS 3962 Table 4.4: minimum side-on windage area for a vessel of this type and length.'],
+['Windage area, rectangle','PIANC 149 §4.3.2: a conservative windage area, vessel length × height above water, as if the profile were a full rectangle. Recommended for large motor boats or where sailboats dominate.'],
+['Wind pressure q','AS 3962 Eq. 4.8.3.3(1): q = 0.0006·V² kPa from the design wind speed.'],
+['Wind force Cd','Wind force on the boat broadside: drag coefficient × windage area × wind pressure.'],
+['Current on hull','Current drag on the underwater hull broadside: ½·ρ·Cd·v² × length × draft (Table 4.5: hull Cd 0.6, plus 1.2 for a yacht keel approximated here by doubling).'],
+['Total beam-on force','Total sideways force on the moored boat from wind and current – what its lines must hold.'],
+['Tension per line','The lines resisting the sideways pull are angled in plan and slope down from the boat, so each carries more than its share of the force: T = F ÷ (n × cos plan angle × cos vertical angle). Assumes equal sharing; snatch loads in waves can be much higher.'],
+['Line MBL ≥ FoS','The line’s minimum breaking load must be at least the safety factor × working tension. Neither code sets the factor; 3 is a common starting value for static loading.'],
+['Cleat safe working load','AS 3962 Cl. 4.10: cleats and bollards must suit the vessel size and design loads; the cleat’s safe working load must exceed the line tension.'],
+['High-sided yachts','Tobiasson Ch. 11.4: tall yachts need cleats well forward and aft of the hull so lines run at a flat angle; steep lines carry less horizontal load and more tension.'],
+['Mooring points: ≥ 3','AS 3962 Cl. 3.5.5: at least three mooring points each side of a floating berth, two more on the walkway for a double berth; fixed berths need two bow and/or two stern points.'],
+['Cleats and bollards sized','AS 3962 Cl. 4.10: cleats and bollards shall be designed and specified to suit vessel size and design loads.'],
+['Main walkway: 1 between','SRSA 10.5.2: one cleat on the main walkway between the two boats of a double berth; alongside berths cleats every 3 m.'],
+['Superyachts: ≥ 4','SRSA 10.5.2: superyachts up to 30 m need at least 4 cleats or bollards along the berth, over 30 m at least 5, plus 2 at the end of each slip on the walkway.'],
+['Cleat length','SRSA 10.5.2: cleats and bollards must take 2–4 lines at once and be bolted through to the structural frame, not just the deck boards.'],
+['Extra bollards at finger','Top Marine practice: extra bollards at the finger–walkway joints spread boat loads into the main pontoon instead of the finger.'],
+['Intermediate mooring pile in double','AS 3962 Cl. 3.3.3 and 4.8.2.1: a pile between the two boats of a double berth, considered where waves exceed 0.3 m (wake, wind) or 0.4 m (50-year head sea). Designed below.'],
+['Triggered?','Whether the code triggers for considering an intermediate pile are met: 50-yr head-sea Hs > 0.4 m (Cl. 4.8.2.1) or wake / wind waves > 0.3 m or prevailing cross winds or currents (Cl. 3.3.3).'],
+['Fixed jetties: mid-berth','SRSA 9.4.2: on fixed jetties, double-loaded berths require mid-berth mooring piles.'],
+['Double berth width + pile','AS 3962 Cl. 3.3.3: the double berth must be widened by the pile’s width so both boats still have their clearance.'],
+['Finger may be shortened','AS 3962 Cl. 3.5.4: with a mooring pile at the end of the berth, the finger can be shorter than 0.8L or left out.'],
+['Mooring load: lines from both','The intermediate pile holds lines from both boats; conservatively both pull at once: 2 × the line tension above.'],
+['Berthing impact: E','Energy if a boat berthing at the design speed (Cl. 4.9) hits the pile: ½ × mass (Table 4.6) × v² × Ce × Cm.'],
+['Impact force from pile stiffness','A freestanding pile absorbs impact energy by bending like a spring of stiffness k = 3EI/L³. The peak force is √(2·E·k): a stiffer pile takes a bigger force but moves less.'],
+['Design load: max(mooring','The pile is designed for the larger of the mooring line load and 1.25 × the impact force (Cl. 4.2(c), impact taken on its own).'],
+['Lever: ring at design SWL','Lever arm for the intermediate pile: from where the line ring sits at the design high water level down to the point of fixity.'],
+['Pile top so the ring','The pile must be tall enough that the sliding line ring cannot come off the top at the highest design water level plus waves (Cl. 4.14).'],
+['Check at both high and low','AS 3962 Cl. 4.9: check berthing impacts at both high and low tide: at low tide the pile load usually governs, at high tide the deflection.'],
+// ---- gangway
+['HAT (','Gangway slope when the water is at Highest Astronomical Tide.'],
+['MSL (','Gangway slope at Mean Sea Level; SRSA 8.3.8 prefers 1:10 or flatter here.'],
+['80 % level','Slope at the water level exceeded 80 % of the time. AS 3962 Table 3.5 requires accessible gangways to be 1:14 or flatter at least 80 % of the time.'],
+['LAT / lowest','Slope at the lowest level checked (chart datum / LAT), when the pontoon is lowest and the gangway steepest. AS: 1:4 general, 1:8 accessible; SRSA: 1:5.'],
+['Clear gangway width','AS 3962 Table 3.4: clear width between handrails by the number of berths served: 1.0–1.8 m (more for accessible berths).'],
+['Gangway width: as wide','SRSA 8.3.8: gangways as wide as possible for trolleys passing, absolute minimum 1.0 m, more for golf carts and wheelchairs.'],
+['Length ≤ 25 m','AS 3962 Table 3.5: the accessible slope limits apply to gangways up to 25 m long; longer runs need landings.'],
+['Slope ≥ 80 % of time','AS 3962 Table 3.5: an accessible gangway must be 1:14 or flatter for at least 80 % of the time, so wheelchair users can use it most of the day.'],
+['Slope ≤ 20 % of time','AS 3962 Table 3.5: an accessible gangway may be steeper for up to 20 % of the time, but never steeper than 1:8 (checked at chart datum).'],
+['Kerb 200 mm','AS 3962 Cl. 3.8: if the gangway is steeper than 1:12 at the lowest tide, the pontoon edge opposite the gangway end needs a 200 mm kerb within 6 m, so a wheelchair rolling off can’t go into the water.'],
+['Treadplate ≤ 1:8','AS 3962 Cl. 3.6.2.3: the hinged plate at the gangway end may not exceed 1:8 over at most 1200 mm; plates longer than 500 mm need kerb rails.'],
+['Boarding: ≥ 2','AS 3962 Cl. 3.5.6: accessible berths need at least two boarding options: a hoist or chair lift, a boarding ramp no steeper than 1:8, or an AS 1657 stair or ladder.'],
+['Accessible berths within 200','AS 3962 Cl. 3.5.2: accessible berths must be within 200 m of the landside access point.'],
+['Disability access: follow','SRSA 7.2 and 8.3.8: follow PIANC WG 14 and KSA disability codes; reduced gradients around 1:10 are suggested.'],
+['Slope at LAT ≤ 1:5','SRSA 8.3.8: maximum gangway gradient 1 in 5 at LAT.'],
+['Slope at MSL ideally','SRSA 8.3.8: ideally no steeper than 1 in 10 at mean sea level.'],
+['Ramp plates both ends','SRSA 8.3.8: ramp plates at both ends give a continuous surface; any vertical step must be 15 mm or less.'],
+['Handrails both sides','AS 3962 Cl. 3.6.5: handrails on both sides; on accessible routes also kerbs or kerb rails to AS 1428.1.'],
+['Handrails: upper','SRSA 8.3.8: upper handrail 1.0–1.2 m and lower 0.6–0.75 m above the deck (for wheelchair users), extending 0.3 m past the sides and 0.45 m past the ends of the gangway base.'],
+['Crossfall ≤ 1:40','AS 3962 Cl. 3.6.3–3.6.4: maximum sideways slope 1:40 with no ponding; mesh or grating must be heelguard type; slip resistance to AS 4586.'],
+['Primary walkway clear width','AS 3962 Table 3.3: clear width of the main walkway between obstructions (cleats, pedestals, piles), by length and whether it serves accessible berths. Never less than the gangway width.'],
+['Main walkway min 2.0','SRSA 8.3.6: main walkways at least 2.0 m wide (2.5 m if the pier is over 120 m), preferred 3–3.5 m.'],
+['Golf carts','SRSA 8.3.6: walkways used by golf carts need 3.5–4 m; superyacht walkways at least 4 m for crew, provisioning and emergency services.'],
+['Secondary walkway clear width','AS 3962 Table 3.3: secondary walkways (between berth rows, parallel to fairways): 1.5 m, or 1.8 m for long runs.'],
+['Secondary walkway: 1.5 m','SRSA 8.3.6: secondary walkways 1.5 m up to 50 m long, 2.0 m up to 120 m, 2.5 m beyond.'],
+['Tidal range HAT','Difference between HAT and LAT entered above; drives gangway slope and the choice between fixed jetties and pontoons.'],
+['Berthing system: fixed jetties','SRSA 9.4.2–9.4.3: fixed jetties suit tidal ranges under about 1 m and depths up to 7 m; pontoons suit ranges over about 0.5 m.'],
+// ---- services
+['Hose reels: no part of berth beyond 4','AS 3962 Cl. 6.2.2: every part of every berth within a 4 m water stream from a fully run-out reel; hose at most 36 m; reels at most 30 m apart; at least two reachable from each berth; one at the shore end of each walkway and one at the seaward end if the last berth is over 20 m away.'],
+['Hose reel flow','AS 3962 Cl. 6.2.2(g): the two worst-placed reels running together must each deliver 0.41 L/s at 220 ± 10 kPa; otherwise a self-priming booster pump of 0.82 L/s is needed.'],
+['Hose reels: hose ≥ 20','SRSA 12.6.3: hose at least 20 m, reels at most 30 m apart, at least two reachable from each berth. Note AS caps hose at 36 m while SRSA sets a 20 m minimum.'],
+['Fire hydrants where','AS 3962 Cl. 6.2.3.1: hydrants should be installed for marinas of 8 or more berths where a fire brigade can attend and use them.'],
+['Hydrant flow for berth','AS 3962 Table 6.2: total hydrant flow by berth length: 10 L/s up to 20 m, 15 L/s up to 30 m, 20 L/s up to 50 m (each hydrant outlet gives 10 L/s).'],
+['Fixed marina: all parts within 60','AS 3962 Cl. 6.2.3.2: on fixed marinas all walkways and fingers must be within 60 m of the brigade pumping appliance, otherwise attack hydrants at each walkway entrance and at least every 30 m.'],
+['Standpipes ≤ 30','SRSA 12.6.3: standpipes no more than 30 m apart; walking distance to a hydrant or extinguisher no more than 25 m.'],
+['Portable extinguishers: number by','AS 3962 Cl. 6.2.4: the number and type of extinguishers depends on the hazards, layout and whether hose reels are fitted; no fixed count is given.'],
+['Extinguishers: 1 per 20','SRSA 12.6.3: one portable extinguisher per 20 berths, at least two, 6 kg dry powder.'],
+['Manual audible fire alarm','AS 3962 Cl. 6.2.5: marinas with more than 30 berths should have a manually activated audible fire alarm.'],
+['Fire detection, alarm','SRSA 12.6.1–12.6.2: fire detection, alarm and a telephone for reporting fires are required.'],
+['Emergency plan to AS 3745','AS 3962 Cl. 6.2.9: every marina should have an emergency plan (AS 3745), with staff trained to use first-response equipment.'],
+['Lifebuoys:','SRSA 12.3 (from SOLAS): at least one lifebuoy per 30 berths on each pier and within every 50 m of main walkway, each with a 30 m floating throw line. Count = the larger of the two rules.'],
+['Safety ladders','SRSA 12.2: ladders out of the water at most 50 m apart, lowest step at least 600 mm below LAT so it can be reached at any tide, extra at fuel berths, with signs to the nearest ladder.'],
+['Emergency cabinets','SRSA 12.1: cabinets with first aid, extinguisher, lifebuoy and a line cutter along main walkways at most 50 m apart; at least one with a defibrillator, placed for a 3-minute response.'],
+['Salvage pump','SRSA 12.5: a suitable salvage pump must be available for emergencies (e.g. a sinking boat).'],
+['No lifebuoy, ladder','AS 3962 Section 6 covers firefighting, waste, lighting, power, water and telephones, but sets no rules for lifebuoys, ladders or first-aid cabinets.'],
+['Socket outlets for','AS 3962 Table 6.3: recommended shore-power sockets by berth size (Australian outlets shown).'],
+['Supply for','SRSA 11.1.2: typical power demand by vessel size for a 60 Hz supply (amps, voltage, phases, kVA).'],
+['Electrical to AS 3004.1','AS 3962 Cl. 6.6: install to AS 3004.1 and AS/NZS 3000, earth-leakage protection on all circuits, and enough power that boats don’t need to run generators.'],
+['Electrical to SBC 401','SRSA 11.1: install to the Saudi electrical code SBC 401 (with BS EN 60092, 60309, BS 7671), keep voltage drop under 5 %, and allow for future electric-boat charging.'],
+['Service pedestals','SRSA 10.5.1: boats up to 20 m may share a pedestal (one per two berths); larger boats get their own. Pedestal body IP44, sockets IPX4.'],
+['Water taps','AS 3962 Cl. 6.7: 3/4" taps for 8–25 m berths, 1" for larger.'],
+['Hose bibs','SRSA 11.2: hose bibs 19 mm under 30 m, 25 mm for 30–100 m, 38–51 mm above; an outlet within 20 m of every berth; flow adequate with 25 % of outlets running.'],
+['Toilets:','SRSA 10.4: one toilet per 50 berths for men and one per 50 for women, no more than 300 m from the furthest gangway, with accessible toilets.'],
+['Urinals','SRSA 10.4: one urinal per 75 berths; wash basins one per 50 (men) and one per 75 (women).'],
+['Showers','SRSA 10.4: showers one per 75 berths for men and women.'],
+['Laundry','SRSA 10.4: at least one washer and one dryer per 300 berths.'],
+['Sanitary facilities and showers','AS 3962 Cl. 6.10: sanitary facilities and showers should be provided; no counts are given.'],
+['Car parking','SRSA 10.3: 0.5–0.75 spaces per berth for small marinas, plus 1.5 per berth over 12 m and 3 per charter yacht (The Yacht Harbour Association). A mobility study sets the final number.'],
+['Parking per vessel by LOA','SRSA 10.3 (Bouchet & Borea d’Olmo): parking per large vessel: 2 for 16–25 m up to 6 for 61 m+.'],
+['Liquid waste','AS 3962 Cl. 6.3 and SRSA 11.6, 11.8: pump-out for sewage, waste oil and bilge water; garbage and recycling near gangway heads with lidded bins.'],
+['Lighting for safe access','AS 3962 Cl. 6.4 and SRSA 11.3: light walkways and berths for safety and security without glare for boats; SRSA adds low, shielded, warm lighting and no floodlighting on the water.'],
+['Fuel: on site','SRSA 11.5: fuel on site, at a nearby facility or by bunkering, to SBC 1201, NFPA and MARPOL; a fuel berth should be separate from general berthing.'],
+// ---- planning
+['Gradient within 1:7','AS 3962 Cl. 7.2.3.3: boat ramp gradient between 1:7 and 1:9, preferably 1:8. Outside that range, signs at the ramp head must state the limits.'],
+['Ramp slope at most 1:8','SRSA 10.7: boat ramps no steeper than 1:8.'],
+['Toe ≥','AS 3962 Cl. 7.2.3.2(e): the bottom of the ramp at least 1 m below design low water (1.2 m for fixed-keel yachts) so trailers don’t drop off the end.'],
+['Ramp length','Plan length of the ramp from crest to toe: height difference × gradient.'],
+['Width per lane','AS 3962 Cl. 7.2.3.2(c)–(d): at least 4 m per lane between kerbs; a single lane without kerbs 4.5 m.'],
+['Manoeuvring area','AS 3962 Cl. 7.2.3.2(b): at least 20 m of manoeuvring area behind the ramp crest for turning cars and trailers.'],
+['Sheltered from short-period','AS 3962 Cl. 7.2.2(b): ramps should be sheltered from short-period waves over 0.2 m.'],
+['Car/trailer spaces per lane','AS 3962 Table 7.1: car-and-trailer spaces per ramp lane by area type and facilities, unless a demand study is done.'],
+['Ramps suit boats','SRSA 10.7: ramps suit boats up to about 6–12 m; provide a washdown area whose runoff is collected and treated.']
+];
+const EXI={qman:'Manned farms use 100-yr combined conditions (ABS); unmanned 50-yr.',qlife:'Design life of the floating collar or structure. NS 9415 sets ≥ 10 yr and an extreme-load return period of 2.5 × life.',qc4:'Largest current measured over at least four weeks at the site; NS 9415 factors it up to 1–100-yr values.',qwd:'Whether site wind statistics exist. Without them NS 9415 uses 35 m/s.',qv10:'50-year wind speed, 10-minute mean, 10 m above sea level.',qcs:'ABS shape coefficient: 0.4 sphere, 0.5 cylinder.',qhz:'Height of the exposed windage above the waterline, for the ABS height coefficient.',qsn:'Fraction of net area covered by twine; typically 0.15–0.30, higher when fouled.',qth:'Angle between the current and the normal to the net panel; 0° is head-on.',qnp:'Number of net panels the current passes through in series; downstream panels are shielded.',qU:'Current approaching the first net panel, e.g. the 50-yr value above.',qA:'Area of one net panel facing the flow.',qct:'Mooring line type, which sets the base drag coefficient (DNV Table 11).',qD:'Nominal chain or rope diameter.',qgt:'Thickness of marine growth on the line surface.',qcc:'DNV consequence class: 2 when failure could cause serious consequences (fish on board).',qan:'Dynamic analysis allows lower safety factors than quasi-static.',qtm:'Mean (steady) line tension from analysis.',qtd:'Dynamic (wave-frequency) line tension from analysis.',qmbl:'Minimum breaking load of the mooring line.',
+a0:'Significant wave height exceeded about once a year inside the basin for head seas with period under 2 s (short chop and wake).',a1:'Once-a-year Hs inside the basin for head seas with period over 2 s.',a2:'Once-a-year Hs for oblique seas (22.5–67.5° off the bow) with period over 2 s.',a3:'Once-a-year Hs for beam (side-on) seas with period under 2 s.',a4:'Once-a-year Hs for beam seas with period over 2 s – the tightest limit, because boats roll.',y1:'Hs exceeded once in 50 years for head seas over 2 s. Over 0.4 m triggers intermediate mooring piles in double berths.',y2:'Hs exceeded once in 50 years for oblique seas over 2 s.',y4:'Hs exceeded once in 50 years for beam seas over 2 s.',
+dlt:'Choose what is being designed. Each type has its own code defaults: floating marinas 25 yr and 1 in 100 yr, permanent civil works 50 yr and 1 in 100 yr, temporary or trial installations 5 yr and 1 in 50 yr.',
+dl:'How long the structure must perform with normal maintenance. Leave blank for the code default of the type selected.',
+rp:'Average recurrence interval of the extreme wave, surge and flood event used for strength design. Leave blank for the code default of the type selected.',
+pt:'The chance you are willing to accept that the design event is exceeded at least once during the design life. Used to suggest a risk-based return period.',
+L:'Length of the pontoon unit being checked.',b:'Width of the walking deck. Live load is applied over this width.',bf:'Width of the flotation (float) at the waterline. Usually equal to the deck width; narrower floats reduce stability sharply.',H:'Height from the bottom of the float (keel) to the top of the flotation unit. Freeboard is measured to this level.',
+Wd:'Total self-weight: structure, deck, fittings, services and pipes full of water (Cl. 4.4).',hg:'Height of the dead-load centre of gravity above the keel. Heavy concrete decks raise it; ballast lowers it.',Wg:'Any extra load sitting on this unit, such as a gangway end reaction, applied at the centre of the waterplane.',Lsv:'Length of the longest boat moored to this unit; sets the SRSA freeboard range (0.4–0.5 m or 0.6–0.75 m).',
+acc:'Unrestricted access applies to all public and commercial marinas; restricted only to private facilities for two vessels or fewer. Rowing and launching pontoons use reduced loads.',el:'Walkway or finger, for the Table 4.1 flotation load.',rho:'Water density: sea 1026 kg/m³, fresh 1000 kg/m³. Fresh water gives less buoyancy.',cons:'Tick to place the live load at deck level when finding the centre of gravity. Appendix A as printed effectively places it at the keel, which overstates stability.',
+kr:'Roll radius of gyration as a fraction of float width. About 0.35 for a uniform box; larger with heavy edges.',car:'Extra rotational inertia from water moving with the float, as a fraction of its own. 0.1–0.3 is typical.',ca3:'Multiplier on the heave added mass estimate ρπb²L/8. Adjust from model tests or diffraction analysis.',wTp:'Wave period to compare natural periods against. Leave 0 to use the peak period from the Waves tab.',
+Lv:'Overall length of the longest vessel using the marina or channel, including bowsprits and davits (Cl. 1.3.40).',Bv:'Beam of the broadest monohull; 0 uses Table 3.2.',ty:'Vessel type for the draft table; yachts draw most.',pc:'Use the 95th percentile draft (Table 3.1) unless the fleet is known.',Dv:'Surveyed design draft; 0 uses Table 3.1.',
+Lb:'Length of the vessel the berth is designed for.',hullb:'Monohull or catamaran beam (Table 3.2).',Bb:'Beam override for the berth vessel; 0 uses Table 3.2.',Hs:'Significant wave height at the channel and berths (wind waves and wake). Half of it is added to depth; over 0.3 m triggers intermediate piles in double berths.',
+silt:'Extra depth for sediment between dredging campaigns.',bed:'Soft beds allow 0.3 m under-keel clearance; hard beds (stiff clay, gravel, rock) need 0.5 m.',cur:'Current speed in the channels and fairways. Over 0.5 m/s requires wider fairways.',multi:'Share of the fleet that is catamarans or trimarans.',
+Lmax:'Length of the largest vessel; under 20 m the basin must be moderate or better.',Hmax:'Largest individual wave expected in the basin, if known.',Tp:'Peak period of the largest waves reaching the berths.',
+V:'Ultimate design wind speed (30 s steady, at 3 m height) from AS/NZS 1170.2 for the site.',wty:'Motor vessels have more windage than yachts (Table 4.4).',wL:'Length of the vessels in the row being loaded.',Cdw:'Drag coefficient for a vessel beam-on to wind: 0.9–1.1 (Table 4.3).',nb:'Number of vessels on each side of the walkway in the section.',Astr:'Projected area of the structure itself exposed to wind.',Cds:'Drag coefficient for the structure: 2.0 rectangular, 1.2 tubular.',
+v:'Design current speed; at least 1.0 m/s in estuaries and rivers (Cl. 4.8.4.2).',crho:'Water density for current pressure.',Cdc:'Drag coefficient for the element in the flow (Table 4.5).',Ac:'Projected area facing the current.',pd:'Pontoon draft; the debris mat is taken as twice this deep.',
+Lx:'Length of floating structure exposed to waves; times 2 kN/m gives the minimum wave force.',Fw:'Wave force from your own analysis; 0 uses the 2 kN/m minimum.',Lbv:'Length of the berthing vessel; sets mass (Table 4.6) and berthing speed.',Ce:'Eccentricity coefficient: fraction of energy absorbed when hit at a quarter point, about 0.5.',Cm:'Virtual mass coefficient: allows for water moving with the boat, about 1.5.',
+mtype:'Choose how the pontoon is held in place. Only the inputs and checks for that type are shown.',msec:'Take the design load from the Loads tab, or enter your own.',Fman:'Total horizontal design load on the pontoon section.',share:'Factor from average to most-loaded restraint; 1.2–1.5 without analysis.',
+sb:'Seabed level relative to chart datum (negative below CD).',mlow:'Lowest still water level the restraint must work at (LAT or lower).',mwl:'1-in-100-year still water level: HAT plus storm surge.',slr:'Sea-level rise allowance over the design life.',crest:'Height of the wave crest above still water at the restraint (about half the storm wave height).',mfb:'Pontoon deck height above water.',
+gh:'Height of the roller guide above the deck.',ptop:'Level of the top of the guide piles.',np:'Number of guide piles holding the section.',D:'Outside diameter of the steel pipe pile.',t:'Wall thickness as supplied.',ca:'Wall thickness lost to corrosion over the design life.',fy:'Steel yield stress.',fix:'Depth below seabed where the pile acts as fixed; 0.9–1.5 m trial without soil data.',emb:'Length of pile driven below the seabed.',
+nm:'Number of mooring legs sharing the load in its direction.',wch:'Chain mass per metre in air.',mbl:'Minimum breaking load of the chain.',sfc:'Safety factor applied to chain breaking load.',mu:'Friction coefficient between block and seabed (0.3–0.6).',blk:'Mass of each concrete gravity block in air.',
+ex:'Horizontal distance from the pontoon to the anchor.',eL:'Unstretched length of the elastic section.',e0:'Stretch in the elastic at the lowest water level, so it never goes slack.',emax:'Maximum working stretch allowed by the manufacturer.',eF:'Force in one elastic unit at the allowable stretch (manufacturer data).',enu:'Number of elastic units working side by side in each leg.',eanc:'Holding capacity of each anchor.',esf:'Safety factor on anchor holding capacity.',
+hng:'Number of H-beam guides holding the section.',hL:'Length of each H-beam guide.',hbr:'Height of the roller bracket on the pontoon.',hsp:'Distance between fixings attaching the H-beam to the wall.',hZ:'Section modulus of the H-beam from the supplier.',hfd:'Design bending stress for welded aluminium (heat-affected zone).',hanc:'Capacity of one wall fixing (anchor bolts and bracket).',
+sn:'Number of hinged arms holding the section.',sL:'Arm length between hinge centres.',samax:'Largest arm angle you accept at the tidal extremes.',sex:'Horizontal movement the gangway and services can accept.',scap:'Axial capacity of one arm, including buckling.',
+vty:'Type of the moored vessel.',vL:'Length of the moored vessel.',vH:'Height of the vessel profile above the waterline, for the PIANC rectangle.',vD:'Draft of the moored vessel, for current on the hull.',area:'Which windage area to use.',vV:'Design wind speed at the berth.',vCd:'Drag coefficient for the vessel beam-on to wind.',vv:'Current speed at the berth.',
+iD:'Outside diameter of the intermediate pile.',it:'Wall thickness of the intermediate pile.',iatt:'Height of the line ring above the water.',
+nl:'Number of lines resisting the sideways load.',ah:'Angle of the lines in plan, from the beam direction.',av:'Angle of the lines above horizontal.',lmbl:'Minimum breaking load of each mooring line.',lsf:'Safety factor on line breaking load.',cswl:'Safe working load of each cleat.',
+nB:'Number of berths reached through this gangway; sets its width.',ac:'Whether the gangway is on the path to accessible berths.',Lg:'Gangway length between hinges.',zA:'Level of the fixed landing at the top of the gangway.',fb:'Pontoon deck height above water where the gangway lands.',
+hat:'Highest Astronomical Tide.',msl:'Mean Sea Level.',w80:'Water level exceeded 80 % of the time (from tide statistics).',lat:'Lowest Astronomical Tide or the lowest level to check.',wlen:'Length of the primary walkway or pier.',slen:'Length of the secondary walkways.',
+nS:'Berths for vessels up to 20 m.',nL:'Berths for vessels over 20 m.',n12:'Berths over 12 m, for extra parking.',nch:'Berths used by charter yachts.',nP:'Number of piers or walkways.',bpp:'Berths on the busiest pier, for lifebuoy counts.',wtot:'Total length of main walkways, for ladders, cabinets and reels.',Ld:'Length of the largest berth or vessel, for power, water and hydrant sizing.',
+rc:'Level of the top of the ramp.',rlw:'Design low water level.',rtoe:'Depth of the ramp toe below design low water.',rg:'Ramp gradient as 1 in n.',rl:'Number of launching lanes.',rw:'Width of each lane.',rk:'Whether the ramp has kerbs.',rkl:'Whether fixed-keel yachts use the ramp (deeper toe).',rm:'Length of manoeuvring area behind the ramp crest.',rhs:'Short-period wave height at the ramp.',ra:'Urban or rural setting, for parking.'
+};
+
+const $=id=>document.getElementById(id), f=(x,d=2)=>Number.isFinite(x)?x.toFixed(d):'—', g=9.81;
+const lerp=(xs,ys,x)=>{if(x<=xs[0])return ys[0];for(let i=1;i<xs.length;i++)if(x<=xs[i]){if(ys[i]==null||ys[i-1]==null)return ys[i]??null;return ys[i-1]+(ys[i]-ys[i-1])*(x-xs[i-1])/(xs[i]-xs[i-1])}return ys[ys.length-1]};
+// Table 3.1 drafts [avg,95th]
+const TL=[8,10,12,15,20,25,30,35,40,45,50];
+const DR={power:[[.7,.9],[.9,1.1],[1,1.3],[1.2,1.5],[1.4,1.8],[1.6,2],[1.9,2.4],[2.2,2.8],[2.3,3],[2.4,3.1],[2.6,3.3]],yacht:[[1.3,1.5],[1.6,1.8],[1.8,2.4],[2.2,2.8],[2.6,3.5],[2.8,3.9],[3.4,4.3],[3.8,5],[4.2,5.8],[4.2,5.8],[4.2,5.8]],cat:[[.6,1.1],[.7,1.2],[.8,1.3],[1.1,1.6],[1.4,1.9],[1.8,2.2],[2.2,2.6]]};
+// Table 3.2 beams
+const BL=[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,27.5,30,35,40,45,50];
+const BM=[3,3.2,3.4,3.7,3.9,4.1,4.3,4.5,4.7,4.9,5.2,5.3,5.5,5.7,5.9,6.2,6.3,6.5,6.7,7,7.5,7.6,8.2,8.8,9.4,10];
+const BC=[4.8,5.2,5.6,6,6.4,6.8,7.2,7.6,8,8.4,8.8,9.2,9.6,10,10.4,10.8,11.2,11.6,12,12.4,13.4,14.4];
+// Table 4.4 wind areas, Table 4.6 displacements
+const WL=[8,10,12,15,18,20,25,30,35,40,45,50];
+const WA={motor:{head:[5,7,11,18,22,24,30,45,54,78,85,90],beam:[16,22,29,45,64,76,95,120,167,213,264,285]},yacht:{head:[4,5,6,9,11,12,15,35,36,40,50,60],beam:[11,15,20,28,40,44,60,92,122,182,210,249]}};
+const DL=[10,12,15,18,20,25,30,35,40,45,50],DT=[7,12,20,33,44,80,180,270,360,470,600];
+const WV=[['Head seas, Tp < 2 s',null,.3],['Head seas, Tp > 2 s',.6,.3],['Oblique seas, Tp > 2 s',.4,.3],['Beam seas, Tp < 2 s',null,.3],['Beam seas, Tp > 2 s',.25,.15]];
+
+// field specs: [id,label,unit,default,step|options,hint]
+const F={
+project:[['Design life',[['dlt','Installation type','',[['float','Floating marina: pontoons, gangways, piling'],['perm','Permanent civil: breakwaters, walls, fixed jetties'],['temp','Temporary / trial / seasonal installation'],['aqua','Aquaculture: floating fish farm, net pens, moorings']]],['dl','Design life','yr','',1,'Blank = code default for the type'],['rp','Return period, extreme events','yr','',1,'Blank = code default for the type'],['pt','Target chance of exceedance in design life','%',10,1,'Used to suggest a risk-based return period']]]],
+stability:[['Unit geometry',[['L','Unit length','m',12,.1],['b','Deck width','m',2.4,.05],['bf','Flotation width at waterline','m',2.4,.05],['H','Keel to top of flotation unit','m',0.8,.01]]],
+ ['Mass',[['Wd','Dead weight (incl. services, full pipes)','kg',9000,50],['hg','Dead-load VCG above keel','m',0.45,.01],['Wg','Gangway / fixed extra load on unit','kg',0,10,'Applied at waterplane centroid'],['Lsv','Longest vessel berthed on unit','m',12,.5,'For SRSA freeboard range']]],
+ ['Loading',[['acc','Access / use','',[['u','Unrestricted'],['r','Restricted (private, ≤2 vessels)'],['row','Rowing / launching pontoon']]],['el','Element','',[['w','Walkway'],['f','Finger']]],['rho','Water','',[['1026','Sea water 1026 kg/m³'],['1000','Fresh water 1000 kg/m³']]],['cons','Live load CG at deck level','',false,null,'Conservative. Appendix A as printed divides dead-load moments by total weight']]],
+ ['Dynamics (natural periods)',[['kr','Roll radius of gyration / float width','',0.35,.01],['car','Added inertia, roll and pitch (fraction)','',0.2,.05],['ca3','Heave added-mass multiplier','',1.0,.05,'1.0 = ρπb²L/8 strip approximation'],['wTp','Wave period to compare','s',4,.1,'Defaults to the Waves tab Tp; overridden if set here']]]],
+layout:[['Design vessel',[['Lv','Longest vessel L','m',20,.5],['Bv','Broadest monohull beam B','m',0,.1,'0 = Table 3.2 value'],['ty','Vessel type for depth','',[['yacht','Yacht (deepest)'],['power','Powerboat'],['cat','Catamaran / houseboat']]],['pc','Draft statistic','',[['1','95th percentile'],['0','Average']]],['Dv','Draft override','m',0,.05,'0 = Table 3.1 value']]],
+ ['Berth vessel (for berth width)',[['Lb','Berth vessel length','m',12,.5],['hullb','Hull','',[['m','Monohull'],['c','Catamaran']]],['Bb','Beam override','m',0,.1,'0 = Table 3.2 value']]],
+ ['Site',[['Hs','Hs at channel / berth','m',0.4,.05],['silt','Siltation allowance','m',0.2,.05],['bed','Dredged bed','',[['soft','Soft material'],['hard','Hard (stiff clay, gravel, rock)']]],['cur','Current in fairways','m/s',0.3,.1],['multi','Multihull share of fleet','%',10,1]]]],
+waves:[['Hs exceeded once a year (m)',WV.map((r,i)=>['a'+i,r[0],'m',[.15,.2,.18,'',.1][i],.01])],['Hs exceeded once in 50 years (m)',WV.map((r,i)=>r[1]==null?null:['y'+i,r[0],'m',[,.45,.3,,.2][i],.01]).filter(Boolean)],['Fleet',[['Lmax','Largest vessel L','m',15,.5],['Hmax','Max wave height (optional)','m','',.01,'Checked against 1.5 × moderate Hs'],['Tp','Peak period of largest waves','s',4,.5,'For SRSA standard-pontoon limit']]]],
+loads:[['Wind (Cl. 4.8.3)',[['V','Ultimate design wind speed (30 s, z ≤ 3 m)','m/s',30,.5],['wty','Vessel type','',[['motor','Motor vessel'],['yacht','Yacht']]],['wL','Vessel length','m',12,.5],['Cdw','Vessel Cd, beam to wind','',1.0,.05,'Table 4.3: 0.9–1.1'],['nb','Vessels each side of walkway (one row)','',10,1],['Astr','Exposed area of structure','m²',4,.1],['Cds','Structure Cd','',[['2.0','Rectangular members 2.0'],['1.2','Tubular piles 1.2']]]]],
+ ['Current (Cl. 4.8.4)',[['v','Design current','m/s',1.0,.1,'≥ 1.0 m/s in estuary or river'],['crho','Water','',[['1026','Sea'],['1000','Fresh']]],['Cdc','Element','',[['2.0','Rectangular pontoon / debris mat 2.0'],['0.70','Circular pile, smooth 0.70'],['1.40','Circular pile, rough 1.40'],['2.2','Square, sharp corners 2.2'],['0.6','Vessel beam-on, hull 0.6'],['0.3','Vessel bow-on 0.3']]],['Ac','Projected area in flow','m²',3,.1],['pd','Pontoon draft (debris mat)','m',0.4,.05]]],
+ ['Waves & berthing',[['Lx','Exposed floating length','m',50,1,'2 kN/m minimum (Cl. 4.8.2.3)'],['Fw','Wave force from analysis','kN',0,1,'0 = use minimum'],['Lbv','Berthing vessel length','m',15,.5],['Ce','Eccentricity coeff. Ce','',0.5,.05,'User input, quarter-point ≈ 0.5'],['Cm','Virtual mass coeff. Cm','',1.5,.05,'User input']]]],
+gangway:[['Gangway',[['nB','Berths served via gangway','',40,1],['ac','Serves accessible berths','',[['1','Yes'],['0','No']]],['Lg','Gangway length','m',25,.5],['zA','Abutment / landing level','m CD',2.6,.05],['fb','Pontoon deck freeboard','m',0.5,.01]]],
+ ['Water levels',[['hat','HAT','m CD',2.1,.05],['msl','MSL','m CD',1.0,.05],['w80','Level exceeded 80 % of time','m CD',0.55,.05],['lat','LAT / lowest level checked','m CD',0,.05]]],
+ ['Walkways',[['wlen','Primary walkway / pier length','m',150,5],['slen','Secondary walkway length','m',60,5]]]],
+mooring:[['Restraint type',[['mtype','Mooring / restraint type','',[['piles','Guide piles (cantilever)'],['chain','Chain to gravity blocks'],['elastic','Elastic rodes (Seaflex-type) to anchors'],['hbeam','Roller H-beam guide on fixed wall'],['strut','Articulated struts / arms to shore']]]],'piles chain elastic hbeam strut'],
+ ['Section load',[['msec','Design horizontal load','',[['calc','From Loads tab (Cl. 4.2(a))'],['man','Manual']]],['Fman','Manual design load','kN',300,5],['share','Uneven load-share factor','',1.3,.05,'Most-loaded restraint vs average']],'piles chain elastic hbeam strut'],
+ ['Levels',[['sb','Seabed level','m CD',-4,.1],['mlow','Lowest still water level','m CD',0,.05],['mwl','1-in-100 yr still water level (HAT + surge)','m CD',2.6,.05],['slr','Sea-level rise over design life','m',0.4,.05],['crest','Wave crest above still water','m',0.4,.05],['mfb','Pontoon freeboard','m',0.5,.01]],'piles chain elastic hbeam strut'],
+ ['Guide piles',[['gh','Pile guide height above deck','m',0.6,.05],['ptop','Pile top level','m CD',5.0,.05],['np','Guide piles in section','',6,1],['D','Pile OD','mm',610,1],['t','Wall thickness','mm',12.7,.1],['ca','Corrosion wall loss','mm',2,.5],['fy','Yield stress','MPa',350,5],['fix','Depth to fixity below seabed','m',2,.1,'Tobiasson: 0.6–3 m, trial 0.9–1.5 m'],['emb','Embedment below seabed','m',8,.5,'Tobiasson: ≥ 4.5 m, often 6–12 m']],'piles'],
+ ['Mooring legs',[['nm','Mooring legs resisting the load','',8,1]],'chain elastic'],
+ ['Chain + gravity blocks',[['wch','Chain mass in air','kg/m',15,.5],['mbl','Chain MBL','kN',400,5],['sfc','Factor of safety on MBL','',3,.1],['mu','Block–seabed friction μ','',0.5,.05],['blk','Concrete block mass in air','t',22,.5]],'chain'],
+ ['Elastic rodes',[['ex','Anchor horizontal offset','m',12,.5],['eL','Elastic section length','m',4,.1],['e0','Pretension stretch at low water','%',10,1],['emax','Allowable working stretch','%',100,5,'From manufacturer'],['eF','Force per unit at allowable stretch','kN',40,1,'From manufacturer'],['enu','Elastic units in parallel per leg','',2,1],['eanc','Anchor capacity (helix / block)','kN',150,5],['esf','Factor of safety on anchor','',2,.1]],'elastic'],
+
+ ['H-beam guide',[['hng','Guides on the section','',8,1],['hL','Guide length','m',5,.1],['hbr','Roller bracket height','m',0.6,.05],['hsp','Wall fixing spacing','m',2.5,.1],['hZ','Section modulus Z','cm³',600,10,'From supplier'],['hfd','Design bending stress (welded, HAZ)','MPa',100,5],['hanc','Capacity of one wall fixing','kN',80,5]],'hbeam'],
+ ['Struts / arms',[['sn','Arms on the section','',8,1],['sL','Arm length (hinge to hinge)','m',6,.1],['samax','Maximum arm angle','°',30,1],['sex','Allowable horizontal excursion','m',0.3,.05],['scap','Axial capacity per arm','kN',120,5]],'strut']],
+vessel:[['Vessel',[['vty','Vessel type','',[['motor','Motor vessel'],['yacht','Yacht']]],['vL','Length','m',12,.5],['vH','Profile height above waterline','m',4,.1,'For PIANC rectangle'],['vD','Draft','m',1.0,.05],['area','Windage basis','',[['as','AS Table 4.4'],['pi','PIANC rectangle L × height'],['max','Larger of the two']]]]],
+ ['Actions',[['vV','Design wind speed','m/s',30,.5],['vCd','Cd, beam to wind','',1.0,.05],['vv','Current at berth','m/s',0.3,.05]]],
+ ['Intermediate mooring pile',[['iD','Pile OD','mm',355.6,.1],['it','Wall thickness','mm',9.5,.1],['iatt','Line ring height above water','m',0.5,.05,'Seabed, fixity, levels and corrosion from Pontoon mooring tab']]],
+ ['Lines & cleats',[['nl','Lines resisting beam load','',2,1],['ah','Line angle in plan from beam direction','°',30,1],['av','Line angle above horizontal','°',10,1],['lmbl','Line MBL','kN',40,1],['lsf','Factor of safety on line MBL','',3,.1],['cswl','Cleat safe working load','kN',15,.5]]]],
+ramps:[['Boat ramp',[['rc','Ramp crest level','m CD',2.8,.05],['rlw','Design low water','m CD',0,.05],['rtoe','Toe depth below design low water','m',1.0,.05],['rg','Gradient 1 in','',8,.1],['rl','Lanes','',2,1],['rw','Width per lane','m',4,.1],['rk','Kerbs','',[['1','Yes'],['0','No']]],['rkl','Fixed-keel yachts use ramp','',[['0','No'],['1','Yes']]],['rm','Manoeuvring area behind crest','m',25,1],['rhs','Short-period Hs at ramp','m',0.15,.01],['ra','Area','',[['urban','Urban'],['rural','Rural']]]]]],
+aqua:[['Farm',[['qman','Operation','',[['0','Unmanned'],['1','Manned']]],['qlife','Design life override','yr','',1,'Blank = Project basis if type is Aquaculture, else 20 yr']]],
+ ['Current and wind',[['qc4','Max current in ≥ 4-week record','m/s',0.4,.05],['qwd','Site wind data available','',[['1','Yes'],['0','No']]],['qv10','50-yr wind V10 (10-min, 10 m)','m/s',30,.5],['qcs','Wind shape coefficient Cs','',0.5,.05],['qhz','Height of windage above water','m',5,.5]]],
+ ['Nets',[['qsn','Net solidity ratio Sn','',0.25,.01],['qth','Inflow angle to net normal','°',0,1],['qnp','Net panels in a row','',4,1],['qU','Incoming current U','m/s',0.74,.01],['qA','Area of one net panel','m²',200,5]]],
+ ['Mooring',[['qct','Line type','',[['studless','Studless chain'],['stud','Stud chain'],['strand','Stranded rope'],['spiral','Spiral rope, no sheath'],['sheath','Spiral rope, sheathed']]],['qD','Nominal diameter','mm',76,1],['qgt','Marine growth thickness','mm',50,5],['qcc','Consequence class','',[['2','2: fish on board'],['1','1: pen empty']]],['qan','Analysis','',[['dyn','Dynamic'],['qs','Quasi-static']]],['qtm','Mean tension','kN',800,10],['qtd','Dynamic tension','kN',600,10],['qmbl','Line minimum breaking load','kN',4500,50]]]],
+services:[['Marina',[['nS','Berths for vessels ≤ 20 m','',80,1],['nL','Berths for vessels > 20 m','',8,1],['n12','Berths > 12 m (for parking)','',30,1],['nch','Charter yacht berths','',2,1],['nP','Piers / walkways','',3,1],['bpp','Berths on busiest pier','',36,1],['wtot','Total length of main walkways','m',360,5]]],
+ ['Design vessel',[['Ld','Largest berth / vessel LOA','m',25,.5]]]]};
+
+let S={};try{S=JSON.parse(localStorage.getItem('as3962')||'{}')}catch(e){}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+function field([id,lab,unit,def,step,hint]){if(Array.isArray(def)){step=def;def=def[0][0]}const v=S[id]??def,ti=EXI[id]?` data-tip="${esc(EXI[id])}"`:'';
+ const h=`<span>${esc(lab)}${unit?` <small style="display:inline">(${esc(unit)})</small>`:''}${hint?`<small>${esc(hint)}</small>`:''}</span>`;
+ if(Array.isArray(step))return `<label${ti}>${h}<select id="${id}">${step.map(([k,t])=>`<option value="${k}"${String(v)==k?' selected':''}>${esc(t)}</option>`).join('')}</select></label>`;
+ if(typeof def==='boolean')return `<label${ti}>${h}<input type="checkbox" id="${id}"${v?' checked':''}></label>`;
+ return `<label${ti}>${h}<input type="number" inputmode="decimal" id="${id}" value="${v}" step="${step}"></label>`}
+for(const k in F)$('f-'+k).innerHTML=F[k].map(([lg,fs,mt])=>`<fieldset${mt?` data-mt="${mt}"`:''}><legend>${esc(lg)}</legend>${fs.map(field).join('')}</fieldset>`).join('')+(k==='project'?'':`<button id="rs-${k}" style="font:600 15px Barlow;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer">Reset to sample values</button>`);
+const n=id=>{const e=$(id);if(!e)return NaN;if(e.type==='checkbox')return e.checked;const x=parseFloat(e.value);return e.tagName==='SELECT'&&isNaN(x)?e.value:x}, sv=id=>$(id).value;
+const st=(ok,t,tip)=>ok==null?`<span class="s na">${t||'n/a'}</span>`:ok?`<span class="s ok">${t||'Pass'}</span>`:`<span class="s no"${tip?` tabindex="0" data-tip="${esc('How to pass: '+tip)}"`:''}>${t||'Fail'}</span>`;
+const AC={'DNV':'Det Norske Veritas – Norwegian classification society; publishes offshore standards (DNV-OS) and rules','ABS':'American Bureau of Shipping – US classification society; Guide for Aquaculture Installations','BV':'Bureau Veritas – French classification society; rules for fish farms','NS':'Norsk Standard (Norwegian Standard), e.g. NS 9415 Marine fish farms','ALS':'Accidental Limit State – survival after an accident such as losing one mooring line','QTF':'Quadratic Transfer Function – gives second-order (drift) wave forces','TLP':'Tension Leg Platform – floater held down by taut vertical tendons','CFD':'Computational Fluid Dynamics','FPI':'Floating Production Installations (ABS rules)','V10':'Wind speed at 10 m above sea level','Sn':'Net solidity ratio – fraction of net area blocked by twine','Chu':'Chu et al. (2023), Offshore Fish Farms: A Review of Standards and Guidelines for Design and Analysis, J. Mar. Sci. Eng. 11, 762','AS/NZS':'Australian / New Zealand Standard (joint standard of Standards Australia and Standards New Zealand)','AS':'Australian Standard. Here mostly AS 3962:2020 Marina design; also AS 1170 (loads), AS 1428 (access), AS 1657 (platforms, ladders), AS 3004 (marina electrics), AS 3745 (emergency plans), AS 4100 (steel), AS 4586 (slip resistance), AS 4997 (maritime structures)',
+'SRSA':'Saudi Red Sea Authority – publisher of the Marina Planning and Design Code v1 (2024) compared on this page','PIANC':'World Association for Waterborne Transport Infrastructure (originally Permanent International Association of Navigation Congresses). Report 149 = Guidelines for Marina Design; WG 134 = superyacht facilities; WG 14 = disability access; WG 196 = breakwater selection; WG 98 = water quality in marinas','WG':'Working Group – the PIANC committee that wrote a report (e.g. WG 134)','ASCE':'American Society of Civil Engineers. Manual 50 = Planning and Design Guidelines for Small Craft Harbors, source of the wave tranquillity criteria',
+'BS':'British Standard (e.g. BS 6349 Maritime works, BS 7671 wiring regulations)','EN':'European Norm (European standard), e.g. BS EN 60092, 60309','ISO':'International Organization for Standardization (e.g. ISO 19650 for BIM)','SBC':'Saudi Building Code (e.g. SBC 401 electrical, SBC 1201 fuel gas)','KSA':'Kingdom of Saudi Arabia','AUS':'Australian (socket outlet type)',
+'CD':'Chart Datum – the zero level on nautical charts, usually Lowest Astronomical Tide. All levels on this page are metres above CD','LAT':'Lowest Astronomical Tide – lowest tide predictable from astronomy alone under average weather; usually equal to Chart Datum. Storm conditions can go lower','HAT':'Highest Astronomical Tide – highest tide predictable from astronomy alone under average weather. Storm surge can go higher','MSL':'Mean Sea Level – average water level over a long period','MHWS':'Mean High Water Springs – average high tide during spring tides','MLWS':'Mean Low Water Springs – average low tide during spring tides','AHD':'Australian Height Datum – the national land-survey level datum (approximately mean sea level)','SWL':'Still Water Level – water level ignoring waves (tide + surge + sea-level rise)','SLR':'Sea-Level Rise – allowance for climate-driven rise over the design life','HWL':'High Water Level – the design high still water level',
+'ARI':'Average Recurrence Interval – average time between events of a given size (same idea as return period)','ULS':'Ultimate Limit State – strength design for rare extreme events','SLS':'Serviceability Limit State – everyday performance (movement, comfort, downtime)','UDL':'Uniformly Distributed Load – load spread evenly over an area (kPa)','FoS':'Factor of Safety – capacity divided by working load','MBL':'Minimum Breaking Load – the load at which a line, chain or rope is guaranteed not to break below',
+'Hs':'Significant wave height – average height (crest to trough) of the highest one-third of waves; close to what an observer reports','Hmax':'Maximum individual wave height, about 1.8 × Hs','Tp':'Peak wave period – period of the waves carrying the most energy','UKC':'Under-Keel Clearance – water left between the keel and the seabed','LOA':'Length Overall – full vessel length including bowsprits and davits',
+'VCG':'Vertical Centre of Gravity – height of the centre of mass above the keel','CG':'Centre of Gravity','GM':'Metacentric height – distance from the centre of gravity G up to the metacentre M; positive means stable (GM with L subscript = longitudinal, for pitch)','BM':'Metacentric radius – height of the metacentre M above the centre of buoyancy B, = I / V','Ze':'Elastic section modulus – bending stiffness of a cross-section for stress; moment capacity = stress × Ze','OD':'Outside Diameter (of a pipe)','HAZ':'Heat-Affected Zone – metal next to a weld whose strength is reduced by welding heat (important for aluminium)','CHS':'Circular Hollow Section (round steel pipe)',
+'Cd':'Drag coefficient – shape factor relating fluid pressure to force','Ce':'Eccentricity coefficient – share of berthing energy absorbed when a boat hits off-centre','Cm':'Virtual (added) mass coefficient – allows for water moving with the boat',
+'kPa':'kilopascal – pressure; 1 kPa = 1 kN per m² ≈ 100 kg per m²','kN':'kilonewton – force; 1 kN ≈ the weight of 102 kg','MPa':'megapascal – stress; 1 MPa = 1 N/mm²','GPa':'gigapascal – 1000 MPa (steel stiffness E ≈ 200 GPa)','kVA':'kilovolt-ampere – electrical supply capacity','kJ':'kilojoule – energy',
+'IP44':'Ingress Protection rating 44: protected against objects > 1 mm and splashing water','IPX4':'Ingress Protection X4: protection against splashing water (dust not rated)','IP66':'Ingress Protection 66: dust-tight and protected against powerful water jets','IP67':'Ingress Protection 67: dust-tight and protected against temporary immersion','ELCB':'Earth Leakage Circuit Breaker – trips when current leaks to earth, protecting people','CCTV':'Closed-Circuit Television (security cameras)','UV':'Ultraviolet (sunlight) – degrades rubber and plastics',
+'EIA':'Environmental Impact Assessment','EMP':'Environmental Management Plan','NCEC':'National Center for Environmental Compliance (Saudi Arabia)','MEWA':'Ministry of Environment, Water and Agriculture (Saudi Arabia)','MWAN':'National Center for Waste Management (Saudi Arabia)','MoMRAH':'Ministry of Municipal, Rural Affairs and Housing (Saudi Arabia)','MAWANI':'Saudi Ports Authority','IALA':'International Association of Marine Aids to Navigation and Lighthouse Authorities','ICOMIA':'International Council of Marine Industry Associations','SOLAS':'International Convention for the Safety of Life at Sea','MARPOL':'International Convention for the Prevention of Pollution from Ships','NFPA':'National Fire Protection Association (US fire codes)','TYHA':'The Yacht Harbour Association (UK marina industry body)',
+'BIM':'Building Information Modelling – shared 3D model and data for design, construction and asset management','LCA':'Life Cycle Assessment – environmental impact over a product’s whole life','EPD':'Environmental Product Declaration','OCR':'Optical Character Recognition – the scanned standard was converted to text, so values could be misread','Cl.':'Clause of the standard','App.':'Appendix','Eq.':'Equation','T':'Table (e.g. T4.2 = Table 4.2)','REF':'Other reference outside the two codes'};
+const ACKEYS=Object.keys(AC).filter(k=>k!=='T').sort((a,b)=>b.length-a.length),acRe=new RegExp('(?<![A-Za-z0-9])(?:'+ACKEYS.map(k=>k.replace(/[.*+?^${}()|[\]\\/]/g,'\\$&')).join('|')+')(?![A-Za-z0-9])|(?<![A-Za-z0-9])T(?=\\d)','g');
+function wrapAC(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>{const p=n.parentElement;if(!p||p.closest('script,style,abbr,option,select,svg,#tip,textarea'))return NodeFilter.FILTER_REJECT;acRe.lastIndex=0;return acRe.test(n.nodeValue)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_SKIP}});const ns=[];while(w.nextNode())ns.push(w.currentNode);
+ for(const n of ns){const t=n.nodeValue,fr=document.createDocumentFragment();let last=0;acRe.lastIndex=0;let m;while((m=acRe.exec(t))){fr.append(t.slice(last,m.index));const a=document.createElement('abbr');a.className='ac';a.textContent=m[0];a.dataset.tip='<b>'+esc(m[0])+'</b> – '+esc(AC[m[0]]);fr.append(a);last=m.index+m[0].length}fr.append(t.slice(last));n.replaceWith(fr)}}
+
+const tipFor=h=>{const t=String(h).replace(/<[^>]+>/g,'');const m=EX.find(([k])=>t.includes(k));return m?m[1]:''};
+const isS=c=>typeof c==='string'&&c.startsWith('SRSA');
+const cl=c=>!c||c==='—'?'':c.startsWith('REF:')?(([a,...r])=>`<span class="src rf">${a}</span>${r.join(' ')}`)(c.slice(4).split(' ')):isS(c)?`<span class="src sr">SRSA</span>${c.slice(5)}`:c.startsWith('AS+SRSA')?`<span class="src as">AS</span><span class="src sr">SRSA</span>${c.slice(8)}`:`<span class="src as">AS</span>${c}`;
+const tbl=(rows,h=['Check','Value','','Source'])=>`<div class="scroll"><table class="stack"><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{const tp=tipFor(r[0]);return `<tr${isS(r[3])?' class="sr"':''}><td${tp?` tabindex="0" data-tip="${esc(tp)}"`:''}>${r[0]}</td><td class="n">${r[1]}</td><td>${r[2]||''}</td><td class="r">${cl(r[3])}</td></tr>`}).join('')}</tbody></table></div>`;
+const yel=(t,tip)=>`<span class="s ex"${tip?` tabindex="0" data-tip="${esc(tip)}"`:''}>${t}</span>`;
+const big=a=>a.map(([l,v])=>`<div>${l}<b>${v}</b></div>`).join('');
+
+function stability(){
+ const L=n('L'),b=n('b'),bf=n('bf'),H=n('H'),Wd=n('Wd'),hg0=n('hg'),Wg=n('Wg')||0,acc=sv('acc'),el=sv('el'),rho=n('rho'),cons=n('cons');
+ const qf=acc==='r'?2:acc==='row'?1:3, qs=acc==='r'?1.5:acc==='row'?1:2, fbMin=acc==='row'?.125:.05;
+ const A=L*bf,I=L*bf**3/12,hd=Wd/(rho*A);
+ const Wf=Wd+Wg+qf*L*b*1000/g, hfl=Wf/(rho*A), fbF=H-hfl;
+ const Wl=qs*L*(b/2)*1000/g, M=Wl*b/4, W1=Wd+Wl+Wg, h1=W1/(rho*A), V1=W1/rho;
+ const hg=cons?(Wd*hg0+(Wl+Wg)*H)/W1:Wd*hg0/W1, hmb=I/V1, hmc=hmb+h1/2-hg, t=M/(W1*hmc), phi=Math.atan(t)*180/Math.PI;
+ const fb=H-(h1+.5*bf*t), chine=h1-.5*bf*t;
+ $('big-st').innerHTML=big([['Min. freeboard, stability load',f(fb*1000,0)+' mm'],['Heel',f(phi,1)+'°'],['GM',f(hmc,2)+' m']]);
+ const rows=[['Waterplane area A = L·b<sub>f</sub>',f(A,1)+' m²','','A.3(c)'],['Second moment I = L·b<sub>f</sub>³/12',f(I,2)+' m⁴','','A.2.10'],['Dead-load draft',f(hd*1000,0)+' mm','','A.3(2)'],['Dead-load freeboard',f((H-hd)*1000,0)+' mm',st(H-hd>0,null,'unit sinks under dead load. Reduce dead weight, or increase float depth H, length or width.'),''],
+ [`Flotation load ${qf} kPa over full deck`,f(qf*L*b,1)+' kN','','T4.1'],['Freeboard under flotation load',f(fbF*1000,0)+' mm',st(fbF>=.05,fbF>=.05?'≥ 50 mm':'< 50 mm','freeboard under the full flotation load must stay ≥ 50 mm. Deepen the float (H), make it longer or wider, or reduce dead weight.'),'4.7.1(b)'],
+ [`Stability load ${qs} kPa on half deck`,f(Wl*g/1000,1)+' kN','',acc==='row'?'4.13.2.2':'T4.1'],['Heeling moment (lever b/4)',f(M*g/1000,2)+' kN·m','','A.3(d)'],['Loaded draft h<sub>1</sub>',f(h1*1000,0)+' mm','','A.3(4)'],['VCG above keel h<sub>g</sub>'+(cons?' (live at deck)':' (as printed)'),f(hg,3)+' m','','A.3(d)(i)'],
+ ['BM = I/V<sub>1</sub>',f(hmb,3)+' m','','A.3(5)'],['GM = BM + h<sub>1</sub>/2 − h<sub>g</sub>',f(hmc,3)+' m',st(hmc>0,hmc>0?'M above G':'Unstable','metacentre is below G. Widen the float (BM grows with width cubed), lower heavy items (smaller hg), or reduce deck mass.'),'A.3(6), 4.13.1'],['Heel angle φ',f(phi,1)+'°',st(phi<=15,phi<=15?'≤ 15° valid':'> 15°: method invalid','Appendix A is only valid to 15°. Widen the float or lower the VCG to reduce heel.'),'A.1, A.3(7)'],
+ ['Freeboard to top of flotation, low side',f(fb*1000,0)+' mm',st(fb>=fbMin,(fb>=fbMin?'≥ ':'< ')+fbMin*1000+' mm','raise low-side freeboard. Deepen the float (H), widen it (less heel and draft), or reduce dead weight or its VCG.'),acc==='row'?'4.13.2.2':'4.13.2.1, A.3(8)'],['Opposite chine immersion',f(chine*1000,0)+' mm',st(chine>0,chine>0?'Submerged':'Emerged','the high-side chine lifts out of the water. Widen the float to reduce heel, or add low ballast to increase draft.'),'4.13.2.1']];
+ if(acc==='row')rows.push(['Waterplane ≥ 85 % of deck area',f(100*bf/b,0)+' %',st(bf/b>=.85,null,'rowing/launching pontoons need a flotation waterplane ≥ 85 % of the deck area. Widen the floats towards the deck width.'),'4.13.2.2']);
+ if(Math.abs(b-bf)>1e-6&&acc!=='row')rows.push(['Flotation narrower than deck: reserve buoyancy should use max float width × 50 mm','','','4.7.1(b)']);
+ const Lsv=n('Lsv'),fbd=H-hd,[fa,fz]=Lsv>20?[.6,.75]:[.4,.5];
+ rows.splice(4,0,[`Dead-load freeboard in range ${fa.toFixed(2)}–${fz.toFixed(2)} m (vessels ${Lsv>20?'> 20 m':'≤ 20 m'})`,f(fbd*1000,0)+' mm',fbd<fa?yel('Below range'):fbd>fz?yel('Above range'):st(true,'In range'),'SRSA 9.4.3']);
+ rows.push(['Design life (Project basis, top of page)',DLv()+' yr','','4.16'],['Stability and buoyancy method: SRSA refers to AS 3962, PIANC WG 149 Pt IV, BS 6349 and SBC','No separate criteria','','SRSA 9.4.3, 9.5']);
+ const Vd=Wd/rho,GM0=I/Vd+hd/2-hg0,IL=bf*L**3/12,GML=IL/Vd+hd/2-hg0,a33=n('ca3')*rho*Math.PI*bf*bf*L/8,kr=n('kr')*bf,kp=L/Math.sqrt(12),car=n('car');
+ const Th0=2*Math.PI*Math.sqrt(Wd/(rho*g*A)),Th=2*Math.PI*Math.sqrt((Wd+a33)/(rho*g*A)),Tr=2*Math.PI*kr*Math.sqrt((1+car)/(g*GM0)),Tpi=2*Math.PI*kp*Math.sqrt((1+car)/(g*GML));
+ const Tw=n('wTp')>0?n('wTp'):n('Tp'),near=T=>Math.abs(T-Tw)/Tw<=.2,rs=T=>near(T)?yel('Within 20 % of T<sub>p</sub>','Natural period is close to the wave period, so motions can be amplified. Move it away: wider float or lower VCG shortens roll; more mass or less waterplane lengthens heave; or reduce waves at the berth.'):st(true,'Clear of T<sub>p</sub>');
+ const sink=1000/(rho*g)*(b/bf);
+ const nat=tbl([['Heave, no added mass: 2π√(m / ρgA)',f(Th0,2)+' s','','REF:Hydrostatics'],
+ ['Heave incl. added mass ≈ ρπb<sub>f</sub>²L/8 × '+n('ca3'),f(Th,2)+' s',rs(Th),'REF:Hydrostatics'],
+ ['Roll: 2π k<sub>r</sub>√((1+c<sub>a</sub>) / g·GM), dead load, GM = '+f(GM0,2)+' m',f(Tr,2)+' s',rs(Tr),'REF:Hydrostatics'],
+ ['Pitch: 2π (L/√12)√((1+c<sub>a</sub>) / g·GM<sub>L</sub>), GM<sub>L</sub> = '+f(GML,1)+' m',f(Tpi,2)+' s',rs(Tpi),'REF:Hydrostatics'],
+ ['Wave period compared (T<sub>p</sub>)',f(Tw,1)+' s','',''],
+ ['Static response: sinkage per 1 kPa over the deck',f(sink*1000,0)+' mm/kPa','Rapid response to pedestrian load','4.13.2.3'],
+ ['Standard pontoons only where waves ≤ 1 m and ≤ 5 s','—','','SRSA 9.4.3']],['Mode','Period','Resonance','Source']);
+ $('big-st').innerHTML+=`<div>Heave / roll period<b>${f(Th,1)} / ${f(Tr,1)} s</b></div>`;
+ $('out-stability').innerHTML=tbl(rows)+'<h3>Natural periods (dead load, free floating)</h3>'+nat+`<p class="note">Estimates for a free-floating rectangular unit. Guide piles, chains, fingers and gangways change the restrained modes. Added mass and gyradius are approximations; use diffraction analysis or model tests for exposed sites.</p>`+`<p class="note">Rectilinear float assumed (B at h/2). Inertial effects under heel (4.13.2.1) and damaged-compartment cases (4.15.2) are not covered. Design life ≥ 25 years (4.16).</p>`;
+ drawSt({L,b,bf,H,h1,phi,fb,chine,qs});
+}
+function drawSt(p){const s=$('svgst'),W=s.clientWidth,Hh=s.clientHeight;if(!W)return;
+ const k=Math.min(W*.6/Math.max(p.b,p.bf),Hh*.42/p.H),cx=W/2,wy=Hh*.5,bw=p.bf*k,dw=p.b*k,hh=p.H*k,dr=p.h1*k,ok=p.fb>=.05&&p.chine>0;
+ const arrows=Array.from({length:5},(_,i)=>{const x=cx-dw/2+dw/2*(i+.5)/5;return `<path d="M${x} ${wy+dr-hh-34}v24m-5-7l5 7 5-7" stroke="var(--mk)" stroke-width="2.5" fill="none"/>`}).join('');
+ s.innerHTML=`<rect x="0" y="${wy}" width="${W}" height="${Hh-wy}" fill="var(--water)"/><path d="M0 ${wy}H${W}" stroke="#fff" stroke-opacity=".7"/>
+ <g id="hull" style="transform-origin:${cx}px ${wy}px;transform:rotate(${-p.phi}deg)">
+ <rect x="${cx-bw/2}" y="${wy+dr-hh}" width="${bw}" height="${hh}" fill="#c9cfd2" stroke="#33454f" stroke-width="1.5"/>
+ <rect x="${cx-dw/2}" y="${wy+dr-hh-6}" width="${dw}" height="8" fill="#7a5c3e"/>${arrows}
+ <path d="M${cx} ${wy+dr-hh-40}V${wy+dr+16}" stroke="#33454f" stroke-dasharray="4 4" opacity=".6"/></g>
+ <text x="16" y="28" font-size="14" fill="var(--ink)" font-family="Barlow">${p.qs} kPa on half deck · heel ${f(p.phi,1)}°</text>
+ <text x="16" y="${Hh-16}" font-size="14" fill="var(--ink)" font-family="Barlow">SWL · draft ${f(p.h1*1000,0)} mm</text>
+ <g font-family="Barlow Condensed" font-weight="700"><rect x="${W-170}" y="12" width="158" height="54" rx="8" fill="${ok?'var(--sea)':'var(--bad)'}"/><text x="${W-160}" y="32" font-size="13" fill="#cfe0e8">Low-side freeboard</text><text x="${W-160}" y="58" font-size="26" fill="#fff">${f(p.fb*1000,0)} mm</text></g>`}
+new ResizeObserver(()=>stability()).observe($('figst'));
+
+function layout(){
+ const L=n('Lv'),ty=sv('ty'),pc=+sv('pc'),Bt=lerp(BL,BM,L),B=n('Bv')>0?n('Bv'):Bt;
+ const dtab=DR[ty],dL=ty==='cat'?TL.slice(0,7):TL,dt=lerp(dL,dtab.map(d=>d[pc]),L),D=n('Dv')>0?n('Dv'):dt;
+ const Hs=n('Hs'),silt=n('silt'),hard=sv('bed')==='hard',ukc=hard?.5:Math.max(.3,.1*D),depth=D+Hs/2+silt+ukc,depthB=D+Hs/2+ukc;
+ const ukcS=Math.max(.1*D,L<=8?.3:L<=35?.5:L<=60?.75:1,hard?.5:.3),siltS=Math.max(silt,.3),depthS=D+Hs/2+siltS+ukcS;
+ const eMin=Math.max(20,L+2,5*B),eNar=Math.max(15,3*B),ePref=Math.max(30,6*B),iMin=Math.max(20,1.5*L),iPref=Math.max(25,1.75*L);
+ const eMinS=Math.max(20,5*B,L>24?6*B:0),cur=n('cur');
+ const Lb=n('Lb'),cat=sv('hullb')==='c',Bb=n('Bb')>0?n('Bb'):cat?(Lb<=30?lerp(BL.slice(0,22),BC,Lb):NaN):lerp(BL,BM,Lb);
+ const single=Bb+(Lb<=20?1:1.5),dbl=2*Bb+(cat?(Lb<=20?1:1.5):(Lb<=20?1:Lb<=30?1.5:2));
+ const singleS=Bb+(Lb<=20?1.5:2),dblS=2*Bb+(Lb<=20?2:3),fl=.8*Lb,fwS=Lb>24?3:Math.ceil(.1*Lb/.25)*.25,cleat=fl<=7.5?2:fl<=12?3:4;
+ $('big-la').innerHTML=big([['Entrance min. (AS / SRSA)',f(eMin,1)+' / '+f(eMinS,1)+' m'],['Fairway, min.',f(1.5*L,1)+' m'],['Entrance depth (AS / SRSA)',f(depth,2)+' / '+f(depthS,2)+' m']]);
+ let o='<h3>Channels</h3>'+tbl([
+ ['Entrance channel, minimum: max(20, L+2, 5B)',f(eMin,1)+' m','','3.1.1.2'],
+ ['Entrance, minimum two-way: max(20, 5B)'+(L>24?'; ≥ 6B for vessels > 24 m':''),f(eMinS,1)+' m','No L+2 term','SRSA 8.3.1'],
+ ['Entrance narrowing at breakwater: max(15, 3B)',f(eNar,1)+' m','“Narrow Channel” signage if less','3.1.1.2'],
+ ['Entrance narrowing: max(15, 3B), one-way traffic',f(eNar,1)+' m','Same','SRSA 8.3.1'],
+ ['Entrance channel, preferred: max(30, 6B)',f(ePref,1)+' m','','3.1.1.3'],
+ ['Entrance preferred max(30, 6B); 8–9B if used in storms or with prevailing wind/current; wider than L<sub>max</sub> where feasible',f(ePref,1)+' m; '+f(8*B,1)+'–'+f(9*B,1)+' m',`L<sub>max</sub> = ${f(L,1)} m`,'SRSA 8.3.1'],
+ ['Internal channel min / preferred',f(iMin,1)+' / '+f(iPref,1)+' m','','3.1.2(a)'],
+ ['Interior channel min / preferred (two-way)',f(iMin,1)+' / '+f(iPref,1)+' m','Same','SRSA 8.3.3'],
+ ['Fairway min 1.5L / preferred 1.75L',f(1.5*L,1)+' / '+f(1.75*L,1)+' m','','3.1.2(b)'],
+ ['Fairway min 1.5L / preferred 1.75–2L (high wind/current, stern-to)',f(1.5*L,1)+' / '+f(1.75*L,1)+'–'+f(2*L,1)+' m','','SRSA 8.3.4'],
+ ['Current in fairways',f(cur,1)+' m/s',cur>.5?st(false,'> 0.5 m/s: widen','widen channels and fairways for the current (SRSA uses 2L), or lower the design current at the berths.'):st(true,'≤ 0.5 m/s'),'3.1.2'],
+ ['Current > 0.5 m/s → channel/fairway width 2L',cur>.5?f(2*L,1)+' m':'Not triggered',cur>.5?yel('Use 2L'):st(true,'≤ 0.5 m/s'),'SRSA 8.3.3–8.3.4'],
+ ['Turning circle diameter ≥ 1.5L (1.3L with thrusters to 3.5L without)',f(1.5*L,1)+' m',f(1.3*L,1)+'–'+f(3.5*L,1)+' m','SRSA 8.3.5'],
+ ['Multihull share',f(n('multi'),0)+' %',n('multi')>25?st(false,'> 25 %: consider widening','widen channels and fairways beyond 1.75L, or plan for a multihull share of 25 % or less.'):st(true,'≤ 25 %'),'3.1.2']],['Dimension','Value','Status','Source']);
+ o+='<h3>Depths below CD</h3>'+tbl([[`Design draft (${ty}, ${pc?'95th pct':'average'}${n('Dv')>0?', override':''})`,f(D,2)+' m',ty==='cat'&&L>30?st(false,'No table data > 30 m','Table 3.1 has no catamaran drafts above 30 m. Enter a surveyed draft in Draft override.'):'','T3.1'],['+ ½ Hs',f(Hs/2,2)+' m','','AS+SRSA 3.2.1.2(a) / 8.3.2'],
+ ['+ siltation allowance (input)',f(silt,2)+' m','','3.2.1.2(b)'],['+ siltation allowance, typically ≥ 0.3 m',f(siltS,2)+' m',silt<.3?yel('Raised to 0.3'):'','SRSA 8.3.2'],
+ [`+ under-keel clearance (${hard?'hard: 0.5 m':'soft: max(0.3, 0.1D)'})`,f(ukc,2)+' m','','3.2.1.2(c)/(d)'],
+ [`+ UKC: max(0.1D, ${L<=8?'0.3':L<=35?'0.5':L<=60?'0.75':'1.0'} m for L ${L<=8?'≤ 8':L<=35?'≤ 35':L<=60?'≤ 60':'> 60'} m, ${hard?'0.5 hard':'0.3 soft'})`,f(ukcS,2)+' m','','SRSA 8.3.2'],
+ ['Entrance channel depth',`<b>${f(depth,2)} m</b>`,'','3.2.1.2'],['Entrance channel depth',`<b>${f(depthS,2)} m</b>`,f(depthS-depth,2)+' m vs AS','SRSA 8.3.2'],
+ ['Berth depth at low tide (no siltation)',f(depthB,2)+' m','Yacht drafts recommended unless height-restricted','3.2.3'],
+ ['Powerboats ≥ 24 m: verify entrance depth to PIANC WG 134; check air draft under fixed bridges',L>=24?'Applies':'Not triggered',L>=24?yel('Verify'):st(true,'L < 24 m'),'SRSA 8.3.2']],['Component','Value','','Source']);
+ o+='<h3>Berths</h3>'+tbl([[`Vessel beam (${cat?'catamaran':'monohull'}, L ${Lb} m)`,f(Bb,2)+' m','','T3.2'],
+ ['Single berth: B + 1 m (≤ 20 m) / B + 1.5 m',f(single,2)+' m','','3.3.2(b)'],['Single berth: B + 1.5 m (≤ 20 m) / B + 2 m',f(singleS,2)+' m','+'+f(singleS-single,2)+' m vs AS','SRSA 8.3.9'],
+ ['Double berth: 2B + 1 / 1.5 / 2 m',f(dbl,2)+' m','Add pile width if mooring pile used','3.3.2(a), 3.3.3'],['Double berth: 2B + 2 m (≤ 20 m) / 2B + 3 m',f(dblS,2)+' m','+'+f(dblS-dbl,2)+' m vs AS','SRSA 8.3.9'],
+ ['Vessels > 24 m: verify berth width to PIANC WG 134',Lb>24?'Applies':'Not triggered',Lb>24?yel('Verify'):st(true,'L ≤ 24 m'),'SRSA 8.3.9'],
+ ['Berth length',f(Lb,1)+' m','= vessel length','3.3.2'],
+ ['Finger length ≥ 0.8L (no end pile)',f(fl,1)+' m','','3.5.4'],['Finger length min 0.8L / preferred 1.0L',f(fl,1)+' / '+f(Lb,1)+' m','','SRSA 8.3.7'],
+ ['Finger > 12 m → end restraint pile or mooring recommended',fl>12?'Recommended':'Not triggered',fl>12?yel('Finger '+f(fl,1)+' m'):st(true,'≤ 12 m'),'SRSA 8.3.7'],
+ ['Finger width','0.9 m uniform, or tapered to 0.6 m','','3.5.4'],['Finger width ≥ 10 % berth length, rounded up to 0.25 m; 3 m for > 24 m',f(fwS,2)+' m',fwS>.9?yel('Wider than AS 0.9 m'):'','SRSA 8.3.7'],
+ ['Alongside gap min 0.2L / preferred 0.25L',f(.2*Lb,1)+' / '+f(.25*Lb,1)+' m','','3.3.2'],['Alongside spacing ≥ 3 m between vessels','3.0 m','','SRSA 8.3.9'],
+ ['Mooring points, floating berth','≥ 3 each side; +2 on walkway for double','','3.5.5'],['Cleats per finger side (finger '+f(fl,1)+' m); 1 on walkway between double-berthed boats; alongside at 3 m centres',cleat+' per side','','SRSA 10.5.2'],
+ ['Intermediate mooring pile between the two boats of a double berth (wake/wind waves > 0.3 m or cross wind/current)',Hs>.3?'Consider':'Not triggered',Hs>.3?yel('Hs > 0.3 m','Freestanding pile separating the two boats; add its width to the berth. Sized on the Vessel mooring tab.'):st(true,'Hs ≤ 0.3 m'),'3.3.3']],['Item','Value','Note','Source']);
+ $('out-layout').innerHTML=o;
+}
+function waves(){
+ const lim=(x,c)=>x*c,cls=(h,L)=>{if(h==null||!(h>=0))return null;const r=h/L;return r<=.75?'Excellent':r<=1?'Good':r<=1.25?'Moderate':'Exceeds'};
+ const rank={Excellent:0,Good:1,Moderate:2,Exceeds:3};let worst=-1,rows=[],yi=0;
+ WV.forEach((r,i)=>{const a=parseFloat(sv('a'+i)),y=r[1]!=null?parseFloat(sv('y'+i)):NaN,ca=cls(isNaN(a)?null:a,r[2]),cy=r[1]!=null?cls(isNaN(y)?null:y,r[1]):null;
+  [ca,cy].forEach(c=>{if(c)worst=Math.max(worst,rank[c])});
+  const badge=c=>c==null?st(null,'—'):c==='Exceeds'?st(false,c,'Hs is above 1.25 × the good limit. Add or extend a breakwater or attenuator, turn berths so waves arrive head-on, or cut reflection from nearby walls.'):c==='Moderate'?`<span class="s ex">${c}</span>`:st(true,c);
+  rows.push(`<tr><td tabindex="0" data-tip="${esc(tipFor(r[0]))}">${r[0]}</td><td class="n">${isNaN(a)?'—':f(a,2)}</td><td class="n">${r[2]} m</td><td>${badge(ca)}</td><td class="n">${isNaN(y)?'—':f(y,2)}</td><td class="n">${r[1]==null?'n/o':r[1]+' m'}</td><td>${badge(cy)}</td></tr>`)});
+ const Tp=n('Tp');let Hpt=0;WV.forEach((r,i)=>{const y=r[1]!=null?parseFloat(sv('y'+i)):NaN;if(!isNaN(y))Hpt=Math.max(Hpt,y)});if(!isNaN(parseFloat(sv('Hmax'))))Hpt=Math.max(Hpt,parseFloat(sv('Hmax')));
+ const names=['Excellent','Good','Moderate','Exceeds moderate'],Lm=n('Lmax'),y1=parseFloat(sv('y1')),Hm=parseFloat(sv('Hmax'));
+ let maxLim=null;WV.forEach((r,i)=>{const y=r[1]!=null?parseFloat(sv('y'+i)):NaN,a=parseFloat(sv('a'+i));if(!isNaN(y))maxLim=Math.max(maxLim??0,1.5*1.25*r[1]);else if(!isNaN(a))maxLim=Math.max(maxLim??0,1.5*1.25*r[2])});
+ $('big-wv').innerHTML=big([['Governing climate',worst<0?'—':names[worst]],['Vessels',Lm<20?'< 20 m':'≥ 20 m']]);
+ $('out-waves').innerHTML=`<div class="scroll"><table class="stack"><thead><tr><th>Direction / period</th><th>1-yr Hs</th><th>Good limit</th><th>Class</th><th>50-yr Hs</th><th>Good limit</th><th>Class</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`+
+ tbl([['Fleet requirement',Lm<20?'Moderate or better':'May be more severe than moderate',worst<0?'':Lm<20?st(worst<=2,null,'vessels under 20 m need moderate or better in every row. Bring the worst Hs below 1.25 × its good limit.'):st(null,'Judgement'),'T4.2 Note'],['Head sea 50-yr Hs > 0.4 m → consider intermediate mooring piles between the two boats in each double berth',isNaN(y1)?'—':f(y1,2)+' m',isNaN(y1)?'':y1>.4?yel('Consider piles','Freestanding pile at the outer end of each double berth, between the two boats, so each boat ties to its own finger and the pile. Not a pontoon guide pile. Sized on the Vessel mooring tab. To remove the trigger, bring the 50-yr head-sea Hs to 0.4 m or less, or use single berths.'):st(true,'Not triggered'),'4.8.2.1'],['Max wave height ≤ 1.5 × moderate Hs criterion',isNaN(Hm)?'—':f(Hm,2)+' m',isNaN(Hm)||maxLim==null?'':st(Hm<=maxLim,'limit '+f(maxLim,2)+' m','reduce wave penetration (breakwater, attenuator) until H<sub>max</sub> is within 1.5 × the moderate Hs limit.'),'T4.2 Note'],['Minimum horizontal wave force on floating elements','2 kN/m','','4.8.2.3'],
+ ['Standard pontoons: H ≤ 1 m and T ≤ 5 s, else bespoke design',f(Hpt,2)+' m, '+f(Tp,1)+' s',st(Hpt<=1&&Tp<=5,Hpt<=1&&Tp<=5?'Standard OK':'Bespoke design','keep waves at the pontoons ≤ 1 m and ≤ 5 s with breakwater protection, or specify bespoke heavy pontoons or a fixed jetty.'),'SRSA 9.4.3'],
+ ['Wave criteria: SRSA adopts the ASCE Manual 50 tranquillity criteria, as used in AS 3962 T4.2 and PIANC WG 134 / 149','Same limits','','SRSA 9.1'],
+ ['Design return period for structures','1 in 50 yr (wave, surge, flood)','','4.1'],['Design return period, permanent structures (ULS)','1 in 100 yr',yel('Stricter'),'SRSA 7.1.2'],
+ ['Operational (SLS) condition','Exceeded 1–3 % of time per year','','SRSA 7.1.2']])+
+ `<p class="note">Classes: Excellent ≤ 0.75 × good limit, Good ≤ limit, Moderate ≤ 1.25 × limit. “n/o” = condition not expected for that event per Table 4.2. For period-dependent attenuators a site-specific wave study is expected (4.8.2.2). Statistical ratios from C4.8.2.2: H<sub>10</sub> ≈ 1.27 Hs, H<sub>1</sub> ≈ 1.67 Hs, H<sub>max</sub> ≈ 1.8 Hs. SRSA 6.6 also requires wind waves (3–8 s), swell (8–25 s), infragravity waves (30–200 s) and vessel wake to be assessed. The SRSA pontoon check uses the largest 50-yr Hs or H<sub>max</sub> entered.</p>`;
+}
+function loads(){
+ const V=n('V'),q=.0006*V*V,ty=sv('wty'),L=n('wL'),Ab=lerp(WL,WA[ty].beam,L),Ah=lerp(WL,WA[ty].head,L),Cd=n('Cdw'),Fv=Cd*Ab*q,nb=n('nb'),Frow=nb*Fv*1.2;
+ const Fs=n('Cds')*n('Astr')*q,Fwind=Frow+Fs;
+ const v=n('v'),p=.5*n('crho')*n('Cdc')*v*v/1000,Fc=p*n('Ac'),mat=2*n('pd'),deb=Math.max(.5*n('crho')*2*v*v/1000*mat,10);
+ const Fwave=n('Fw')>0?n('Fw'):2*n('Lx');
+ const c1=Fwind+1.5*Fc+1.5*Fwave,c2=.8*Fwind+1.25*Fc+1.25*Fwave;
+ const Lb=n('Lbv'),M=lerp(DL,DT,Lb),vb=Lb>34?.15:Lb>=25?.2:.3,E=.5*M*vb*vb*n('Ce')*n('Cm');
+ $('big-ld').innerHTML=big([['Wind pressure q',f(q,3)+' kPa'],['Wind on one vessel, beam',f(Fv,1)+' kN'],['Berthing energy',f(E,2)+' kJ']]);
+ $('out-loads').innerHTML='<h3>Wind</h3>'+tbl([['q = 0.0006 V²',f(q,3)+' kPa','','4.8.3.3(1)'],[`Vessel area, beam / head (${ty}, ${L} m)`,f(Ab,1)+' / '+f(Ah,1)+' m²',L<8||L>50?st(false,'Outside table','Table 4.4 covers 8–50 m vessels. Use a measured windage area for this vessel.'):'','T4.4'],['Force per vessel, beam: Cd·A·q',f(Fv,2)+' kN','','4.8.3.3(2)'],['Force per vessel, head (Cd 0.8)',f(.8*Ah*q,2)+' kN','','T4.3'],[`Row of ${nb} windward + 20 % on ${nb} leeward`,f(Frow,1)+' kN','','4.8.3.3'],['Structure: Cd·A·q',f(Fs,2)+' kN','','T4.3'],['Total wind on section',f(Fwind,1)+' kN','','']])+
+ '<h3>Current &amp; debris</h3>'+tbl([['p = ½ρ·Cd·v²',f(p,3)+' kPa',v<1?st(false,'v < 1.0 m/s min. in estuary/river','in an estuary or river AS 3962 requires a design current of at least 1.0 m/s. Raise the input, or ignore if the site is in neither.'):'','4.8.4.3'],['Force on element',f(Fc,2)+' kN','','4.8.4.3'],['Debris mat depth = 2 × pontoon draft',f(mat,2)+' m','1.2 m for fixed structures','4.8.4.4'],['Debris load per metre (≥ 10 kN/m)',f(deb,1)+' kN/m','','4.8.4.4'],['Negative lift on leading edge in floods','Check','','4.8.4.5']])+
+ '<h3>Strength combinations (piling, Cl. 4.2)</h3>'+tbl([['Wave force used',f(Fwave,1)+' kN',n('Fw')>0?'From analysis':'2 kN/m × '+n('Lx')+' m','4.8.2.3'],['W + 1.5 C + 1.5 Wv (at HAT)',`<b>${f(c1,1)} kN</b>`,'Also check LAT where depth varies','4.2(a)(i)'],['0.8 W + 1.25 C + 1.25 Wv (max flood/surge level)',f(c2,1)+' kN','','4.2(a)(iii)'],['Marina itself: add 1.5 × vertical wave effect','—','','4.2(b)'],['Return period: waves, surge, flood ≥ 1 in 50 yr; wind per AS/NZS 1170','50 yr','','4.1'],['Return period, permanent structures ≥ 1 in 100 yr (temporary 20–50 yr)','100 yr',yel('Stricter'),'SRSA 7.1.2'],['Seismic loads on structures and foundations to Saudi Building Code','Include','','SRSA 9.5'],['Load cases: full occupancy and worst case, all actions; document criteria and sources','—','','SRSA 9.5'],['Fixed jetty deck above design high water + SLR + wave crest; check uplift','—','','SRSA 9.4.2']])+
+ '<h3>Structural live loads (apply whichever is worse)</h3>'+tbl([
+ ['Access category: unrestricted unless private, ≤ 2 vessels','—','','4.3'],
+ ['Gangway, unrestricted: 4 kPa UDL, or 4.5 kN on 0.01 m²','4 kPa | 4.5 kN','','4.5.1'],
+ ['Gangway, restricted: 3 kPa + handrail load (AS 1170.1), or 4.5 kN','3 kPa | 4.5 kN','','4.5.2'],
+ ['Fixed walkways and fingers, unrestricted: 5 kPa, or 4.5 kN','5 kPa | 4.5 kN','','4.6.1'],
+ ['Fixed walkways and fingers, restricted: 3 kPa, or 4.5 kN','3 kPa | 4.5 kN','','4.6.2'],
+ ['Floating structures: 3 kPa over deck (excl. under gangways) or worst part, or 4.5 kN, plus gangway reaction','3 kPa | 4.5 kN','','4.7.2'],
+ ['Flotation / stability loads: Table 4.1 (see Stability tab)','3.0 / 2.0 kPa','','T4.1'],
+ ['Dead load includes services and pipes full of water','—','','4.4'],
+ ['Gangway and connections: loads from lateral displacement of the pontoon','—','','4.12'],
+ ['SRSA: no separate values; refers to AS 3962, PIANC 149 Pt IV, BS 6349, SBC','—','','SRSA 9.5']],['Load','Value','','Source'])+
+ '<h3>Berthing</h3>'+tbl([['Design displacement',f(M,0)+' t','','T4.6'],['Berthing velocity',f(vb,2)+' m/s','','4.9'],['E = ½ M v² Ce Cm',f(E,2)+' kJ','Coefficients user-supplied','4.9'],['Factored impact (alone, no environment)','1.25 × impact load','','4.2(c)']])+
+ `<p class="note">Wind uses steady 30 s ultimate speed at z ≤ 3 m (4.8.3.1–2); use higher z for vessels over 25 m. Current minimum 1.0 m/s applies to estuaries and rivers; flood-prone sites need a site-specific study. SRSA gives no load formulas or coefficients of its own; it refers to AS 3962, PIANC WG 149 Pt IV, BS 6349 and the Saudi Building Code (9.5).</p>`;
+}
+function gangway(){
+ const Lg=n('Lg'),zA=n('zA'),fb=n('fb'),ac=sv('ac')==='1',nB=n('nB');
+ const sl=wl=>{const d=zA-(wl+fb);const hz=Math.sqrt(Math.max(Lg*Lg-d*d,1e-9));return {d,s:Math.abs(d)/hz}};
+ const lv=[['HAT',n('hat')],['MSL',n('msl')],['80 % level',n('w80')],['LAT / lowest',n('lat')]],r=lv.map(([k,w])=>({k,w,...sl(w)})),inv=s=>s>0?'1:'+f(1/s,1):'flat';
+ const sMsl=r[1].s,s80=r[2].s,sLo=r[3].s,tr=n('hat')-n('lat');
+ const w=nB<=10?(ac?1.2:1):nB<=60?1.2:nB<=120?(ac?1.8:1.5):1.8;
+ const wl=n('wlen'),sl2=n('slen'),pw=ac?(wl<=200?1.8:null):(wl<=200?1.5:2.4),sw=ac?(wl<=200?1.5:null):(wl<=200?1.5:1.8);
+ const pwS=wl>120?2.5:2,swS=sl2<=50?1.5:sl2<=120?2:2.5;
+ $('big-gw').innerHTML=big([['Slope at LAT',inv(sLo)],['Slope at MSL',inv(sMsl)],['Clear width (AS)',f(w,1)+' m']]);
+ const rows=[['Clear gangway width ('+nB+' berths)',f(w,1)+' m','','T3.4'],['Gangway width: as wide as possible, absolute min 1.0 m; wider for carts and wheelchairs','≥ 1.0 m',st(w>=1,'AS value ≥ 1.0 m','widen the gangway to at least 1.0 m clear.'),'SRSA 8.3.8']];
+ if(ac){rows.push(['Length ≤ 25 m for accessible slopes',f(Lg,1)+' m',st(Lg<=25,null,'accessible slopes only count for gangways up to 25 m. Shorten the gangway or add an intermediate landing.'),'T3.5'],['Slope ≥ 80 % of time ≤ 1:14',inv(s80),st(s80<=1/14,null,'need 1:14 or flatter for 80 % of the time. Lengthen the gangway (max. 25 m), lower the landing level, raise pontoon freeboard, or add a ramped jetty (T3.5 Note 1).'),'T3.5'],['Slope ≤ 20 % of time ≤ 1:8 (at CD)',inv(sLo),st(sLo<=1/8,null,'need 1:8 or flatter at CD. Lengthen the gangway, lower the landing level, or raise pontoon freeboard.'),'T3.5'],['Kerb 200 mm on pontoon edge within 6 m',sLo>1/12?'Required':'Not required',sLo>1/12?yel('slope &gt; 1:12'):st(true,'≤ 1:12'),'3.8'],['Treadplate ≤ 1:8 over ≤ 1200 mm; kerb rails if > 500 mm','—','','3.6.2.3'],['Boarding: ≥ 2 of hoist, 1:8 ramp, AS 1657 stair','—','','3.5.6'],['Accessible berths within 200 m of landside access',wl+' m',st(wl<=200,null,'accessible berths must be within 200 m of landside access. Move them closer to the gangway.'),'3.5.2'],['Disability access: follow PIANC WG 14 and KSA disability codes; reduced gradients such as 1:10','1:10 guide',st(sMsl<=.1,'MSL '+inv(sMsl),'for disability access SRSA points to about 1:10. Lengthen the gangway or lower the landing.'),'SRSA 7.2, 8.3.8'])}
+ else rows.push(['Slope at CD ≤ 1:4',inv(sLo),st(sLo<=.25,null,'general berths need 1:4 or flatter at CD. Lengthen the gangway or lower the landing.'),'T3.5']);
+ rows.push(['Slope at LAT ≤ 1:5',inv(sLo),st(sLo<=.2,null,'SRSA allows 1:5 at most at LAT. Lengthen the gangway or lower the landing.'),'SRSA 8.3.8'],['Slope at MSL ideally ≤ 1:10',inv(sMsl),sMsl<=.1?st(true,'≤ 1:10'):yel('> 1:10'),'SRSA 8.3.8'],
+ ['Ramp plates both ends; vertical rise ≤ 15 mm','≤ 15 mm','','SRSA 8.3.8'],
+ ['Handrails both sides'+(ac?', kerbs/kerbrails to AS 1428.1':''),'—','','3.6.5'],['Handrails: upper 1.0–1.2 m, lower 0.6–0.75 m; extend ≥ 0.3 m at sides, ≥ 0.45 m at ends','—','','SRSA 8.3.8'],
+ ['Crossfall ≤ 1:40; heelguard openings; slip per AS 4586','—','','3.6.3–3.6.4']);
+ const wrows=[['Primary walkway clear width (length '+wl+' m)',pw?f(pw,1)+' m':'n/a','≥ gangway width','T3.3'],['Main walkway min 2.0 m (2.5 m if pier > 120 m); preferred 3–3.5 m',f(pwS,1)+' m',pw&&pwS>pw?yel('+'+f(pwS-pw,1)+' m vs AS'):'','SRSA 8.3.6'],
+ ['Golf carts: 3.5–4 m; superyachts: ≥ 4 m','3.5–4 m','','SRSA 8.3.6'],
+ ['Secondary walkway clear width',sw?f(sw,1)+' m':'n/a','','T3.3'],['Secondary walkway: 1.5 m ≤ 50 m, 2.0 m ≤ 120 m, 2.5 m > 120 m (length '+sl2+' m)',f(swS,1)+' m',sw&&swS>sw?yel('+'+f(swS-sw,1)+' m vs AS'):'','SRSA 8.3.6'],
+ ['Tidal range HAT − LAT',f(tr,2)+' m','',''],['Berthing system: fixed jetties typical where range < 1 m and depth ≤ 7 m; pontoons where range > 0.5 m',tr<.5?'Fixed jetty':tr<1?'Either':'Pontoons','','SRSA 9.4.2–9.4.3']];
+ $('out-gangway').innerHTML='<h3>Slope by water level</h3>'+tbl(r.map(x=>[x.k+' ('+f(x.w,2)+' m CD)',inv(x.s),x.d<0?'Pontoon above landing':'Down to pontoon','']),['Level','Slope','','Source'])+'<h3>Gangway</h3>'+tbl(rows,['Requirement','Value','Status','Source'])+'<h3>Walkways &amp; berthing system</h3>'+tbl(wrows,['Requirement','Value','Status','Source'])+(ac&&tr>3?`<p class="note">Tidal range exceeds 3 m: AS T3.5 Note 2 allows a reduced 1:14 duration, to be identified. Consider a ramped jetty (Note 1).</p>`:'');
+ drawGw(r,Lg,zA,fb);
+}
+function drawGw(r,Lg,zA,fb){const s=$('svggw'),W=s.clientWidth,H=s.clientHeight;if(!W)return;
+ const lo=r[r.length-1].w,zs=r.map(x=>x.w+fb).concat(zA,lo-.5),z0=Math.min(...zs),z1=Math.max(...zs,r[0].w),k=Math.min((W-120)/Lg,(H-50)/(z1-z0+.3)),Y=z=>H-20-(z-z0)*k,x0=60;
+ const cols=['var(--ok)','#8a8f93','var(--mk)','var(--bad)'];
+ s.innerHTML=`<rect x="0" y="${Y(zA)}" width="${x0}" height="${H}" fill="#7d8a90"/>`+r.map((x,i)=>{const hz=Math.sqrt(Math.max(Lg*Lg-x.d*x.d,0))*k,ye=Y(x.w+fb);return `<path d="M0 ${Y(x.w)}H${W}" stroke="${cols[i]}" stroke-dasharray="6 5" stroke-width="1.5"/><path d="M${x0} ${Y(zA)}L${x0+hz} ${ye}" stroke="${cols[i]}" stroke-width="4" stroke-linecap="round"/><rect x="${x0+hz}" y="${ye}" width="60" height="${fb*k+6}" fill="#c9cfd2" stroke="#33454f"/><text x="${W-8}" y="${Y(x.w)-5}" text-anchor="end" font-size="13" font-family="Barlow" fill="var(--ink)">${x.k}</text>`}).join('');}
+new ResizeObserver(()=>gangway()).observe($('figgw'));
+
+function services(){
+ const nS=n('nS'),nL=n('nL'),N=nS+nL,n12=n('n12'),nch=n('nch'),nP=Math.max(1,n('nP')),bpp=n('bpp'),wt=n('wtot'),Ld=n('Ld'),c=Math.ceil;
+ const ASP=[[10,'1 × 15 A','—'],[12,'2 × 15 A','—'],[15,'2 × 15 A','1 × 32 A'],[20,'2 × 15 A','1 × 32 A'],[25,'2 × 15 A','1 × 32 A'],[30,'2 × 15 A','1 × 63 A'],[35,'2 × 15 A','1 × 63 A'],[40,'2 × 15 A','1 × 125 A'],[45,'2 × 15 A','1 × 125 A'],[50,'2 × 15 A','1 × 250 A']].find(x=>Ld<=x[0]);
+ const SRP=[[8,'16 A 1φ, 3.5 kVA'],[14,'16 A 1φ, 3.5 kVA'],[20,'32 A 3φ, 20 kVA'],[30,'63 A 3φ, 42 kVA'],[40,'150 A 3φ, 100 kVA'],[50,'225 A 3φ, 150 kVA'],[60,'375 A 3φ, 250 kVA'],[90,'600 A 3φ, 400 kVA'],[150,'1000 A 3φ, 670 kVA']].find(x=>Ld<=x[0]);
+ const hyd=Ld<=20?10:Ld<=30?15:Ld<=50?20:NaN,pkV=Ld<16?0:Ld<=25?2:Ld<=35?3:Ld<=45?4:Ld<=60?5:6;
+ const lb=Math.max(nP*c(bpp/30),c(wt/50)),reels=nP*2+c(Math.max(wt-nP*30,0)/30);
+ $('big-sv').innerHTML=big([['Berths',N],['Lifebuoys (SRSA)',lb],['Extinguishers (SRSA)',Math.max(2,c(N/20))]]);
+ let o='<h3>Firefighting</h3>'+tbl([
+ ['Hose reels: no part of berth beyond 4 m stream from fully extended reel; hose ≤ 36 m; ≤ 30 m apart; ≥ 2 reachable from each berth; at shore end of first berth and seaward end of each walkway (if last berth > 20 m away)','≈ '+reels+' reels','Indicative from walkway length','6.2.2'],
+ ['Hose reel flow: two most disadvantaged reels 0.41 L/s each at 220 ± 10 kPa; else booster pump 0.82 L/s','0.41 L/s','','6.2.2(g)'],
+ ['Hose reels: hose ≥ 20 m; ≤ 30 m apart; ≥ 2 reachable from each berth; at shore side of first berth and seaward end of each walkway','≈ '+reels+' reels',yel('Min. hose 20 m (AS max. 36 m)'),'SRSA 12.6.3'],
+ ['Fire hydrants where ≥ 8 berths and brigade can use them',N>=8?'Required':'Not required','','6.2.3.1'],['Hydrant flow for berth length '+Ld+' m',Number.isFinite(hyd)?hyd+' L/s':'> 50 m: outside AS',Number.isFinite(hyd)?'':yel('Outside table'),'T6.2'],
+ ['Fixed marina: all parts within 60 m of pumping appliance, else attack hydrants at walkway entry and ≤ 30 m intervals','—','','6.2.3.2'],
+ ['Standpipes ≤ 30 m apart; walking distance to hydrant or extinguisher ≤ 25 m','—','','SRSA 12.6.3'],
+ ['Portable extinguishers: number by hazard and layout','No count set','','6.2.4'],['Extinguishers: 1 per 20 berths, min 2; 6 kg dry powder',Math.max(2,c(N/20)),'','SRSA 12.6.3'],
+ ['Manual audible fire alarm for > 30 berths',N>30?'Required':'Not required',N>30?yel('> 30 berths'):st(true,'≤ 30'),'6.2.5'],['Fire detection, alarm and telephone for fire emergency','Required','','SRSA 12.6.1–12.6.2'],
+ ['Emergency plan to AS 3745','Required','','6.2.9']],['Requirement','Value','Status','Source']);
+ o+='<h3>Life safety</h3>'+tbl([
+ ['Lifebuoys: 1 per 30 berths on each pier, and within every 50 m of main walkway; 30 m floating throw line',lb,'max('+nP*c(bpp/30)+', '+c(wt/50)+')','SRSA 12.3'],
+ ['Safety ladders ≤ 50 m apart; lowest step ≥ 600 mm below LAT; extra at fuel berths','≥ '+c(wt/50+nP),'Indicative, along main walkways','SRSA 12.2'],
+ ['Emergency cabinets along main walkways ≤ 50 m spacing; ≥ 1 with defibrillator (3-minute response)','≥ '+c(wt/50),'','SRSA 12.1'],
+ ['Salvage pump available','1','','SRSA 12.5'],['No lifebuoy, ladder or first-aid cabinet criteria (S6 covers fire, waste, lighting, power, water)','—','','6']],['Requirement','Value','Note','Source']);
+ o+='<h3>Power, water, pedestals</h3>'+tbl([
+ ['Socket outlets for '+Ld+' m berth (AUS): single-phase / three-phase',ASP?ASP[1]+' / '+ASP[2]:'—',ASP?'':yel('> 50 m'),'T6.3'],['Supply for '+Ld+' m vessel (60 Hz)',SRP?SRP[1]:'Customised','','SRSA 11.1.2'],
+ ['Electrical to AS 3004.1 and AS/NZS 3000; ELCB on all circuits; enough power that generators are not needed','—','','6.6'],['Electrical to SBC 401 (+ BS EN 60092, 60309, BS 7671); ≤ 5 % voltage drop; plan for e-propulsion charging','—','','SRSA 11.1'],
+ ['Service pedestals: vessels ≤ 20 m may share 1 per 2; > 20 m individual; body IP44, sockets IPX4',c(nS/2)+nL,'','SRSA 10.5.1'],
+ ['Water taps: 3/4" for 8–25 m berths; 1" above 25 m',Ld>25?'1"':'3/4"','','6.7'],['Hose bibs: 19 mm < 30 m, 25 mm 30–100 m, 38–51 mm > 100 m; outlet within 20 m of every berth; flow with 25 % of outlets open',Ld<30?'19 mm':Ld<=100?'25 mm':'38–51 mm','','SRSA 11.2']],['Requirement','Value','Note','Source']);
+ o+='<h3>Amenities &amp; parking</h3>'+tbl([
+ ['Toilets: 1 per 50 berths (M) + 1 per 50 (F); ≤ 300 m from furthest access bridge; accessible toilets required',c(N/50)+' M + '+c(N/50)+' F','','SRSA 10.4'],
+ ['Urinals 1 per 75 (M); basins 1 per 50 (M), 1 per 75 (F)',c(N/75)+' urinals; '+c(N/50)+' M + '+c(N/75)+' F basins','','SRSA 10.4'],
+ ['Showers 1 per 75 berths (M and F)',c(N/75)+' M + '+c(N/75)+' F','','SRSA 10.4'],['Laundry: 1 washer + 1 dryer per 300 berths',c(N/300)+' + '+c(N/300),'','SRSA 10.4'],
+ ['Sanitary facilities and showers','Provide; no counts set','','6.10'],
+ ['Car parking 0.5–0.75 per berth, + 1.5 per berth > 12 m (TYHA), + 3 per charter yacht',f(.5*N+1.5*n12+3*nch,0)+'–'+f(.75*N+1.5*n12+3*nch,0),'','SRSA 10.3'],
+ ['Parking per vessel by LOA (16–25 m: 2 … 61 m+: 6)',pkV?pkV+' per '+Ld+' m vessel':'< 16 m: n/a','','SRSA 10.3'],
+ ['Liquid waste: pump-out, waste oil, bilge water; solid waste near gangway head, with recycling','Required','','AS+SRSA 6.3 / 11.6, 11.8'],
+ ['Lighting for safe access, security and navigation, minimise glare','Required','','AS+SRSA 6.4 / 11.3'],
+ ['Fuel: on site, nearby, or bunkering; to SBC 1201, NFPA, MARPOL','Assess','','SRSA 11.5']],['Requirement','Value','Note','Source']);
+ $('out-services').innerHTML=o+`<p class="note">Counts are indicative and based on the totals entered. Hose reel and ladder numbers depend on the actual layout. SRSA 12.3 attributes its lifebuoy rules to SOLAS. Parking for superyacht marinas varies with the provision, and SRSA 10.3 expects a mobility study.</p>`;
+}
+
+function envLoads(){
+ const V=n('V'),q=.0006*V*V,ty=sv('wty'),L=n('wL'),Fv=n('Cdw')*lerp(WL,WA[ty].beam,L)*q,Fwind=n('nb')*Fv*1.2+n('Cds')*n('Astr')*q;
+ const v=n('v'),Fc=.5*n('crho')*n('Cdc')*v*v/1000*n('Ac'),Fwave=n('Fw')>0?n('Fw'):2*n('Lx');
+ return {Fwind,Fc,Fwave,c1:Fwind+1.5*Fc+1.5*Fwave};
+}
+function mooring(){
+ const mt=sv('mtype');
+ for(const fs of document.querySelectorAll('#f-mooring fieldset[data-mt]'))fs.style.display=fs.dataset.mt.split(' ').includes(mt)?'':'none';
+ const E=envLoads(),Fd=sv('msec')==='calc'?E.c1:n('Fman'),k=n('share');
+ const sb=n('sb'),low=n('mlow'),wlD=n('mwl')+n('slr'),crest=n('crest'),mfb=n('mfb'),rng=wlD-low;
+ const head=tbl([
+ [sv('msec')==='calc'?'From Loads tab: W + 1.5 C + 1.5 Wv':'Manual design load',f(Fd,0)+' kN',sv('msec')==='calc'?`W ${f(E.Fwind,0)}, C ${f(E.Fc,1)}, Wv ${f(E.Fwave,0)} kN`:'','4.2(a)(i)'],
+ ['Most-loaded restraint share factor',f(k,2),'Uneven pull between restraints','REF:Tobiasson 17.2, 17.4'],
+ ['Design water level range: lowest still water to 1-in-100 yr + sea-level rise',f(low,2)+' to '+f(wlD,2)+' m CD',f(rng,2)+' m range','4.14, 2.3.2.6'],
+ ['Anchorage elasticity changes how load reaches the structure; check each attachment','—','','4.11']],['Item','Value','Note','Source']);
+ let o='',big1=[],ok=true,pic={mt,sb,low,wlD,mfb};
+ if(mt==='piles'){
+  const gh=n('gh'),ptop=n('ptop'),topReq=wlD+crest+mfb+gh,np=Math.max(1,n('np')),P=Fd*k/np,lever=wlD+mfb-sb+n('fix');
+  const D=n('D'),te=n('t')-n('ca'),d=D-2*te,Z=Math.PI*(D**4-d**4)/(32*D),I=Math.PI*(D**4-d**4)/64,Mu=P*lever,phiM=.9*n('fy')*Z/1e6,ut=Mu/phiM,defl=P*1e3*(lever*1e3)**3/(3*200e3*I);
+  const CHS=[[273.1,9.3],[323.9,9.5],[355.6,9.5],[406.4,9.5],[406.4,12.7],[457,12.7],[508,12.7],[559,12.7],[610,12.7],[610,16],[660,16],[711,16],[762,16],[813,16],[914,19],[1016,19]];
+  const capOf=([Do,tw])=>{const e=tw-n('ca'),di=Do-2*e;return .9*n('fy')*Math.PI*(Do**4-di**4)/(32*Do)/1e6};
+  const pick=CHS.find(c=>capOf(c)>=Mu),fx=n('fix'),emb=n('emb');ok=ut<=1&&ptop>=topReq;
+  big1=[['Load per pile',f(P,1)+' kN'],['Pile utilisation',f(ut*100,0)+' %']];Object.assign(pic,{ptop,fix:fx});
+  o='<h3>Cantilever guide piles</h3>'+tbl([
+  ['Pile top ≥ design level + wave crest + freeboard + guide height',f(topReq,2)+' m CD',st(ptop>=topReq,'Top '+f(ptop,2)+' m CD','raise the pile top to at least '+f(topReq,2)+' m CD, or fit a tether so the pontoon cannot float off (Cl. 4.14).'),'4.14'],
+  ['Load on most-loaded pile P = F·k / n',f(P,1)+' kN','Applied at guide (deck level)','4.2(a)'],
+  ['Lever: guide level − seabed + depth to fixity',f(lever,2)+' m','','REF:Tobiasson 17.1'],
+  ['Design moment M* = P × lever',f(Mu,0)+' kN·m','',''],
+  [`Steel pipe ${D} × ${n('t')} mm, ${n('ca')} mm wall loss: Ze`,f(Z/1e6,2)+' × 10⁶ mm³','Elastic modulus (conservative)','REF:AS 4100'],
+  ['φMs = 0.9 fy Ze',f(phiM,0)+' kN·m',st(ut<=1,'Util. '+f(ut*100,0)+' %','increase pile diameter or wall thickness, add piles (lower P), or reduce the lever by founding shallower fixity (stiffer soil).'),'REF:AS 4100'],
+  ['Pontoon excursion at guide, P·L³/3EI',f(defl,0)+' mm','Check services and gangway tolerance','4.12'],
+  ['Smallest standard round pipe for M* with '+n('ca')+' mm wall loss, fy '+n('fy')+' MPa',pick?pick[0]+' × '+pick[1]+' mm':'> 1016 mm',pick?'φMs '+f(capOf(pick),0)+' kN·m':yel('None listed','No listed pipe carries the moment: add piles to cut the load per pile, or reduce the lever arm.'),'REF:Tobiasson 17.1'],
+  ['Depth to fixity: usually 0.6–3 m (2–10 ft) below apparent bottom; 0.9–1.5 m common trial without soil data',f(fx,2)+' m',fx>=.6&&fx<=3?st(true,'In range'):yel('Outside usual range','Tobiasson: fixity is usually 2–10 ft below the apparent bottom. If the soil is too weak to give fixity, discount that layer or load-test a pile.'),'REF:Tobiasson 17.1, App. 2'],
+  ['Embedment ≥ about 4.5 m (15 ft) in competent material; often 6–12 m (20–40 ft); confirm by soil analysis or load test',f(emb,1)+' m',emb>=4.5?st(true):yel('< 4.5 m','Tobiasson: any pile generally needs at least 15 ft (4.5 m) embedment in competent material, and 20–40 ft in good soils is common. Deepen, or prove capacity with a pile load test.'),'REF:Tobiasson 17.1, App. 2'],
+  ['Pile height build-up: low water + half storm wave + float freeboard + freeboard on pile (above the float)','—','Covered by the pile top check above','REF:Tobiasson Fig. 17-3'],
+  ['Use round pipe, not H-piles: loads come from any direction; pipe needs no orientation when driven','—','','REF:Tobiasson 13'],
+  ['Between pile arrays change the diameter, not the wall thickness, so the wrong pile cannot be installed','—','','REF:Tobiasson 17.1'],
+  ['Corrosion: extra wall thickness or coating (coal-tar or fusion-bonded epoxy, galvanising); seal pipe top and bottom rather than concrete-filling','—','','REF:Tobiasson 11, 13'],
+  ['Pile splices: full-penetration butt weld with backing ring; never weld unknown or high-strength used pipe with mild-steel rod','—','','REF:Tobiasson 13'],
+  ['Group piles of similar boat size, soil and depth into arrays; size each array separately','—','','REF:Tobiasson 17.1'],
+  ['Guides: rollers (not sliding), stainless axles; take P in any horizontal direction; through-bolted to frame','—','','REF:Tobiasson 17.2'],
+  ['Place piles along main walkway, not finger ends; orient so prevailing load bears in compression on the dock','—','','REF:Tobiasson 17.2'],
+  ['Also check piles at LAT where depth varies along the section','—','','4.2 Note 2']],['Check','Value','Status','Source']);
+ }
+ if(mt==='chain'){
+  const h=wlD-sb,nm=Math.max(1,n('nm')),H=Fd*k/nm,w=n('wch')*g*.87,a=H*1e3/w,s=Math.sqrt(h*h+2*h*a),x=a*Math.asinh(s/a),T=H+w*h/1e3,hold=n('mu')*g*n('blk')*(1-1026/2400);
+  ok=T*n('sfc')<=n('mbl')&&hold>=H;big1=[['Load per leg',f(H,1)+' kN'],['Chain scope',f(s/h,1)+' : 1']];Object.assign(pic,{s,x,a,h});
+  o='<h3>Chain to gravity blocks (zero uplift at anchor)</h3>'+tbl([
+  ['Water depth at design level h',f(h,2)+' m','',''],
+  ['Horizontal load per leg H = F·k / n',f(H,1)+' kN','',''],
+  ['Chain submerged weight w',f(w,0)+' N/m','0.87 × air weight in sea water','REF:Tobiasson 17.4'],
+  ['Minimum suspended length s = √(h² + 2h·H/w)',f(s,1)+' m','Catenary, chain tangent to seabed','REF:Statics'],
+  ['Scope s / h',f(s/h,1)+' : 1',s/h>5?yel('Rules of thumb (3–5 : 1) too short','Tobiasson shows that 3:1 to 5:1 rules leave the anchor lifted under real loads; the required scope grows with the pull. Use the calculated length, heavier chain, or fixed bottom anchors (stake piles, embedment anchors) that tolerate uplift.'):st(true,'≤ 5 : 1'),'REF:Tobiasson 17.4'],
+  ['Horizontal distance pontoon → touchdown',f(x,1)+' m','Footprint; check against fairways','REF:Statics'],
+  ['Top tension T = H + w·h',f(T,1)+' kN',st(T*n('sfc')<=n('mbl'),'FoS '+f(n('mbl')/T,1),'use a heavier/higher-grade chain (MBL ≥ '+f(T*n('sfc'),0)+' kN), or add legs to cut H.'),'REF:Statics'],
+  ['Block holding μ·Wsub, concrete 2400 kg/m³',f(hold,1)+' kN',st(hold>=H,'≥ H','increase block mass to at least '+f(H/(n('mu')*g*(1-1026/2400)),1)+' t, or use embedment anchors or stake piles.'),'REF:Tobiasson 17.4'],
+  ['Pretension opposing legs and match lengths so the dock does not shift with tide; computer analysis for large ranges','—','','REF:Tobiasson 17.4'],
+  ['Chain weight hangs on the pontoon: allow for it in freeboard','—','','REF:Tobiasson 17.4'],
+  ['Mushroom anchor (shank flat, dish half buried): ≈ 3× air weight in sand, 2× in mud; loses 30–50 % at 3–6° uplift','—','','REF:Tobiasson 17.5']],['Check','Value','Status','Source']);
+ }
+ if(mt==='elastic'){
+  const X=n('ex'),Le=n('eL'),e0=n('e0')/100,emax=n('emax')/100,Fu=n('eF'),nu=Math.max(1,n('enu')),nm=Math.max(1,n('nm'));
+  const hmin=low-sb,hmax=wlD-sb,Lmin=Math.hypot(X,hmin),Lmax=Math.hypot(X,hmax),Lr=Lmin-Le*(1+e0),eT=(Lmax-Lr)/Le-1,th=Math.atan(hmax/X),H=Fd*k/nm,TH=H/Math.cos(th),Fcap=Fu*nu,Ttide=Fcap*eT/emax,V=TH*Math.sin(th),acap=n('eanc');
+  ok=eT<=emax&&TH<=Fcap&&TH*n('esf')<=acap&&Lr>0;big1=[['Load per leg',f(H,1)+' kN'],['Stretch at high water',f(eT*100,0)+' %']];Object.assign(pic,{X,th});
+  o='<h3>Elastic rodes (Seaflex-type) to anchors</h3><p class="note">Generic linear check. Use the manufacturer’s force–elongation curve and anchor data for design.</p>'+tbl([
+  ['Rode length to anchor: low / high water',f(Lmin,2)+' / '+f(Lmax,2)+' m','Anchor offset '+f(X,1)+' m','REF:Statics'],
+  ['Non-elastic part (rope, chain, fittings) set so elastic is pretensioned '+f(e0*100,0)+' % at low water',f(Lr,2)+' m',Lr>0?'':st(false,null,'the elastic section is longer than the rode needs. Shorten the elastic unit or move the anchor further out.'),'REF:Practice'],
+  ['Elastic stretch at design high water',f(eT*100,0)+' %',st(eT<=emax,'≤ '+f(emax*100,0)+' %','lengthen the elastic section, add units in series, or move the anchor further out so the rode angle is flatter.'),'REF:Practice'],
+  ['Rode angle above horizontal at high water',f(th*180/Math.PI,1)+'°','Steeper = less horizontal restraint','REF:Statics'],
+  ['Tension needed for H per leg: T = H / cos θ',f(TH,1)+' kN',st(TH<=Fcap,'Capacity '+f(Fcap,0)+' kN','add elastic units in parallel, add legs, or flatten the rode angle.'),'REF:Statics'],
+  ['Tension from tide stretch alone at high water',f(Ttide,1)+' kN','Pulls pontoon down and sideways','REF:Statics'],
+  ['Vertical pull-down on pontoon per leg, T·sin θ',f(V,1)+' kN','Deduct from reserve buoyancy (Stability tab)','4.7.1(b)'],
+  ['Anchor capacity ≥ FoS × T (helix, screw or block)',f(acap,0)+' kN',st(TH*n('esf')<=acap,'Need '+f(TH*n('esf'),0)+' kN','use a larger or deeper helix anchor, a heavier block, or more legs.'),'REF:Practice'],
+  ['Keeps position over the tide range without long chain footprints; suits deep water and large ranges','—','Example: Richards Bay breakwater used elastic lines and helix anchors','REF:Practice'],
+  ['Check UV, abrasion, marine growth and fatigue life; inspect connections','—','','REF:Practice']],['Check','Value','Status','Source']);
+ }
+ if(mt==='hbeam'){
+  const ng=Math.max(1,n('hng')),P=Fd*k/ng,br=n('hbr'),Lreq=rng+br+.3,Lg=n('hL'),sp=n('hsp'),M=P*sp/4,Mc=n('hZ')*n('hfd')/1000,anc=n('hanc');
+  ok=Lg>=Lreq&&Lg<=12&&M<=Mc&&P<=anc;big1=[['Load per guide',f(P,1)+' kN'],['Guide length needed',f(Lreq,2)+' m']];Object.assign(pic,{});
+  o='<h3>Roller-guided H-beam on a fixed wall or jetty</h3>'+tbl([
+  ['Guide length ≥ water level range + roller bracket height + 0.3 m',f(Lreq,2)+' m',st(Lg>=Lreq,'Guide '+f(Lg,2)+' m','lengthen the H-beam to at least '+f(Lreq,2)+' m so the rollers stay engaged at every level.'),'4.14'],
+  ['Supplier range 1–12 m lengths (aluminium 6061-T6, nominal 250 × 250 mm)',f(Lg,2)+' m',st(Lg<=12,'≤ 12 m','more than 12 m needs a bespoke guide or a different restraint.'),'REF:Supplier'],
+  ['Load per guide P = F·k / n',f(P,1)+' kN','',''],
+  ['Bending between wall fixings, roller at mid-span: M = P·s / 4',f(M,1)+' kN·m','Fixing spacing '+f(sp,2)+' m','REF:Statics'],
+  ['Moment capacity Z × design stress',f(Mc,1)+' kN·m',st(M<=Mc,'Util. '+f(100*M/Mc,0)+' %','add wall fixings (shorter span), use a larger section, or add guides.'),'REF:AS/NZS 1664'],
+  ['Wall fixing: worst case the full P at one bracket',f(P,1)+' kN',st(P<=anc,'Capacity '+f(anc,0)+' kN','use stronger anchors or more fixings, or check the wall itself for P.'),'REF:Practice'],
+  ['Welded aluminium: use heat-affected-zone strength, not parent 6061-T6','—','','REF:AS/NZS 1664'],
+  ['Do not lock fixed and floating parts rigidly; allow tide, surge, freeboard change, wave movement, impact, wear and uplift','—','','REF:Practice'],
+  ['Flexible utility crossings and an accessible transition at the interface','—','','REF:Practice']],['Check','Value','Status','Source']);
+ }
+ if(mt==='strut'){
+  const La=n('sL'),na=Math.max(1,n('sn')),a=Math.asin(Math.min(1,rng/2/La)),ex=La-Math.sqrt(Math.max(La*La-(rng/2)**2,0)),Fax=Fd*k/na/Math.cos(a),cap=n('scap'),amax=n('samax'),exA=n('sex');
+  ok=a*180/Math.PI<=amax&&ex<=exA&&Fax<=cap&&rng<2*La;big1=[['Arm angle at extremes',f(a*180/Math.PI,1)+'°'],['Horizontal excursion',f(ex*1000,0)+' mm']];Object.assign(pic,{La,a});
+  o='<h3>Articulated struts / cantilever arms to shore</h3>'+tbl([
+  ['Arm horizontal at mid-range; angle at extremes = asin(range / 2L)',f(a*180/Math.PI,1)+'°',st(a*180/Math.PI<=amax,'≤ '+amax+'°','use longer arms, or a different restraint for this tidal range.'),'REF:Tobiasson 17.3'],
+  ['Horizontal excursion of the dock: L − √(L² − (range/2)²)',f(ex*1000,0)+' mm',st(ex<=exA,'≤ '+f(exA*1000,0)+' mm','use longer arms, or allow more horizontal movement at gangway and services.'),'REF:Tobiasson 17.3'],
+  ['Axial force per arm, F·k / n / cos α',f(Fax,1)+' kN',st(Fax<=cap,'Capacity '+f(cap,0)+' kN','add arms or use stronger arms (check buckling in compression).'),'REF:Statics'],
+  ['Arms take the full design load; do not combine with outboard piles (dock moves horizontally)','—','','REF:Tobiasson 17.3'],
+  ['Suits small level change and short docks parallel to a wall; check hinge bending, torsion and differential wave motion','—','','REF:Tobiasson 17.3']],['Check','Value','Status','Source']);
+ }
+ const tr=n('hat')-n('lat');
+ o+='<h3>Restraint selection</h3>'+tbl([
+ ['Guide piles','Firm seabed, moderate depth; positive fixed position','Tall piles in big tidal ranges; deep water','REF:Tobiasson 17.1'],
+ ['Chains / cables to anchors','Deep water, poor pile ground, ice, aesthetics','Large footprint, excursion with tide, uneven loading bends the dock','REF:Tobiasson 17.4'],
+ ['Elastic rodes (Seaflex-type) with helix or block anchors','Compact footprint, large ranges, deep water','Proprietary; stiffness, fatigue, pull-down on pontoon','SRSA 9.4.3'],
+ ['Roller H-beam on fixed wall or jetty','Pontoon alongside a wall; no piles in the water','Guide length vs range; wall capacity; 12 m supplier limit','REF:Supplier'],
+ ['Articulated struts / cantilever arms to shore','Small level change, short docks parallel to a wall','Dock moves horizontally as arm rotates; takes full load','REF:Tobiasson 17.3'],
+ ['Fixed jetty instead of pontoon','Tidal range < 1 m, depth ≤ 7 m, larger waves','Deck above design HWL + SLR + crest; uplift','SRSA 9.4.2'],
+ ['This site: tidal range (Gangway tab)',f(tr,2)+' m',tr>.5?'Pontoons suited (SRSA > 0.5 m)':'Fixed jetty also suited','SRSA 9.4.3']],['System','Suits','Watch','Source']);
+ $('big-mo').innerHTML=big([['Design load on section',f(Fd,0)+' kN'],...big1]);
+ $('out-mooring').innerHTML='<h3>Design load and levels</h3>'+head+o+`<p class="note">First-pass checks only. Final restraint design needs geotechnical input and, for proprietary systems, the supplier’s certified data.</p>`;
+ pic.ok=ok;drawMo(pic);
+}
+function drawMo(p){const s=$('svgmo'),W=s.clientWidth,Ht=s.clientHeight;if(!W)return;
+ const zt=Math.max(p.ptop||0,p.wlD+p.mfb)+.8,zb=p.sb-(p.fix||0)-.6,ky=(Ht-40)/(zt-zb),Y=z=>20+(zt-z)*ky,G=`font-family="Barlow" font-size="13" fill="var(--ink)"`;
+ const px=W*.36,pw=Math.min(180,W*.3),ptn=`<rect x="${px}" y="${Y(p.wlD+p.mfb)}" width="${pw}" height="${p.mfb*ky+10}" fill="#c9cfd2" stroke="#33454f"/>`,pl=`<rect x="${px}" y="${Y(p.low+p.mfb)}" width="${pw}" height="${p.mfb*ky+10}" fill="none" stroke="#33454f" stroke-dasharray="4 3"/>`;
+ let body='';
+ if(p.mt==='piles')body=`<rect x="${px+pw+4}" y="${Y(p.ptop)}" width="16" height="${Y(p.sb-p.fix)-Y(p.ptop)}" fill="#59656b"/><path d="M${px+pw-20} ${Y(p.sb-p.fix)}h60" stroke="var(--ink)" stroke-dasharray="4 3"/><text ${G} x="${px+pw+26}" y="${Y(p.ptop)+4}">Pile top ${f(p.ptop,2)}</text><text ${G} x="${px+pw+26}" y="${Y(p.sb-p.fix)+4}">Fixity</text>`;
+ if(p.mt==='chain'){const kx=(W-px-pw-30)/Math.max(p.x,1),x0=px+pw,pts=Array.from({length:41},(_,i)=>{const xx=p.x*i/40,yy=p.a*(Math.cosh(xx/p.a)-1);return `${x0+(p.x-xx)*kx},${Y(p.sb+yy)}`}).join(' ');body=`<polyline points="${pts}" fill="none" stroke="#33454f" stroke-width="2.5"/><rect x="${x0+p.x*kx-6}" y="${Y(p.sb)-12}" width="22" height="14" fill="#7d8a90"/><text ${G} x="${W-8}" y="${Y(p.wlD)-6}" text-anchor="end">Horizontal not to scale</text>`}
+ if(p.mt==='elastic'){const kx=(W-px-pw-30)/Math.max(p.X,1),x0=px+pw,ax=x0+p.X*kx;body=`<path d="M${x0} ${Y(p.wlD)}L${ax} ${Y(p.sb)}" stroke="#33454f" stroke-width="2"/><path d="M${x0+(ax-x0)*.25} ${Y(p.wlD)+(Y(p.sb)-Y(p.wlD))*.25}L${x0+(ax-x0)*.55} ${Y(p.wlD)+(Y(p.sb)-Y(p.wlD))*.55}" stroke="var(--mk)" stroke-width="6"/><path d="M${ax} ${Y(p.sb)}v${Math.min(40,Ht-Y(p.sb)-4)}" stroke="#59656b" stroke-width="3"/><text ${G} x="${W-8}" y="${Y(p.wlD)-6}" text-anchor="end">Elastic section shown yellow</text>`}
+ if(p.mt==='hbeam')body=`<rect x="${px+pw}" y="${Y(p.wlD+p.mfb+1)}" width="${W-px-pw}" height="${Ht}" fill="#9aa4a8"/><rect x="${px+pw-12}" y="${Y(p.wlD+p.mfb+.6)}" width="12" height="${Y(p.low-.4)-Y(p.wlD+p.mfb+.6)}" fill="#cfd6da" stroke="#33454f"/><text ${G} x="${px+pw+8}" y="${Y(p.wlD+p.mfb+1)+18}">Fixed wall</text>`;
+ if(p.mt==='strut'){const hz=(p.wlD+p.low)/2+p.mfb,kx=Math.min((W-px-pw-20)/p.La,ky);body=`<rect x="${px+pw+p.La*kx}" y="${Y(p.wlD+p.mfb+1)}" width="${W}" height="${Ht}" fill="#9aa4a8"/><path d="M${px+pw} ${Y(p.wlD+p.mfb/2)}L${px+pw+p.La*kx} ${Y(hz)}M${px+pw} ${Y(p.low+p.mfb/2)}L${px+pw+p.La*kx} ${Y(hz)}" stroke="#33454f" stroke-width="3"/><circle cx="${px+pw+p.La*kx}" cy="${Y(hz)}" r="5" fill="var(--mk)"/><text ${G} x="${W-8}" y="${Y(p.wlD+p.mfb+1)+18}" text-anchor="end">Hinge on wall</text>`}
+ s.innerHTML=`<rect x="0" y="${Y(p.wlD)}" width="${W}" height="${Y(p.sb)-Y(p.wlD)}" fill="var(--water)"/><rect x="0" y="${Y(p.sb)}" width="${W}" height="${Ht}" fill="#b9a586"/><path d="M0 ${Y(p.low)}H${W}" stroke="#fff" stroke-dasharray="6 5"/>${pl}${ptn}${body}
+ <text ${G} x="8" y="${Y(p.wlD)-6}">Design SWL ${f(p.wlD,2)} m CD</text><text ${G} x="8" y="${Y(p.low)-6}">Lowest ${f(p.low,2)}</text><text ${G} x="8" y="${Y(p.sb)+16}">Seabed ${f(p.sb,1)}</text>
+ <g font-family="Barlow Condensed" font-weight="700"><rect x="8" y="${Ht-56}" width="130" height="46" rx="8" fill="${p.ok?'var(--sea)':'var(--bad)'}"/><text x="18" y="${Ht-38}" font-size="13" fill="#cfe0e8">Restraint checks</text><text x="18" y="${Ht-17}" font-size="20" fill="#fff">${p.ok?'Pass':'Check'}</text></g>`}
+
+new ResizeObserver(()=>mooring()).observe($('figmo'));
+function ipile(T){
+ const Lv=n('vL'),M=lerp(DL,DT,Math.max(Lv,10))*1000,vb=Lv>34?.15:Lv>=25?.2:.3,E=.5*M*vb*vb*n('Ce')*n('Cm');
+ const wlD=n('mwl')+n('slr'),att=n('iatt'),lever=wlD+att-n('sb')+n('fix'),Dp=n('iD'),te=n('it')-n('ca'),d=Dp-2*te;
+ const I=Math.PI*(Dp**4-d**4)/64,Z=Math.PI*(Dp**4-d**4)/(32*Dp),k=3*200e3*I/(lever*1e3)**3,Pb=Math.sqrt(2*E*k*1e3)/1e3,dlt=Pb*1e3/k;
+ const Pm=2*T,Pd=Math.max(Pm,1.25*Pb),Mu=Pd*lever,phiM=.9*n('fy')*Z/1e6,ut=Mu/phiM,top=wlD+n('crest')+att+.3,y1=parseFloat(sv('y1')),hs=n('Hs');
+ const trig=(y1>.4)||(hs>.3);
+ const Lb=n('Lb'),Bb=n('Bb')>0?n('Bb'):lerp(BL,BM,Lb),dbl=2*Bb+(Lb<=20?1:Lb<=30?1.5:2);
+ return '<h3>Intermediate mooring pile (between boats in a double berth)</h3><p class="note">A freestanding pile at the outer end of a double berth that separates the two boats; each boat ties to its finger and to this pile through a ring that slides with the tide. It is not a pontoon guide pile (Pontoon mooring tab) or a fixed-jetty pile.</p>'+tbl([
+ ['Triggered? 50-yr head sea Hs > 0.4 m (Waves tab) or wake/wind waves > 0.3 m (Layout tab), or prevailing cross wind/current',isNaN(y1)?'—':f(y1,2)+' m / '+f(hs,2)+' m',trig?yel('Consider pile'):st(true,'Not triggered'),'4.8.2.1, 3.3.3'],
+ ['Fixed jetties: mid-berth mooring piles required in double-loaded berths','—','','SRSA 9.4.2'],
+ ['Double berth width + pile width',f(dbl,2)+' + '+f(Dp/1000,2)+' = '+f(dbl+Dp/1000,2)+' m','Berth vessel from Layout tab','3.3.3'],
+ ['Finger may be shortened or omitted where an end pile is provided','—','','3.5.4'],
+ ['Mooring load: lines from both boats, 2 × line tension',f(Pm,1)+' kN','Line tension from above','4.9, 4.10'],
+ [`Berthing impact: E = ½ M v² Ce Cm (${f(M/1000,0)} t, ${vb} m/s)`,f(E/1000,2)+' kJ','Ce, Cm from Loads tab','4.9, T4.6'],
+ ['Impact force from pile stiffness, √(2E·k), k = 3EI/L³',f(Pb,1)+' kN','Deflection '+f(dlt,0)+' mm','REF:Statics'],
+ ['Design load: max(mooring, 1.25 × impact)',f(Pd,1)+' kN','Impact taken alone (no environment)','4.2(c)'],
+ ['Lever: ring at design SWL + attachment height, to fixity',f(lever,2)+' m','Levels from Pontoon mooring tab','4.9'],
+ [`Steel pipe ${Dp} × ${n('it')} mm: φM<sub>s</sub> = 0.9 f<sub>y</sub> Z<sub>e</sub>`,f(phiM,0)+' kN·m',st(ut<=1,'Util. '+f(ut*100,0)+' %','use a larger or thicker pipe, or reduce the lever (shallower fixity, lower ring).'),'REF:AS 4100'],
+ ['Pile top so the ring cannot ride off: design SWL + crest + attachment + 0.3 m',f(top,2)+' m CD','','4.14'],
+ ['Check at both high and low tide: low tide governs pile load, high tide governs deflection','—','','4.9']],['Check','Value','Status','Source']);
+}
+function vessel(){
+ const ty=sv('vty'),L=n('vL'),Hh=n('vH'),Dr=n('vD'),Aas=lerp(WL,WA[ty].beam,L),Api=L*Hh,b=sv('area'),A=b==='as'?Aas:b==='pi'?Api:Math.max(Aas,Api);
+ const q=.0006*n('vV')**2,Fw=n('vCd')*A*q,v=n('vv'),Fc=.5*1026*.6*v*v/1000*L*Dr+(ty==='yacht'?.5*1026*.6*v*v/1000*L*Dr:0),F=Fw+Fc;
+ const nl=Math.max(1,n('nl')),T=F/(nl*Math.cos(n('ah')*Math.PI/180)*Math.cos(n('av')*Math.PI/180)),reqM=T*n('lsf');
+ const fl=.8*L,cl=fl<=7.5?2:fl<=12?3:4;
+ $('big-vm').innerHTML=big([['Beam-on force',f(F,1)+' kN'],['Line tension',f(T,1)+' kN'],['Required line MBL',f(reqM,0)+' kN']]);
+ $('out-vessel').innerHTML='<h3>Actions on the moored vessel</h3>'+tbl([
+ ['Windage area, AS Table 4.4 (beam)',f(Aas,1)+' m²',L<8||L>50?yel('Outside table'):'','T4.4'],
+ ['Windage area, rectangle L × height (conservative)',f(Api,1)+' m²',b==='as'?'':'Used','REF:PIANC 149 §4.3.2'],
+ ['Wind pressure q = 0.0006 V²',f(q,3)+' kPa','','4.8.3.3'],['Wind force Cd·A·q',f(Fw,1)+' kN','','4.8.3.3'],
+ ['Current on hull (Cd 0.6'+(ty==='yacht'?' + keel 0.6 extra':'')+', area L × draft)',f(Fc,2)+' kN','','T4.5'],
+ ['Total beam-on force',`<b>${f(F,1)} kN</b>`,'','']],['Item','Value','Note','Source'])+
+ '<h3>Lines</h3>'+tbl([
+ [`Tension per line: F / (n·cos ${n('ah')}°·cos ${n('av')}°)`,f(T,1)+' kN','Equal share assumed','REF:Statics'],
+ ['Line MBL ≥ FoS × tension',f(n('lmbl'),0)+' kN',st(reqM<=n('lmbl'),'Need '+f(reqM,0)+' kN','use a stronger line (MBL ≥ '+f(reqM,0)+' kN), add lines, or reduce plan/vertical angles by moving cleats.'),'REF:Practice'],
+ ['Cleat safe working load ≥ line tension',f(n('cswl'),1)+' kN',st(T<=n('cswl'),'≥ '+f(T,1)+' kN','specify a larger cleat or bollard, or spread load over more cleats with extra lines.'),'4.10'],
+ ['High-sided yachts: put bow and stern cleats well forward and aft for a flat line angle','—','','REF:Tobiasson 11.4']],['Check','Value','Status','Source'])+
+ '<h3>Cleats &amp; mooring points</h3>'+tbl([
+ ['Mooring points: ≥ 3 each side of a floating berth; +2 on walkway for double berths; fixed berths 2 bow and/or 2 stern','≥ 3 per side','','3.5.5'],
+ ['Cleats and bollards sized for vessel and design loads','—','','4.10'],
+ [`Cleats per finger side (finger ≈ 0.8L = ${f(fl,1)} m)`,cl+' per side','','SRSA 10.5.2'],
+ ['Main walkway: 1 between boats in double berths; alongside berths at 3 m centres','—','','SRSA 10.5.2'],
+ ['Superyachts: ≥ 4 cleats/bollards up to 30 m, ≥ 5 above; +2 at the end of each slip on the walkway',L>24?(L<=30?'≥ 4':'≥ 5'):'n/a (≤ 24 m)','','SRSA 10.5.2'],
+ ['Cleat length / bollard height takes 2–4 lines at once; through-bolted to the structural frame','—','','SRSA 10.5.2'],
+ ['Extra bollards at finger–walkway joints to spread boat load','—','','REF:Top Marine'],
+ ['Intermediate mooring pile in double berths if wake/wind waves > 0.3 m or 50-yr head sea > 0.4 m','See Waves tab','','3.3.3, 4.8.2.1']],['Requirement','Value','Status','Source'])+
+ ipile(T)+`<p class="note">Line tensions assume lines share load equally and ignore dynamic snatch; for exposed berths add a dynamic factor or model it. Neither AS 3962 nor SRSA gives line safety factors: the FoS here is your input.</p>`;
+}
+
+const CK=[
+['Approvals & process',[
+ ['Consult SRSA at planning stage; submit detailed design: layout, berth mix, dimensions, wave protection, depths, edge levels, infrastructure, utilities, surveys','SRSA 4.10'],
+ ['Permits: MoMRAH location, building and operational; NCEC environmental classification and permit; SRSA onboarding and operational permits','SRSA 4.10, App. II'],
+ ['Stakeholder engagement report (local communities and authorities)','SRSA 4.1'],
+ ['Quality management evidence through design, construction and operation','SRSA 1.3'],
+ ['Hazard identification, risk assessments, H&S policy, environmental policy, waste management plan','SRSA 1.4'],
+ ['Upgrades: verify existing facility against the Code; prioritised deficiency list','SRSA 4.2.2']]],
+['Site assessment',[
+ ['Single project datum; diagram linking CD, AHD/local datum and survey marks on drawings','AS+SRSA 2.1.1 / 6.3.1'],
+ ['Hydrographic and topographic surveys, incl. existing features, property limits and utilities','AS+SRSA 2.1.2–2.1.3 / 6.3.2'],
+ ['Geotechnical investigation (boreholes / trial pits for detailed design); contamination and acid-sulfate testing','AS+SRSA 2.2 / 6.4'],
+ ['Directional wind data and wind rose; align berths with predominant wind where possible','AS+SRSA 2.3.2.1 / 6.5'],
+ ['Wave climate: wind waves 3–8 s, swell 8–25 s, infragravity 30–200 s, vessel wake; Hs, Hmax, T, direction tables and wave rose','SRSA 6.6'],
+ ['Tides where not published: recorder ≥ 28 days (AS) / ≥ 35 days (SRSA); establish MSL, MHWS, MLWS, HAT, LAT','AS+SRSA 2.3.2.3 / 6.7.1'],
+ ['Storm surge and extreme water levels; climate change over each structure’s design life','AS+SRSA 2.3.2.4, 2.3.2.6 / 6.7.2'],
+ ['Rivers: flood level, velocities, scour depth and extent, debris','2.3.2.5'],
+ ['Sediment: shoreline stability, grain size, densities, suspended sediment vs currents and waves','AS+SRSA 2.3.2.8 / 6.8'],
+ ['Ecological baseline: fauna and flora, coral and reef, benthic habitat, sediment quality, critical habitats, water / air / noise; EIA and EMP (NCEC, MEWA)','SRSA 6.9']]],
+['Modelling',[
+ ['Wave propagation / transformation (compulsory, planning)','SRSA 6.10'],
+ ['Wave penetration / agitation (compulsory, final design)','SRSA 6.10'],
+ ['Hydrodynamics incl. flushing / water quality to PIANC 98 (compulsory, planning)','SRSA 6.10'],
+ ['Extreme water level analysis (compulsory, planning)','SRSA 6.10'],
+ ['Sediment transport (if siltation risk); navigation simulation (if complex entrance or large vessels)','SRSA 6.10'],
+ ['State whether physical modelling is recommended, at end of design','SRSA 6.10']]],
+['Basis of design',[
+ ['Market study and berth mix, incl. future trends and superyacht (> 24 m) berths','SRSA 4.4, 7.3'],
+ ['Basis of Design: design life, return periods, berth mix, disabled access criteria, deliverables','SRSA 7.1–7.3'],
+ ['Design life ≥ 25 yr for structures, gangways, piling','4.16'],
+ ['BIM to ISO 19650 (voluntary)','SRSA 7.5']]],
+['Layout & structures',[
+ ['Aids to navigation to IALA; MAWANI approval; report for List of Lights','SRSA 8.4'],
+ ['Navigation aids provided','5.4'],
+ ['Breakwater type selection (PIANC WG 196, WG 149 ch. 5); wave transmission; impact on coastal processes','SRSA 9.1'],
+ ['Edge treatments: crest level vs overtopping and sea-level rise, toe and scour protection, ecological enhancement','SRSA 9.2'],
+ ['Materials for marine exposure (Red Sea heat, salinity, humidity); concrete mix; durability measures','AS+SRSA 5.2 / 9.6'],
+ ['Constructability; remove design hazards early','SRSA 9.7']]],
+['Landside & utilities',[
+ ['Marina office with minimum digital integration hardware','SRSA 10.1'],
+ ['Dry stack: storage, launch / retrieval, wet launch berth, passenger access, security','SRSA 10.6'],
+ ['Boat launching: washdown area with runoff collected and treated','SRSA 10.7'],
+ ['Maintenance yard: washdown, sealed workshop floor, isolated contaminated runoff','AS+SRSA 6.5 / 10.8'],
+ ['Security: controlled gate access, signage, lighting at access points, CCTV','SRSA 10.9'],
+ ['Lighting: berths and all footways; low, shielded, warm fittings; no floodlighting on water','AS+SRSA 6.4 / 11.3'],
+ ['Communications: Wi-Fi in common areas; emergency landline','AS+SRSA 6.8 / 11.4'],
+ ['Fuel: on site, nearby, or bunkering; fuel berth separate from general berthing','AS+SRSA 6.9 / 11.5'],
+ ['Pump-out for black, grey and bilge water (central or in-slip)','AS+SRSA 6.3.2 / 11.6'],
+ ['Stormwater: buffers, swales, permeable paving, oil/grit separators','AS+SRSA 6.5 / 11.7'],
+ ['Solid waste with recycling separation, MWAN rules; bins near gangway heads with lids','AS+SRSA 6.3.3 / 11.8']]],
+['Sustainability (voluntary)',[
+ ['Smart marina: digital data collection, analysis and use (ICOMIA)','SRSA 5.1'],
+ ['Regenerative tourism: net biodiversity gain, local communities, heritage, climate resilience','SRSA 5.2.2'],
+ ['Life Cycle Assessment and Environmental Product Declaration','SRSA 5.2.3']]],
+['Commissioning & operation',[
+ ['As-constructed survey and drawings for charting','AS+SRSA 2.1.4 / 4.11.1'],
+ ['Operation and Maintenance manual','SRSA 4.11.2'],
+ ['Emergency plan (AS 3745) with staff training','6.2.9']]]];
+function ramps(){
+ const crest=n('rc'),lw=n('rlw'),toeD=n('rtoe'),gr=n('rg'),lanes=Math.max(1,n('rl')),wl=n('rw'),kerb=sv('rk')==='1',keel=sv('rkl')==='1',man=n('rm'),hs=n('rhs'),area=sv('ra');
+ const toe=lw-toeD,rise=crest-toe,len=rise*gr,toeReq=keel?1.2:1,wReq=lanes===1&&!kerb?4.5:4;
+ const pk={urban:['20–30','30–40','40–50'],rural:['10–20','20–30','30–40']}[area];
+ $('big-pl').innerHTML=big([['Ramp length (plan)',f(len,1)+' m'],['Gradient','1:'+f(gr,1)],['Lanes',lanes]]);
+ let o='<h3>Boat ramp</h3>'+tbl([
+ ['Gradient within 1:7 to 1:9, preferred 1:8','1:'+f(gr,1),st(gr>=7&&gr<=9,null,'set the gradient between 1:7 and 1:9, ideally 1:8. Outside this range a sign at the ramp head must state the limits.'),'7.2.3.3'],
+ ['Ramp slope at most 1:8','1:'+f(gr,1),st(gr>=8,null,'flatten the ramp to 1:8 or less steep.'),'SRSA 10.7'],
+ [`Toe ≥ ${toeReq} m below design low water${keel?' (fixed-keel yachts)':''}`,f(toeD,2)+' m',st(toeD>=toeReq,null,'extend the ramp further seaward or dredge so the toe sits at least '+toeReq+' m below design low water.'),'7.2.3.2(e)'],
+ ['Ramp length = (crest − toe) × gradient',f(len,1)+' m','Crest '+f(crest,2)+', toe '+f(toe,2)+' m CD',''],
+ [`Width per lane ≥ ${wReq} m${lanes===1&&!kerb?' (single lane, no kerbs)':''}`,f(wl,1)+' m',st(wl>=wReq,null,'widen each lane to at least '+wReq+' m.'),'7.2.3.2(c)–(d)'],
+ ['Manoeuvring area ≥ 20 m landward of ramp crest',f(man,0)+' m',st(man>=20,null,'provide at least 20 m of manoeuvring space behind the crest.'),'7.2.3.2(b)'],
+ ['Sheltered from short-period waves > 0.2 m',f(hs,2)+' m',st(hs<=.2,null,'shelter the ramp (relocate, add a groyne or screen) so short-period waves stay at or below 0.2 m.'),'7.2.2'],
+ [`Car/trailer spaces per lane (${area}): ramp only / with holding structures / with rigging areas`,pk.join(' / '),'Total for '+lanes+' lane'+(lanes>1?'s':'')+': '+pk.map(r=>r.split('–').map(x=>x*lanes).join('–')).join(' / '),'T7.1'],
+ ['Ramps suit boats about 6–12 m LOA; washdown with runoff collected','—','','SRSA 10.7']],['Check','Value','Status','Source']);
+ $('out-ramps').innerHTML=o;
+}
+function checklist(){
+ if($('out-checklist').childElementCount){ckp();return}
+ $('big-ck').innerHTML=big([['Items done',`<span id="ckp">0 %</span>`],['Groups',CK.length],['Items',CK.reduce((a,[,i])=>a+i.length,0)]]);
+ const o=CK.map(([gname,items],gi)=>`<fieldset class="ck"><legend>${esc(gname)} <span class="ckc" id="ckc${gi}"></span></legend>${items.map(([t,src],i)=>{const id='ck_'+gi+'_'+i;return `<label class="ckl"><input type="checkbox" id="${id}"${S[id]?' checked':''}><span>${esc(t)}</span><span class="r">${cl(src)}</span></label>`}).join('')}</fieldset>`).join('');
+ $('out-checklist').innerHTML=o;ckp();
+}
+function ckp(){let tot=0,dn=0;CK.forEach(([,items],gi)=>{let d=0;items.forEach((x,i)=>{if($('ck_'+gi+'_'+i)?.checked)d++});tot+=items.length;dn+=d;const c=$('ckc'+gi);if(c)c.textContent=d+'/'+items.length});const p=$('ckp');if(p)p.textContent=Math.round(100*dn/tot)+' %'}
+
+
+const DEF={float:{dl:25,rp:100,name:'Floating marina'},perm:{dl:50,rp:100,name:'Permanent civil'},temp:{dl:5,rp:50,name:'Temporary / trial'},aqua:{dl:20,rp:50,name:'Aquaculture'}};
+const DLv=()=>{const v=parseFloat(sv('dl'));return v>0?v:DEF[sv('dlt')].dl},RPv=()=>{const v=parseFloat(sv('rp'));return v>0?v:DEF[sv('dlt')].rp};
+function project(){
+ const t=sv('dlt'),D=DEF[t],N=DLv(),R=RPv(),enc=r=>1-(1-1/r)**N,P=n('pt')/100,Rr=1/(1-(1-P)**(1/N));
+ const dS=t==='temp'?[0,5]:t==='float'?[20,30]:[50,Infinity],okS=N>=dS[0]&&N<=dS[1],rpS=t==='temp'?[20,50]:[100,Infinity];
+ const tmpA='AS 3962 has no shorter design life or return period for temporary works. Using less than 25 yr / 1 in 50 yr is a project decision: record the reason, the removal date and the risk accepted.';
+ const head='<div class="big"><div>Design life'+(parseFloat(sv('dl'))>0?'':' (default)')+'<b>'+N+' yr</b></div><div>Return period'+(parseFloat(sv('rp'))>0?'':' (default)')+'<b>1 in '+R+' yr</b></div><div>Chance it occurs in life<b>'+f(100*enc(R),0)+' %</b></div></div>';
+ const tail=[['Return period needed for your '+f(P*100,0)+' % target chance over '+N+' yr: R = 1 / (1 − (1 − P)<sup>1/N</sup>)','1 in '+f(Rr,0),Rr>R?yel('Target not met','Your 1 in '+R+' yr event has a '+f(100*enc(R),0)+' % chance of being exceeded in '+N+' yr, above your '+f(P*100,0)+' % target. Use about 1 in '+f(Rr,0)+' yr, or accept the higher risk.'):st(true,'Target met by 1 in '+R),'REF:Statistics'],['Chance of exceedance in design life: 1 in 20 / 50 / 100 yr',[20,50,100].map(r=>f(100*enc(r),0)).join(' / ')+' %','1 − (1 − 1/R)<sup>N</sup>','REF:Statistics']];
+ if(t==='aqua'){const man=sv('qman')==='1',Rm=man?100:50;$('out-project').innerHTML=head+tbl([
+ ['Defaults for Aquaculture: design life 20 yr, return period 1 in 50 yr (2.5 × life)','Override above','',''],
+ ['Floating collar design life ≥ 10 yr (NS 9415)',N+' yr',st(N>=10,'Fail (min. 10 yr)','NS 9415 sets at least 10 years for the floating collar. Increase the design life; a shorter trial installation is outside NS 9415 and needs its own justified basis.'),'REF:NS9415 (Chu 2023 §3.1)'],
+ ['Steel structures under ABS / DNV class ≥ 20 yr; longer without dry-docking needs extra corrosion allowance',N+' yr',N>=20?st(true):yel('Below class min. 20 yr','ABS and DNV class rules target at least 20 years for steel fish-farm structures. Shorter is possible only outside classification, for example plastic (HDPE) collars to NS 9415.'),'REF:ABS/DNV (Chu 2023 §3.1)'],
+ ['Extreme-load return period ≥ 2.5 × design life = 1 in '+f(2.5*N,0)+' yr (≈ 2 % per year)','1 in '+R,R>=2.5*N?st(true,'Pass (min. 1 in '+f(2.5*N,0)+')'):st(false,null,'raise the return period to at least 2.5 × design life = '+f(2.5*N,0)+' years.'),'REF:NS9415 (Chu 2023 §3.1)'],
+ ['Combined wind, wave and current: '+(man?'manned farm ≥ 1 in 100 yr':'unmanned farm ≥ 1 in 50 yr')+' (set manned/unmanned on the Aquaculture tab)','1 in '+R,R>=Rm?st(true):yel('Below ABS','ABS uses 100-yr combined conditions for manned floating fish farms and 50-yr for unmanned. A manned farm may use 50 yr only if the coastal state accepts it.'),'REF:ABS T7 (Chu 2023)'],
+ ...tail,
+ ['AS 3962 and the SRSA marina code do not cover fish farms; their design-life and return-period rules are not applied here','—','','—'],
+ ['Sea-level rise and storm changes over the design life (SLR input on Pontoon mooring tab)',f(n('slr'),2)+' m','','REF:Chu 2023 §3.2']],['Item','Value','Status','Source']);return}
+ $('out-project').innerHTML=head+tbl([
+ ['Defaults for '+D.name+': design life '+D.dl+' yr, return period 1 in '+D.rp+' yr','Override above','',''],
+ ['Marina structures, gangways and piling ≥ 25 yr (replaceable parts such as guides and rollers excluded)',N+' yr',N>=25?st(true):t==='temp'?yel('Temporary: below AS',tmpA):st(false,null,'set the design life to at least 25 years, or choose Temporary / trial if the installation will be removed.'),'4.16'],
+ [t==='temp'?'Temporary works ≤ 5 yr':t==='float'?'Floating elements typically 20–30 yr':'Permanent facilities, civil structures, pipework, plant ≥ 50 yr',N+' yr',okS?st(true,'In range'):yel('Outside SRSA range',t==='perm'?'SRSA expects at least 50 years for permanent facilities.':t==='float'?'SRSA expects 20–30 years for floating elements.':'Beyond 5 years SRSA treats the works as permanent; switch the type.'),'SRSA 7.1.1'],
+ ['Extreme events (wave, surge, flood) ≥ 1 in 50 yr; wind to AS/NZS 1170','1 in '+R,R>=50?st(true):t==='temp'?yel('Temporary: below AS',tmpA):st(false,null,'use a return period of at least 50 years.'),'4.1'],
+ [t==='temp'?'Temporary works: 1 in 20 to 1 in 50 yr, chosen for risk':'Permanent structures and facilities ≥ 1 in 100 yr','1 in '+R,R>=rpS[0]?st(true):yel('Below SRSA','SRSA uses ≥ 1 in 100 yr for permanent structures; 20–50 yr for temporary works, set by the client’s accepted risk.'),'SRSA 7.1.2'],
+ ['Return period needed for your '+f(P*100,0)+' % target chance over '+N+' yr: R = 1 / (1 − (1 − P)<sup>1/N</sup>)','1 in '+f(Rr,0),Rr>R?yel('Target not met','Your 1 in '+R+' yr event has a '+f(100*enc(R),0)+' % chance of being exceeded in '+N+' yr, above your '+f(P*100,0)+' % target. Use about 1 in '+f(Rr,0)+' yr, or accept the higher risk.'):st(true,'Target met by 1 in '+R),'REF:Statistics'],
+ ['Chance of exceedance in design life: 1 in 20 / 50 / 100 yr',[20,50,100].map(r=>f(100*enc(r),0)).join(' / ')+' %','1 − (1 − 1/R)<sup>N</sup>','REF:Statistics'],
+ ['Sea-level rise and storm changes over the design life (SLR input on Pontoon mooring tab)',f(n('slr'),2)+' m','','AS+SRSA 2.3.2.6 / 6.7.2']],['Item','Value','Status','Source']);
+}
+function aqua(){
+ const isAq=sv('dlt')==='aqua',life=parseFloat(sv('qlife'))>0?n('qlife'):isAq?DLv():20,man=sv('qman')==='1',RPmin=2.5*life,RPu=isAq?RPv():Math.max(50,Math.ceil(RPmin)),c4=n('qc4'),V10=n('qv10'),wd=sv('qwd')==='1',Sn=n('qsn'),th=n('qth')*Math.PI/180,np=Math.max(1,Math.round(n('qnp'))),U=n('qU'),A=n('qA');
+ const fac=[[1,1.4],[10,1.65],[50,1.85],[100,2]],cRP=fac.map(([r,k])=>[r,k*c4]);
+ const CD=.04+(-.04+.33*Sn+6.54*Sn**2-4.88*Sn**3)*Math.cos(th),r=.46*CD;
+ const pan=Array.from({length:np},(_,i)=>{const u=U*(1-r)**i;return {i:i+1,u,F:.5*1025*CD*A*u*u/1000}}),Ftot=pan.reduce((a,p)=>a+p.F,0);
+ const Dn=n('qD')/1000,dT=n('qgt')/1000,ct=sv('qct'),CD0={stud:2.6,studless:2.4,strand:1.8,spiral:1.6,sheath:1.2}[ct],mu=ct.includes('stud')?2:1;
+ const Mg=Math.PI/4*((Dn+2*dT)**2-Dn**2)*1325*mu,Wg=Mg*(1-1025/1325)*g,CDg=CD0*(Dn+2*dT)/Dn;
+ const cc=sv('qcc'),an=sv('qan'),Tm=n('qtm'),Td=n('qtd'),MBL=n('qmbl');
+ const SF={1:{dyn:[1.1,1.5],qs:1.7},2:{dyn:[1.4,2.1],qs:2.5}}[cc],ALS={1:{dyn:[1,1.1],qs:1.1},2:{dyn:[1,1.25],qs:1.35}}[cc];
+ const Tuls=an==='dyn'?SF.dyn[0]*Tm+SF.dyn[1]*Td:SF.qs*(Tm+Td),Tals=an==='dyn'?ALS.dyn[0]*Tm+ALS.dyn[1]*Td:ALS.qs*(Tm+Td),absSF=an==='dyn'?2.25:2.7,Tabs=absSF*(Tm+Td);
+ const Ch=[[15.3,1,1],[30.5,1.18,1.23],[46,1.31,1.4],[61,1.4,1.52],[76,1.47,1.62],[91.5,1.53,1.71],[106.5,1.58,1.78]],hz=n('qhz'),chr=Ch.find(x=>hz<=x[0])||Ch[6],Cs=n('qcs'),Vr=wd?V10:35,Pw=.61*Cs*chr[2]*Vr**2;
+ $('big-aq').innerHTML=big([[isAq?'Design return period (Project basis)':'Design return period (aquaculture default)','1 in '+RPu+' yr'],['Net drag, '+np+' panels',f(Ftot,1)+' kN'],['Mooring ULS demand / MBL',f(100*Tuls/MBL,0)+' %']]);
+ let o='<h3>Design life and return period</h3>'+tbl([
+ ['Floating collar design life ≥ 10 yr',life+' yr',st(life>=10,'Fail (min. 10 yr)','NS 9415 sets at least 10 years for a floating collar; increase the design life.'),'REF:NS9415 (Chu 2023 §3.1)'],
+ ['Steel structures (ABS, DNV class rules) ≥ 20 yr; beyond 20 yr without dry-docking, raise corrosion allowance',life+' yr',life>=20?st(true):yel('Below class min. 20 yr','ABS and DNV classification targets at least 20 years for steel fish-farm structures. Below that the design cannot use the class rules as written.'),'REF:ABS/DNV (Chu 2023 §3.1)'],
+ ['Extreme-load return period ≥ 2.5 × design life = 1 in '+f(RPmin,0)+' yr (2 % annual exceedance)','1 in '+RPu+' yr',RPu>=RPmin?st(true,'Pass (min. 1 in '+f(RPmin,0)+')'):st(false,'Fail (min. 1 in '+f(RPmin,0)+')','raise the return period in Project basis to at least 1 in '+f(RPmin,0)+' yr.'),'REF:NS9415 (Chu 2023 §3.1)'],
+ ['Combined wind, wave and current return period: '+(man?'manned':'unmanned')+' floating farm',man?'100 / 100 / 100 yr':'50 / 50 / 50 yr',man?'50 yr only if coastal state accepts':'','REF:ABS T7 (Chu 2023)']],['Item','Value','Status','Source']);
+ o+='<h3>Current</h3>'+tbl([
+ ...cRP.map(([rp,v],i)=>[`${rp}-yr current = ${fac[i][1].toFixed(2)} × max of ≥ 4-week record`,f(v,2)+' m/s','','REF:NS9415 T3 (Chu 2023)']),
+ ['Default uniform current if no site data: circulation + tide 0.5 m/s, plus wind-driven 0.02 × V10',f(.5+.02*V10,2)+' m/s','','REF:BV (Chu 2023 §3.2.2)'],
+ ['Design current from at least 8 directions, including the strongest','≥ 8 directions','','REF:Scottish std (Chu 2023 §3.2.2)'],
+ ['Use the most unfavourable current direction unless the farm is moored to the prevailing current','—','','REF:NS9415 (Chu 2023 §3.2.2)']],['Item','Value','Status','Source']);
+ o+='<h3>Wind</h3>'+tbl([
+ ['Design wind '+(wd?'from site data (50-yr, 10-min mean at 10 m, ≥ 3 months record)':'with no site data'),f(Vr,1)+' m/s',wd?'':'NS 9415 default 35 m/s','REF:NS9415 (Chu 2023 §3.2.3)'],
+ ['1-min wind at 10 m: ≥ 36 m/s working and transit, ≥ 51.5 m/s severe storm','36 / 51.5 m/s','','REF:BV (Chu 2023 §3.2.3)'],
+ [`Wind pressure P = 0.61 Cs Ch V² (Cs ${Cs}, Ch ${chr[2]} at ${hz} m, 1-h)`,f(Pw,0)+' Pa','','REF:ABS Eq.13, T4–5 (Chu 2023)'],
+ ['Always state averaging time and reference height of a wind speed','—','','REF:DNV (Chu 2023 §3.2.3)']],['Item','Value','Status','Source']);
+ o+='<h3>Net drag and shielding</h3>'+tbl([
+ [`Net drag coefficient CD = 0.04 + (−0.04 + 0.33Sn + 6.54Sn² − 4.88Sn³) cos θ (Sn ${Sn}, θ ${n('qth')}°)`,f(CD,3),Sn>.35?yel('Sn outside usual range','The empirical fit was derived from flexible net tests with typical solidities; check high-solidity or fouled nets against tests.'):'','REF:Lader & Enerhaug (Chu 2023 Eq.11)'],
+ ['Velocity reduction behind one panel r = 0.46 CD',f(100*r,1)+' %','','REF:Løland (Chu 2023 Eq.10)'],
+ ...pan.map(p=>[`Panel ${p.i}: u = U(1 − r)^${p.i-1}, drag ½ρ CD A u²`,f(p.u,2)+' m/s',f(p.F,2)+' kN','REF:Løland (Chu 2023 Eq.10)']),
+ ['Total net drag on the row',f(Ftot,1)+' kN','Nets are outside classification scope','REF:Chu 2023 §3.2.2']],['Item','Value','Note','Source']);
+ o+='<h3>Load combinations (return period, years)</h3>'+tbl([
+ ['Floating unit strength (ULS), case A – wave-dominated: wind / wave / current / sea level','100 / 100 / 10 / 100','Extreme storm with ordinary current','REF:DNV T6 (Chu 2023)'],
+ ['Floating unit strength (ULS), case B – current-dominated: wind / wave / current / sea level','10 / 10 / 100 / 100','Extreme current with ordinary storm','REF:DNV T6 (Chu 2023)'],
+ ['Floating unit accidental (ALS) – damaged unit: wind / wave / current / sea level','≥ 1 each','Annual conditions, repaired at once','REF:DNV T6 (Chu 2023)'],
+ ['Nets and their supports, case 1 – current-dominated: current / wind / wave','≥ 50 / 10 / 10','Extreme current, ordinary storm','REF:DNV T8 (Chu 2023)'],
+ ['Nets and their supports, case 2 – storm-dominated: current / wind / wave','≥ 10 / 100 / 100','Extreme storm, ordinary current','REF:DNV T8 (Chu 2023)'],
+ ['Moorings, case 1 – current-dominated: current / wave','50 / 10','',"REF:Scottish T9 (Chu 2023)"],
+ ['Moorings, case 2 – wave-dominated: current / wave','10 / 50','50-yr current alone if waves are not modelled','REF:Scottish T9 (Chu 2023)'],
+ ['Moorings: 100-yr of one of wind, wave or current with associated others','100 yr','50 yr if coastal state accepts','REF:ABS (Chu 2023 §3.3.3)'],
+ ['Moorings ULS and ALS: wind / wave / current','≥ 100 / 100 / 100','Norway, UK: 100 / 100 / 10 (not for strong-current sites)','REF:DNV T10 (Chu 2023)']],['Combination','Return periods','Note','Source']);
+ o+='<h3>Marine growth on mooring lines</h3>'+tbl([
+ [`Mass M = π/4 [(D + 2Δt)² − D²] ρg μ (D ${n('qD')} mm, Δt ${n('qgt')} mm, ρg 1325, μ ${mu})`,f(Mg,2)+' kg/m','','REF:DNV Eq.14 (Chu 2023)'],
+ ['Submerged weight W = M (1 − ρs/ρg) g',f(Wg,1)+' N/m','','REF:DNV Eq.15 (Chu 2023)'],
+ [`Drag coefficient CD × (D + 2Δt)/D (base CD ${CD0})`,f(CDg,2),'','REF:DNV Eq.16, T11 (Chu 2023)'],
+ ['Include marine growth on any component not regularly cleaned; it also increases net shielding','—','','REF:Chu 2023 §3.4']],['Item','Value','','Source']);
+ o+='<h3>Mooring line safety check</h3>'+tbl([
+ [`DNV ULS, class ${cc}, ${an==='dyn'?'dynamic: γmean '+SF.dyn[0]+' Tmean + γdyn '+SF.dyn[1]+' Tdyn':'quasi-static: γ '+SF.qs+' × T'}`,f(Tuls,0)+' kN',st(Tuls<=MBL,'MBL '+f(MBL,0)+' kN','use a line with higher MBL, add lines, or reduce dynamic tension (more compliance, better layout); a dynamic analysis allows lower factors.'),'REF:DNV T12 (Chu 2023)'],
+ [`DNV ALS (one line lost), class ${cc}`,f(Tals,0)+' kN',st(Tals<=MBL,'≤ MBL','redundancy is insufficient: strengthen the remaining lines or add lines so the system survives one failure.'),'REF:DNV T12 (Chu 2023)'],
+ [`ABS all intact, ${an==='dyn'?'dynamic':'quasi-static'} SF ${absSF} × T`,f(Tabs,0)+' kN',st(Tabs<=MBL,'≤ MBL','increase line MBL or reduce tension; ABS also needs 1.57/1.8 (one broken, equilibrium) and 1.22/1.4 (transient).'),'REF:ABS T13 (Chu 2023)'],
+ ['Class 1: failure has no serious consequence (pen empty); Class 2: fish on board','Class '+cc,'','REF:DNV (Chu 2023 §4.3.3)'],
+ ['Single-point mooring: no ALS; factors × 1.2; emergency disconnect','—','','REF:DNV (Chu 2023 §4.3.3)'],
+ ['Synthetic fibre ropes: properties from manufacturer tests (DNV-OS-E303)','—','','REF:DNV (Chu 2023 §4.3.3)']],['Check','Value','Status','Source']);
+ o+='<h3>Applicable standards</h3>'+tbl([
+ ['Classification rules for fish farms: DNV, ABS (Guide for Aquaculture Installations), BV (incl. nearshore submerged pens)','—','Steel or metallic structures','REF:Chu 2023 §2.1'],
+ ['Ship-shaped: DNV-OS-C101, C102; ABS-FPI 5A-1-4, 5A-1-5','—','','REF:Chu 2023 T2'],
+ ['Column-stabilised: DNV-OS-C101, C103, C201; ABS-FPI 5B-1-1, 5B-1-2','—','','REF:Chu 2023 T2'],
+ ['Spar / deep draught: DNV-OS-C101, C106; ABS-FPI 5B-3-1, 5B-3-3, 5B-3-4','—','','REF:Chu 2023 T2'],
+ ['NS 9415 Marine fish farms (Norway), with NS 3472 steel; mainly nearshore','—','','REF:Chu 2023 §2.2'],
+ ['Marine Scotland technical standard for finfish aquaculture (escape prevention)','—','','REF:Chu 2023 §2.2'],
+ ['ISO 16488:2015 Marine finfish farms, open net cage design and operation','—','','REF:Chu 2023 §2.2'],
+ ['Analysis: diffraction panels for large bodies + Morison elements for slender members (D < L/5); Newman approximation for slow drift (not for vertical modes or shallow water)','—','','REF:Chu 2023 §3.2.1'],
+ ['Pre-service (load-out, tow, installation) and accidental cases: flotation failure, vessel collision, line or connector failure, slamming, sloshing','—','','REF:Chu 2023 §3.4']],['Item','','','Source']);
+ $('out-aqua').innerHTML=o+'<p class="note">From Chu et al. (2023), <i>Offshore Fish Farms: A Review of Standards and Guidelines for Design and Analysis</i>, J. Mar. Sci. Eng. 11, 762 (CC BY 4.0). Values are as summarised in that review; check the cited class rule or standard before design. AS 3962 and SRSA do not cover fish farms.</p>';
+}
+
+const fns={project,stability,layout,waves,loads,gangway,services,mooring,vessel,ramps,aqua,checklist};
+const tip=$('tip');let tipOn=null;
+const showTip=el=>{tipOn=el;tip.innerHTML=el.dataset.tip;tip.style.display='block';const r=el.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;let x=Math.min(Math.max(8,r.right-w),innerWidth-w-8),y=r.bottom+8;if(y+h>innerHeight-8)y=r.top-h-8;tip.style.left=x+'px';tip.style.top=y+'px'};
+const hideTip=()=>{tipOn=null;tip.style.display='none'};
+document.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tip]');el?showTip(el):tipOn&&hideTip()});
+document.addEventListener('focusin',e=>{const el=e.target.closest('[data-tip]');el?showTip(el):hideTip()});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-tip]');el&&el!==tipOn?showTip(el):hideTip()});
+addEventListener('scroll',hideTip,true);
+const all=()=>{for(const k in fns)try{fns[k]()}catch(e){console.log(e)}try{wrapAC(document.body)}catch(e){console.log(e)}};
+document.addEventListener('input',e=>{if(!e.target.id)return;if(e.target.id.startsWith('ck_')){S[e.target.id]=e.target.checked;try{localStorage.setItem('as3962',JSON.stringify(S))}catch(x){}ckp();return}S[e.target.id]=e.target.type==='checkbox'?e.target.checked:e.target.value;try{localStorage.setItem('as3962',JSON.stringify(S))}catch(x){}all()});
+for(const k in F)if(k!=='project')$('rs-'+k).addEventListener('click',()=>{F[k].forEach(([,fs])=>fs.forEach(([id,,,def,step])=>{if(Array.isArray(def)){step=def;def=def[0][0]}delete S[id];const e=$(id);if(e.type==='checkbox')e.checked=def;else if(Array.isArray(step))e.value=step[0][0];else e.value=def}));try{localStorage.setItem('as3962',JSON.stringify(S))}catch(x){}all()});
+const route=()=>{const h=(location.hash||'#stability').slice(1),id=fns[h]?h:'stability';document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===id));document.querySelectorAll('nav a').forEach(a=>a.toggleAttribute('aria-current',a.getAttribute('href')==='#'+id));all()};
+window.addEventListener('hashchange',route);route();
+}
+</script></body></html>
