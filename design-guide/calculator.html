@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MICI Float Comparison Calculator</title>
+<style>
+:root{--ink:#16302b;--mut:#5b6f6a;--line:#d8e2df;--bg:#f6f8f7;--card:#fff;--acc:#1f7a5c;--warn:#b5462b;--ok:#2d7d46;--float:#1e1e1e;--sub:#4f9a3f;--pipe:#e3a33b}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+header{padding:22px 28px 10px}
+h1{margin:0 0 4px;font-size:22px}
+.lede{color:var(--mut);max-width:900px;margin:0}
+main{padding:0 28px 40px}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+h2{font-size:15px;margin:0 0 10px;text-transform:uppercase;letter-spacing:.04em;color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 16px}
+label{display:block;font-size:12px;color:var(--mut)}
+label input,label select{display:block;margin-top:3px}
+input,select{font:inherit;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink);width:100%}
+.cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.col{border:1px solid var(--line);border-radius:10px;padding:12px;background:#fbfdfc;display:flex;flex-direction:column;gap:8px}
+.col .top{display:flex;gap:6px;align-items:center}
+.col .top input{font-weight:600}
+.x{border:none;background:none;color:var(--mut);cursor:pointer;font-size:18px;line-height:1}
+.pp{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.sub{font-size:11px;color:var(--mut);margin-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+svg.plan{width:100%;height:170px;background:#eef4f2;border-radius:8px}
+table.res{width:100%;border-collapse:collapse;font-size:12.5px}
+table.res td{padding:2px 0;border-bottom:1px dotted var(--line)}
+table.res td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:600}
+.ok{background:#e1f2e6;color:var(--ok)}.bad{background:#f8e3dd;color:var(--warn)}.mid{background:#fbf0d9;color:#8a5a00}
+.warn{color:var(--warn);font-size:12px}
+nav.tabs{display:flex;gap:6px;margin:14px 0 0}
+nav.tabs button{font:inherit;font-weight:600;padding:8px 18px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;background:#e6ecea;color:var(--mut);cursor:pointer}
+nav.tabs button.on{background:#fff;color:var(--acc)}
+.pctl{display:grid;grid-template-columns:1fr 1fr 1.3fr;gap:18px}
+@media(max-width:900px){.pctl{grid-template-columns:1fr}}
+.pctl label{display:block;font-size:12px;color:var(--mut)}
+.pctl select,.pctl input[type=number]{width:100%;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:6px}
+.pchk{display:flex;flex-direction:column;gap:2px;max-height:330px;overflow:auto;font-size:12.5px}
+.pchk label{display:flex !important;flex-direction:row !important;justify-content:flex-start !important;align-items:center;gap:6px;color:var(--ink) !important;cursor:pointer;text-align:left !important;width:auto !important;margin:0 !important}
+.pchk label input{width:auto !important;margin:0;flex:none}
+.pchk svg{flex:none}
+.pbtn{padding:3px 10px !important;font-size:12px !important}
+.tti{position:relative;display:inline-block;margin-left:5px;width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;background:#0f5f73;color:#fff;font-size:10px;font-weight:700;cursor:help;text-transform:none;letter-spacing:0;vertical-align:middle}
+.tti .ttx{display:none;position:absolute;left:50%;top:18px;transform:translateX(-50%);width:300px;background:#fff;color:var(--ink);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.14);padding:8px 10px;font-size:11.5px;font-weight:400;line-height:1.45;text-align:left;z-index:20}
+.tti:hover .ttx{display:block}
+.pcharts{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px}
+.pchart{position:relative;border:1px solid var(--line);border-radius:10px;padding:10px 10px 4px;background:#fff}
+.pchart h4{margin:0 0 4px;font-size:13px;color:var(--ink)}
+.pchart .ymax{position:absolute;top:8px;right:10px;font-size:11px;color:var(--mut)}
+.psave{font:inherit;font-size:11px;padding:1px 6px;margin-right:4px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--acc);cursor:pointer}.psave:hover{border-color:var(--acc)}
+.pchart .ymax input{width:62px;font:inherit;padding:1px 4px;border:1px solid var(--line);border-radius:5px}
+.ptip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:6px 8px;font-size:11.5px;line-height:1.45;display:none;z-index:5;max-width:320px}
+.ptip b{font-variant-numeric:tabular-nums}
+.ptip .sw{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px}
+#gsec.docked{position:fixed;right:12px;top:12px;width:340px;max-height:calc(100vh - 24px);overflow:auto;z-index:6;margin:0;box-shadow:0 8px 28px rgba(0,0,0,.18)}
+#gsec.docked .grid{grid-template-columns:1fr}
+body.has-dock main,body.has-dock header{margin-right:360px}
+@media (max-width:900px){#gsec.docked{width:auto;left:12px;max-height:45vh}body.has-dock main,body.has-dock header{margin-right:0}}
+
+/* colour coding */
+.col{border-top:5px solid var(--shc,#1f7a5c)}
+.col[data-shape="square"]{--shc:#3a7bd5;background:linear-gradient(#f3f7fd,#fbfdfc 120px)}
+.col[data-shape="hex"]{--shc:#1f9e8a;background:linear-gradient(#f0faf8,#fbfdfc 120px)}
+.col[data-shape="oct"]{--shc:#8a5cc7;background:linear-gradient(#f7f3fc,#fbfdfc 120px)}
+.col .top input{border-color:var(--shc);color:var(--shc)}
+.shp{display:inline-block;font-size:10.5px;font-weight:700;color:#fff;background:var(--shc);border-radius:99px;padding:1px 8px;margin-right:4px}
+.typ{display:inline-block;font-size:10.5px;font-weight:600;color:var(--shc);border:1px solid var(--shc);border-radius:99px;padding:0 7px}
+.sub{padding-left:7px;border-left:3px solid #999}
+.sub.pipes{color:#a8640a;border-color:#e3a33b}
+.sub.cells{color:#1f5f86;border-color:#6fb7e3}
+.sub.opts{color:#555;border-color:#888}
+table.res tr.grp td{padding-top:8px;border-bottom:none;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left !important}
+table.res tr.grp.geo td{color:#3a7bd5}table.res tr.grp.area td{color:#2d8a3e}table.res tr.grp.mass td{color:#b0651b}table.res tr.grp.flo td{color:#1f7fa8}table.res tr.grp.stab td{color:#0f5f73}
+#globals label{border-left:3px solid var(--gc,#ccc);padding-left:7px}
+#globals label.gc-stab{--gc:#1f7fa8}#globals label.gc-geo{--gc:#3a7bd5}#globals label.gc-mat{--gc:#b0651b}#globals label.gc-crit{--gc:#2d8a3e}#globals label.gc-size{--gc:#8a5cc7}
+.glegend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);margin:-4px 0 10px}
+.glegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#globals .rr{display:flex;gap:8px;align-items:center;margin-top:3px}
+#globals .rr input[type=range]{flex:1;min-width:0;margin:0;accent-color:var(--gc,#1f7a5c);border:none;padding:0}
+#globals .rr input[type=number]{width:84px;flex:none;margin:0}
+button.add{font:inherit;padding:8px 12px;border-radius:8px;border:1px dashed var(--acc);background:#fff;color:var(--acc);cursor:pointer}
+.bars{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}
+.bar{display:grid;grid-template-columns:130px 1fr 70px;gap:6px;align-items:center;font-size:12px;margin:3px 0}
+.bar .b{height:12px;background:var(--acc);border-radius:3px}
+.bar span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.eq{font-family:"Cambria Math",Georgia,serif;font-size:15px;margin:4px 0 4px 10px}
+.eqs h3{font-size:13px;margin:14px 0 4px}
+.note{color:var(--mut);font-size:12px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:-2px}
+</style>
+</head>
+<body>
+<header>
+<h1>MICI Float Comparison Calculator</h1>
+<p class="lede">Every option gets the <b>same planter (substrate) volume</b> and the <b>same total buoyant volume</b> (floats + buoyancy chambers). The calculator works out the geometry each option then needs, and compares planting area, gap between planters, plastic and floating behaviour. Concept-level estimate only: not a substitute for a stability and structural check.</p>
+<nav class="tabs"><button data-view="simple" class="on">Simple floats</button><button data-view="complex">All floats (including L-shaped floats, MastaVault)</button><button data-view="plots">Plots</button></nav>
+</header>
+<main>
+
+<section id="gsec">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="margin:0">Common inputs (same for every option)</h2><button class="add" id="popBtn" style="padding:5px 10px">⇱ Pop out (keep visible while scrolling)</button></div><div style="height:10px"></div>
+<div class="grid" id="globals"></div>
+</section>
+
+<section id="optsec">
+<h2>Options</h2>
+<div class="cols" id="cols"></div>
+<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+<button class="add" id="addBtn">+ Add option</button>
+<button class="add" id="resetBtn">Reset to defaults</button>
+</div>
+<div class="legend"><span><i style="background:var(--float)"></i>Floats</span><span><i style="background:var(--sub)"></i>Mangroves (planter substrate)</span><span><i style="background:var(--pipe)"></i>Buoyancy pipes</span><span><i style="background:#6fb7e3;outline:1px solid #1f5f86"></i>Water pockets in soil cells (share of squares = share of volume)</span></div>
+</section>
+
+<section id="cmpsec">
+<h2>Comparison</h2>
+<div class="bars" id="bars"></div>
+</section>
+
+<section id="plotsec" style="display:none">
+<h2>Plots<span id="plotsNote"></span></h2>
+<p class="note" style="margin-top:0">Pick a parameter to vary, the outputs to plot and the float options to include. Everything else stays at the common inputs above (change them and the plots update). Hover a chart to read the values.</p>
+<div class="pctl">
+ <div><div class="sub">1 · Vary (x-axis)</div>
+  <label>Parameter<select id="px"></select></label>
+  <div class="pp" style="margin-top:6px"><label>From<input type="number" id="pmin"></label><label>To<input type="number" id="pmax"></label><label>Points<input type="number" id="pn" min="3" max="60" step="1" value="21"></label></div>
+  <div class="note" id="pxnote"></div>
+ </div>
+ <div><div class="sub">2 · Plot (y-axis), one chart each</div><div id="pys" class="pchk"></div></div>
+ <div><div class="sub">3 · Float options</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><button class="add pbtn" data-sel="all">All</button><button class="add pbtn" data-sel="simple">Simple only</button><button class="add pbtn" data-sel="none">None</button></div>
+  <div id="popts" class="pchk"></div>
+  <div class="note">Colour = float type · dashed = soil cells · marker: ■ square, ● hexagonal, ◆ octagonal.</div>
+ </div>
+</div>
+<div style="display:flex;gap:8px;margin:10px 0"><button class="add" id="pcsv">⤓ Download data (CSV)</button><button class="add" id="ppngall">⤓ All charts (PNG)</button></div>
+<div id="pcharts" class="pcharts"></div>
+</section>
+
+<section>
+<h2>Definitions</h2>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));font-size:13px;gap:6px 22px">
+<div><b>a</b>: planter inner width (across flats for polygons; across the floats for two parallel floats)</div>
+<div><b>b</b>: outer width of the module (across flats)</div>
+<div><b>w</b>: float width (ring width; width of each parallel float; top width of an L-shaped float)</div>
+<div><b>s<sub>a</sub>, s<sub>b</sub></b>: side length of the planter / of the outer edge</div>
+<div><b>L</b>: length of the two parallel floats (and of the planter between them)</div>
+<div><b>p</b>, <b>D<sub>p</sub></b>: width and depth of each attached non-buoyant planter</div>
+<div><b>D<sub>s</sub></b>: substrate (planter) depth, from the deck/substrate surface down to the planter floor</div>
+<div><b>d</b>: float depth, the full height of a float from deck to bottom</div>
+<div><b>h<sub>f</sub></b>: foot height of an L-shaped float, the part below the planter floor: h<sub>f</sub> = d − D<sub>s</sub></div>
+<div><b>e</b>: how far the foot of an L-shaped float reaches in under the planter</div>
+<div><b>h<sub>b</sub></b>: height of a buoyant base under the planter</div>
+<div><b>V<sub>p</sub></b>: planter volume (substrate, plus water pockets if soil cells are used)</div>
+<div><b>V<sub>b</sub></b>: total buoyant (air) volume: floats + pipes</div>
+<div><b>V<sub>ch</sub></b>: buoyancy pipe volume inside the planter; <b>V<sub>rem</sub></b>: the rest, in the floats</div>
+<div><b>Gap</b>: clear distance between planters of neighbouring modules (substrate edge to substrate edge)</div>
+<div><b>Freeboard f</b>: height of the deck (= substrate surface) above the water</div>
+<div><b>Draft</b>: depth from the waterline to the lowest point of the module</div>
+<div><b>Reserve buoyancy</b>: extra load the module can carry before the deck goes under</div>
+<div><b>Floating forest OK</b>: gap ≤ the floating-forest limit, so canopies and roots can join up</div>
+<div><b>"mangroves–path–mangroves" OK</b>: a float path runs between planters. Always OK when the floating forest is OK, with attached non-buoyant planters, and for hexagons and octagons; otherwise when the path is at least the minimum width</div>
+<div><b>Floating forest: lower density</b>: attached non-buoyant planters give a sparser forest (trees in separate pots)</div>
+<div><b>"path–mangroves–path"</b>: floats on the outside of the mangroves (two parallel floats without attached planters)</div>
+</div>
+</section>
+
+<section class="eqs">
+<h2>Equations</h2>
+<p class="note">x = width across flats (m). Shape constants: area A = k·x², perimeter P = c·x.</p>
+<div class="eq">Side length: s = x · tan(π/n) &nbsp;(n = 4, 6, 8) → square s = x, hexagon s = x/√3 ≈ 0.577x, octagon s = (√2 − 1)x ≈ 0.414x</div>
+<div class="eq">Square: k = 1, c = 4 &nbsp;·&nbsp; Hexagon: k = √3/2 ≈ 0.866, c = 2√3 ≈ 3.464 &nbsp;·&nbsp; Octagon: k = 2(√2 − 1) ≈ 0.828, c = 8(√2 − 1) ≈ 3.314</div>
+
+<h3>1. Buoyancy chambers (pipes)</h3>
+<div class="eq">Vertical pipes: V<sub>v</sub> = n<sub>v</sub> · (π D<sub>v</sub>² / 4) · L<sub>v</sub></div>
+<div class="eq">Horizontal pipes (wall to wall): V<sub>h</sub> = (π D<sub>h</sub>² / 4) · Σ L<sub>i</sub>, &nbsp; L<sub>i</sub> = chord of the planter at the pipe's position</div>
+<div class="eq">Total chamber volume: V<sub>ch</sub> = V<sub>v</sub> + V<sub>h</sub></div>
+
+<h3>2. Planter (same substrate volume V<sub>p</sub> for all options)</h3>
+<div class="eq">Planter inner area: A<sub>in</sub> = (V<sub>p</sub> + V<sub>ch,in</sub>) / D<sub>s</sub></div>
+<div class="eq">Planter inner width: a = √(A<sub>in</sub> / k)</div>
+<div class="eq">Planting (surface) area: A<sub>plant</sub> = A<sub>in</sub> − n<sub>v</sub> · π D<sub>v</sub>² / 4</div>
+<div class="eq">With soil cells (fraction f<sub>c</sub> of the planter): substrate = (1 − f<sub>c</sub>) · V<sub>p</sub>; &nbsp; cell plastic = p · f<sub>c</sub> · V<sub>p</sub>; &nbsp; water pockets = (1 − p) · f<sub>c</sub> · V<sub>p</sub> &nbsp;(p = plastic fraction, default 5%)</div>
+<p class="note">With soil cells, V<sub>p</sub> is the planter volume: the planter stays the same size, and the cells replace part of the substrate with water. Water pockets below the waterline are neutral (they weigh what they displace); above it they drain. So they add no load, and the module carries less substrate weight. V<sub>ch,in</sub> = chamber volume inside the substrate layer (vertical pipes up to depth D<sub>s</sub>, all horizontal pipes). Chambers take space that would otherwise be substrate, so the planter grows to keep V<sub>p</sub> constant. Because V<sub>h</sub> depends on a, a is found by iteration.</p>
+
+<h3>3. Remaining buoyancy (same total V<sub>b</sub> for all options)</h3>
+<div class="eq">V<sub>rem</sub> = V<sub>b</sub> − V<sub>ch</sub></div>
+<div class="eq"><b>Perimeter ring</b> (depth d): k(b² − a²) · d = V<sub>rem</sub> &nbsp;⇒&nbsp; b = √(a² + V<sub>rem</sub> / (k d)), &nbsp; ring width w = (b − a) / 2</div>
+<div class="eq"><b>Two parallel floats</b> (floats of length L along two opposite sides; planter a × L with a·L = A<sub>in</sub>, L = a unless set): 2 · w · L · d = V<sub>rem</sub> &nbsp;⇒&nbsp; w = V<sub>rem</sub> / (2 L d), &nbsp; b = a + 2w, &nbsp; footprint = L · b</div>
+<div class="eq"><b>Two parallel floats + attached non-buoyant planters</b> (width p, depth D<sub>p</sub>, one outside each float): b = a + 2w + 2p; &nbsp; each a p × p pot centred on the float side, so neighbouring pots along the run have gaps; extra substrate 2 p² D<sub>p</sub> (buoyed where submerged); &nbsp; planting area = A<sub>in</sub> + 2 p²; &nbsp; gap = w (attached planters of neighbouring modules touch)</div>
+<div class="eq"><b>Two parallel L-shaped floats</b> (top width w beside the planter, float depth d, foot of height h<sub>f</sub> = d − D<sub>s</sub> reaching e under it): 2 L [w D<sub>s</sub> + (w + e) h<sub>f</sub>] = V<sub>rem</sub> ⇒ e = (V<sub>rem</sub>/(2L) − w D<sub>s</sub>)/h<sub>f</sub> − w; &nbsp; gap = 2w</div>
+<div class="eq"><b>Stepped (L) floats</b> (top width w beside the planter, float depth d, so the foot below the planter floor has height h<sub>f</sub> = d − D<sub>s</sub>): b = a + 2w; &nbsp; V<sub>top</sub> = k(b² − a²)·D<sub>s</sub>; &nbsp; V<sub>foot</sub> = k(b² − a<sub>i</sub>²)·h<sub>f</sub>; &nbsp; V<sub>top</sub> + V<sub>foot</sub> = V<sub>rem</sub> ⇒ a<sub>i</sub> = √(b² − (V<sub>rem</sub> − V<sub>top</sub>)/(k h<sub>f</sub>)), &nbsp; foot extension e = (a − a<sub>i</sub>)/2; gap = 2w</div>
+<div class="eq"><b>Buoyant base under the planter</b> (hexafloat-type): h<sub>b</sub> = V<sub>rem</sub> / A<sub>in</sub>, &nbsp; b = a + 2t</div>
+<div class="eq">Footprint: A<sub>out</sub> = k b² &nbsp;·&nbsp; Planting ratio = A<sub>plant</sub> / A<sub>out</sub></div>
+<div class="eq">Minimum gap between neighbouring planters: ring → 2w (two rings side by side); two parallel floats → 2w across the floats, ~0 along them; base → 2t (walls only)</div>
+
+<p class="note"><b>Float sizing.</b> "Same total buoyant volume" fixes V<sub>b</sub> for every option. "Size floats to a target freeboard" instead solves V<sub>rem</sub> (by bisection) so each option sits at the target freeboard: a lighter module (e.g. with soil cells) then gets narrower floats.</p>
+<p class="note"><b>Submerged-substrate mode.</b> Give the share of the substrate depth that should sit below water, q: target freeboard = (1 − q) · D<sub>s</sub> (deck level = substrate surface). Floats are then sized to that freeboard.</p>
+<h3>Stability and natural periods</h3>
+<div class="eq">Depths z measured down from the deck; keel = lowest point (z<sub>max</sub>). KG = z<sub>max</sub> − z<sub>G</sub>, KB = z<sub>max</sub> − z<sub>B</sub></div>
+<div class="eq">z<sub>G</sub> = Σ m<sub>i</sub> z<sub>i</sub> / M &nbsp;(substrate at D<sub>s</sub>/2, floats at their mid-depth, deck and live load at 0, tree at −z<sub>tree</sub>)</div>
+<div class="eq">z<sub>B</sub> = Σ V<sub>i</sub> z<sub>i</sub> / Σ V<sub>i</sub> over the submerged parts (floats, buoyed substrate, pipes)</div>
+<div class="eq">BM = I<sub>wp</sub> / V<sub>disp</sub>, &nbsp; GM = KB + BM − KG = (z<sub>G</sub> − z<sub>B</sub>) + BM</div>
+<div class="eq">Polygon second moment of area: I = A (6R² − s²)/24 (R = circumradius, s = side); rectangles: I = L w³/12 + L w y<sub>c</sub>²</div>
+<div class="eq">Heave: T<sub>h</sub> = 2π √( M (1 + C<sub>a,h</sub>) / (ρ<sub>w</sub> g A<sub>wp</sub>) )</div>
+<div class="eq">Roll / pitch: T<sub>r</sub> = 2π √( I<sub>G</sub> (1 + C<sub>a,r</sub>) / (M g GM) ), &nbsp; I<sub>G</sub> = Σ m<sub>i</sub> (k<sub>i</sub>² + (z<sub>i</sub> − z<sub>G</sub>)²)</div>
+<p class="note">Small-angle hydrostatics with the porous substrate counted as buoyant volume (it moves with the module). Added-mass coefficients are rough inputs; use a diffraction model (e.g. ANSYS Aqwa) or flume tests for design values. Periods ignore mooring stiffness and connections between modules.</p>
+<h3>4. Plastic (wall area × thickness t × density ρ<sub>pl</sub>)</h3>
+<div class="eq">Ring: S = (c b + c a) · d + 2 (A<sub>out</sub> − A<sub>in</sub>)</div>
+<div class="eq">Two parallel floats: S = 2 · 2 (w L + w d + L d)</div>
+<div class="eq">Stepped floats: S = c b (D<sub>s</sub> + h<sub>f</sub>) + c a D<sub>s</sub> + c a<sub>i</sub> h<sub>f</sub> + k(b² − a²) + k(a² − a<sub>i</sub>²) + k(b² − a<sub>i</sub>²)</div>
+<div class="eq">Base: S = 2 A<sub>in</sub> + c a · h<sub>b</sub></div>
+<div class="eq">Pipes: S = Σ (π D L<sub>i</sub> + π D² / 2) &nbsp;(L<sub>i</sub> = wall-to-wall chord for horizontal pipes)</div>
+<div class="eq">Planter shell (optional): S = c a · D<sub>s</sub> + A<sub>in</sub></div>
+<div class="eq">m<sub>pl</sub> = S · t · ρ<sub>pl</sub></div>
+<p class="note">Assumes one continuous ring float. Real perimeter floats are segmented, which adds end walls, so ring plastic is a lower bound.</p>
+
+<h3>5. Flotation (vertical equilibrium)</h3>
+<div class="eq">ρ<sub>w</sub> · V<sub>disp</sub>(f) = M = m<sub>sub</sub> + m<sub>tree</sub> + m<sub>pl</sub> + m<sub>deck</sub> + m<sub>live</sub></div>
+<div class="eq">m<sub>sub</sub> = ρ<sub>sat</sub> · V<sub>p</sub>, &nbsp; m<sub>deck</sub> = q<sub>deck</sub> · A<sub>path</sub>, &nbsp; m<sub>live</sub> = (q<sub>live</sub> / g) · A<sub>path</sub></div>
+<div class="eq">V<sub>disp</sub>(f) = Σ prisms A<sub>i</sub> · max(0, z<sub>bot,i</sub> − max(z<sub>top,i</sub>, f)) + V<sub>p</sub> · max(0, D<sub>s</sub> − f)/D<sub>s</sub> + Σ L<sub>i</sub> · A<sub>seg</sub>(f)</div>
+<div class="eq">Submerged pipe segment (radius r, centre depth z<sub>c</sub>, h = z<sub>c</sub> + r − f): A<sub>seg</sub> = r² cos⁻¹((r − h)/r) − (r − h)√(2rh − h²)</div>
+<p class="note">f = depth of the waterline below the deck / substrate surface (freeboard), solved by bisection. Depths are measured downward from the deck. Ring floats span 0…d, vertical pipes 0…L<sub>v</sub>, substrate 0…D<sub>s</sub>, horizontal pipes lie on the planter floor, and the buoyant base spans D<sub>s</sub>…D<sub>s</sub>+h<sub>b</sub>. The planter is treated as porous: submerged substrate is buoyed by the water around it. Reserve buoyancy = ρ<sub>w</sub>V<sub>disp</sub>(0)/M − 1.</p>
+</section>
+</main>
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(10,25,20,.55);z-index:10;align-items:center;justify-content:center;padding:20px">
+ <div style="background:#fff;border-radius:12px;max-width:1100px;width:100%;max-height:92vh;overflow:auto;padding:16px 18px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><b class="mtitle"></b><button class="x" id="mclose" style="font-size:24px">×</button></div>
+  <div class="mbody" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px"></div>
+  <p class="note" style="margin:10px 0 0">Gap = clear distance between the two planters (substrate edge to substrate edge). <b>Click a picture to show or hide the mangroves</b> (a tree per planter; trees in small attached planters are full size, with roots growing out of the planter).</p>
+ </div>
+</div>
+
+<script>
+const K={square:1,hex:Math.sqrt(3)/2,oct:2*(Math.SQRT2-1)};
+const C={square:4,hex:2*Math.sqrt(3),oct:8*(Math.SQRT2-1)};
+const N={square:4,hex:6,oct:8};
+const SHAPE={square:"Square",hex:"Hexagonal",oct:"Octagonal"};
+
+const G_DEF=[
+ ["Vp","Planter (substrate) volume V<sub>p</sub> (m³)",2.4,0.1],
+ ["Ds","Substrate (planter) depth D<sub>s</sub> (m)",0.6,0.05],
+ ["Vb","Total buoyant volume V<sub>b</sub> (m³, used only in same-volume mode)",4.56,0.1],
+ ["d","Float depth d (m): full height of the floats",0.95,0.05],
+ ["rhoS","Saturated substrate density (kg/m³)",1900,50],
+ ["tree","Tree mass above water (kg)",80,10],
+ ["treeH","Mangrove height above the substrate surface (m) (drawings only)",4,0.5],
+ ["treeCG","Tree centre of mass above deck (m) (stability)",1.5,0.1],
+ ["Cah","Heave added-mass coefficient C<sub>a,h</sub> (× displaced mass)",0.5,0.1],
+ ["Car","Roll/pitch added-inertia coefficient C<sub>a,r</sub>",0.2,0.05],
+ ["canopyW","Mangrove canopy width (m) (drawings only)",3.5,0.25],
+ ["t","Plastic wall thickness t (mm)",6,1],
+ ["rhoP","Plastic density (kg/m³)",950,10],
+ ["qDeck","Decking/frame on paths (kg/m²)",25,5],
+ ["qLive","Live load on paths (kPa)",0,0.5],
+ ["rhoW","Water density (kg/m³)",1025,1],
+ ["gapMax","Floating forest: max gap between planters (m)",1.2,0.1],
+ ["pathMin","&quot;Mangroves–path–mangroves&quot;: min float path width (m) · AS 3962: fingers 0.9, walkways 1.5",0.9,0.1],
+ ["cellPl","Soil cell plastic (% of cell volume)",5,1],
+];
+const g={};G_DEF.forEach(([k,,v])=>g[k]=v);g.shell=false;g.mode="vol";g.fbTarget=240;g.subPct=90;
+const effDs=()=>g.Ds;
+
+const DEFAULTS=[
+ {name:"Square – two parallel floats",shape:"square",rem:"pair",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Square – two parallel floats + MastaVault",shape:"square",rem:"pair",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3,cells:40},
+ {name:"Square – two parallel floats + non-buoyant planters on both sides",shape:"square",rem:"pair",side:0.8,sideD:0.4,nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Square – two parallel L-shaped floats",shape:"square",rem:"pair",pwt:0.3,pdt:1.2,nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Square – perimeter floats",shape:"square",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Square + MastaVault soil cells",shape:"square",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3,cells:40},
+ {name:"Square – stepped (L) floats + MastaVault",shape:"square",rem:"step",wt:0.2,wb:0.6,cells:40,nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Hexagonal – perimeter floats",shape:"hex",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Hexagonal – stepped (L) floats + MastaVault",shape:"hex",rem:"step",wt:0.2,wb:0.6,cells:40,nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Hexagonal + horizontal pipes",shape:"hex",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:6,Dh:0.3},
+ {name:"Hexagonal + vertical pipes",shape:"hex",rem:"ring",nv:12,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Hexagonal + MastaVault soil cells",shape:"hex",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3,cells:40},
+ {name:"Octagonal – perimeter floats",shape:"oct",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Octagonal + horizontal pipes",shape:"oct",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:6,Dh:0.3},
+ {name:"Octagonal + vertical chambers",shape:"oct",rem:"ring",nv:12,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+ {name:"Octagonal + MastaVault soil cells",shape:"oct",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3,cells:40},
+ {name:"Octagonal – stepped (L) floats + MastaVault",shape:"oct",rem:"step",wt:0.2,wb:0.6,cells:40,nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},
+];
+let cols=JSON.parse(JSON.stringify(DEFAULTS));
+
+function seg(zc,r,f){ if(f<=zc-r) return Math.PI*r*r; if(f>=zc+r) return 0; const h=zc+r-f; return r*r*Math.acos((r-h)/r)-(r-h)*Math.sqrt(Math.max(0,2*r*h-h*h)); }
+
+function hPipes(shape,a,n,D){
+ // pipes laid side by side across the planter floor, each running wall to wall
+ const N_=N[shape],R=a/(2*Math.cos(Math.PI/N_)),o=N_===6?0:Math.PI/N_,V=[];
+ for(let i=0;i<N_;i++){const t=o+i*2*Math.PI/N_;V.push([R*Math.cos(t),R*Math.sin(t)]);}
+ const Y=Math.max(...V.map(v=>v[1])),r=D/2;
+ const chord=y=>{const xs=[];for(let i=0;i<N_;i++){const [x1,y1]=V[i],[x2,y2]=V[(i+1)%N_];if((y-y1)*(y-y2)<=0&&y1!==y2)xs.push(x1+(y-y1)*(x2-x1)/(y2-y1));}return xs.length<2?0:Math.max(...xs)-Math.min(...xs);};
+ const out=[];if(n<1)return out;
+ const span=2*(Y-r);
+ for(let i=0;i<n;i++){const y=n===1?0:-span/2+i*span/(n-1)*1;
+  const L=Math.max(0,Math.min(chord(y-r*0.999),chord(y+r*0.999)));out.push({y,L});}
+ out.overlap=n>1&&span/(n-1)<D;out.empty=out.some(q=>q.L<=0);return out;}
+function compute(s0){
+ const s=s0.rem==="pair"?{...s0,shape:"square",Lv:Math.min(s0.Lv,effDs())}:{...s0,Lv:Math.min(s0.Lv,effDs())};
+ const k=K[s.shape],c=C[s.shape],t=g.t/1000,Ds=effDs(),pair=s.rem==="pair";
+ const Av=s.nv*Math.PI*s.Dv*s.Dv/4, Vv=Av*s.Lv, Vvin=Av*Math.min(s.Lv,Ds);
+ const Ah=Math.PI*s.Dh*s.Dh/4;
+ const fc=Math.min(1,(s.cells||0)/100), Vsoil=g.Vp, Vsub=g.Vp*(1-fc);
+ const Lf=pair&&s.Lf>0?s.Lf:0;
+ let a=Math.sqrt(Vsoil/Ds/k), L=a, Vh=0;
+ const Lh=aa=>pair?s.nh*aa:hPipes(s.shape,aa,s.nh,s.Dh).reduce((t,p)=>t+p.L,0);
+ for(let i=0;i<60;i++){Vh=Ah*Lh(a); const A_=(Vsoil+Vvin+Vh)/Ds; if(Lf){L=Lf;a=A_/Lf;} else {a=Math.sqrt(A_/k);L=a;}}
+ const LhTot=Lh(a); Vh=Ah*LhTot;
+ const Ain=pair?a*L:k*a*a, cin=pair?2*(a+L):c*a, Vch=Vv+Vh, warns=[], Vcellpl=Vsoil*fc*g.cellPl/100, Vwater=Vsoil*fc-Vcellpl;
+ if(s.nh>0 && s.Dh>Ds) warns.push("Horizontal pipe diameter exceeds substrate depth.");
+ if(pair&&s.nh>0&&s.nh*s.Dh>L) warns.push("Horizontal pipes overlap: too many or too wide to fit side by side in one layer.");
+ if(s.nh>0&&!pair){const hp=hPipes(s.shape,a,s.nh,s.Dh);if(hp.overlap)warns.push("Horizontal pipes overlap: too many or too wide to fit side by side in one layer.");else if(hp.empty)warns.push("Outermost horizontal pipes don't fit at the planter's corners.");}
+ if(fc>=1) warns.push("100% soil cells: no substrate at all, only water pockets. Roots and anchorage would rely entirely on the cells.");
+ else if(fc>0.6) warns.push("Over 60% of the planter is water pockets: little substrate left for roots and anchorage.");
+ if(s.nv>0 && Av>0.6*Ain) warns.push("Vertical pipes take over 60% of the planter area.");
+ const wp=pair&&s.side>0?s.side:0, Dp=wp?(s.sideD>0?s.sideD:0.4):0, pl=wp?Math.min(wp,L):0, Vside=2*wp*pl*Dp;
+ const run=Vrem=>{
+ let b,w=0,hb=0,e=0,ai=a,Vact=Vrem,stepMsg="";
+ const step=s.rem==="step",pL=pair&&s.pwt>0,dTot=(step&&s.dt>0)?s.dt:(pL&&s.pdt>0)?s.pdt:g.d;let hf=Math.max(0,dTot-Ds),dS=Ds+hf;
+ if(step&&s.wb>0){w=Math.max(0.01,s.wt||0.15);b=a+2*w;const Vtop=k*(b*b-a*a)*Ds;
+  if(s.wb<w)stepMsg="Bottom width is smaller than the top width: using a plain float (no foot).";
+  e=Math.min(Math.max(0,s.wb-w),a/2);if(s.wb-w>a/2)stepMsg="Bottom width reaches past the middle of the planter: foot capped at e = a/2.";
+  ai=a-2*e;const Af=k*(b*b-ai*ai);
+  if(Vrem<=Vtop){hf=0;Vact=Vtop;stepMsg="The top width alone already gives more buoyancy than needed: no foot required.";}
+  else{hf=(Vrem-Vtop)/Af;}dS=Ds+hf;
+ } else if(step){w=Math.max(0.01,s.wt||0.15);b=a+2*w;const Vtop=k*(b*b-a*a)*Ds,Vmin=Vtop+k*(b*b-a*a)*hf;
+  if(hf<=0){stepMsg="Float depth d must be greater than the substrate depth D<sub>s</sub> to leave room for a foot.";}
+  else if(Vrem<=Vmin){e=0;Vact=Vmin;if(Vrem<Vmin*0.999)stepMsg="The top width alone already gives more buoyancy than needed: no foot required.";}
+  else{const ai2=b*b-(Vrem-Vtop)/(k*hf);if(ai2<=0){ai=0;e=a/2;Vact=Vtop+k*b*b*hf;stepMsg="Foot closes the whole planter floor and still falls short: widen the top.";}else{ai=Math.sqrt(ai2);e=(a-ai)/2;}}
+ } else if(s.rem==="ring"){ b=Math.sqrt(a*a+Vrem/(k*g.d)); w=(b-a)/2; } else if(pL&&s.pwb>0){ w=s.pwt;
+   if(s.pwb<w)stepMsg="Bottom width is smaller than the top width: using a plain float (no foot).";
+   e=Math.min(Math.max(0,s.pwb-w),a/2);if(s.pwb-w>a/2)stepMsg="The feet would meet under the planter: foot capped at e = a/2.";
+   const Vtop=2*L*w*Ds;if(Vrem<=Vtop){hf=0;Vact=Vtop;stepMsg="The top width alone already gives more buoyancy than needed: no foot required.";}else{hf=(Vrem-Vtop)/(2*L*(w+e));}dS=Ds+hf;
+   ai=a-2*e; b=a+2*w+2*wp; }
+ else if(pL){ w=s.pwt; const Vmin=2*L*w*(Ds+hf);
+   if(hf<=0){stepMsg="Float depth d must be greater than the substrate depth D<sub>s</sub> to leave room for a foot.";Vact=2*L*w*Ds;}
+   else if(Vrem<=Vmin){e=0;Vact=Vmin;if(Vrem<Vmin*0.999)stepMsg="The top width alone already gives more buoyancy than needed: no foot required.";}
+   else{e=(Vrem/(2*L)-w*Ds)/hf-w;if(e>a/2){e=a/2;Vact=2*L*(w*Ds+(w+e)*hf);stepMsg="The feet meet under the planter and still fall short: widen the top.";}}
+   ai=a-2*e; b=a+2*w+2*wp; }
+ else if(pair){ w=Vrem/(2*L*g.d); b=a+2*w+2*wp; } else { hb=Vrem/Ain; b=a+2*t; }
+ const Aout=pair?L*b:k*b*b, Apath=(s.rem==="ring"||step)?Aout-Ain:pair?2*w*L:0, Aplant=Math.max(0,Ain-Av)+2*wp*pl;
+ const gap=wp?w:(s.rem==="ring"||pair||step)?2*w:2*t;
+ let S=0;
+ if(s.rem==="ring"&&w>0) S+=(c*b+c*a)*g.d+2*(Aout-Ain);
+ if(s.rem==="base"&&hb>0) S+=2*Ain+c*a*hb;
+ if(pair&&!pL&&w>0) S+=2*2*(w*L+w*g.d+L*g.d);
+ if(pL){const ar=w*Ds+(w+e)*hf,pr=2*(Ds+hf)+2*(w+e);S+=2*(pr*L+2*ar);}
+ if(step) S+=c*b*dS+c*a*Ds+c*ai*hf+(k*b*b-Ain)+(Ain-k*ai*ai)+(k*b*b-k*ai*ai);
+ S+=s.nv*(Math.PI*s.Dv*s.Lv+Math.PI*s.Dv*s.Dv/2);
+ S+=Math.PI*s.Dh*LhTot+s.nh*Math.PI*s.Dh*s.Dh/2;
+ if(g.shell) S+=cin*Ds+Ain;
+ if(g.shell&&wp) S+=2*(2*(wp+pl)*Dp+wp*pl);
+ const mpl=S*t*g.rhoP+Vcellpl*g.rhoP;
+ const msub=g.rhoS*(Vsub+Vside), mdeck=g.qDeck*Apath, mlive=g.qLive*1000/9.81*Apath;
+ const M=msub+g.tree+mpl+mdeck+mlive;
+ const zc=Ds-s.Dh/2, rr=s.Dh/2;
+ const disp=f=>{let V=0;
+  if(s.rem==="ring") V+=(Aout-Ain)*Math.max(0,g.d-Math.max(0,f));
+  V+=Vsub*Math.max(0,Ds-Math.max(0,f))/Ds;
+  if(wp) V+=Vside*Math.max(0,Dp-Math.max(0,f))/Dp;
+  V+=Av*Math.max(0,Ds-Math.max(Ds-s.Lv,f));
+  if(s.nh>0) V+=LhTot*seg(zc,rr,f);
+  if(s.rem==="base") V+=Ain*Math.max(0,Ds+hb-Math.max(Ds,f));
+  if(pair&&!pL) V+=2*w*L*Math.max(0,g.d-Math.max(0,f));
+  if(pL){V+=2*w*L*Math.max(0,Ds-Math.max(0,f));V+=2*(w+e)*L*Math.max(0,dS-Math.max(Ds,f));}
+  if(step){V+=(k*b*b-Ain)*Math.max(0,Ds-Math.max(0,f));V+=(k*b*b-k*ai*ai)*Math.max(0,dS-Math.max(Ds,f));}
+  return V;};
+ const zmax=Math.max((s.rem==="ring"||(pair&&!pL))?g.d:0,(step||pL)?dS:0,Ds,s.rem==="base"?Ds+hb:0);
+ const cap=g.rhoW*disp(0); let f=null,sinks=cap<M;
+ if(!sinks){let lo=0,hi=zmax;for(let i=0;i<80;i++){const m=(lo+hi)/2; if(g.rhoW*disp(m)>M) lo=m; else hi=m;} f=(lo+hi)/2;}
+ let st=null;
+ if(!sinks){
+  const n_=N[s.shape],Ip=x=>{const R_=x/(2*Math.cos(Math.PI/n_)),sd=x*Math.tan(Math.PI/n_);return k*x*x*(6*R_*R_-sd*sd)/24;};
+  const rect=(wx,ly,yc)=>({A:wx*ly,Ir:ly*wx*wx*wx/12+wx*ly*yc*yc,Ip:wx*ly*ly*ly/12});
+  const E=[];const add=(o,top,bot)=>{if(o.A>0&&bot>top)E.push({...o,top,bot});};
+  const Asub=Vsub/Ds,fs=Ain>0?Asub/Ain:0;
+  if(pair){const ff=(x,yc,top,bot)=>{const q=rect(x,L,yc);add({A:2*q.A,Ir:2*q.Ir,Ip:2*q.Ip},top,bot);};
+   if(pL){ff(w,a/2+w/2,0,Ds);ff(w+e,a/2+(w-e)/2,Ds,dS);} else ff(w,a/2+w/2,0,g.d);
+   add({A:Asub,Ir:L*a*a*a/12*fs,Ip:a*L*L*L/12*fs},0,Ds);
+   if(wp){const q=rect(wp,pl,a/2+w+wp/2);add({A:2*q.A,Ir:2*q.Ir,Ip:2*q.Ip},0,Dp);}
+  } else {
+   if(s.rem==="ring") add({A:Aout-Ain,Ir:Ip(b)-Ip(a),Ip:Ip(b)-Ip(a)},0,g.d);
+   if(step){add({A:Aout-Ain,Ir:Ip(b)-Ip(a),Ip:Ip(b)-Ip(a)},0,Ds);add({A:k*b*b-k*ai*ai,Ir:Ip(b)-Ip(ai),Ip:Ip(b)-Ip(ai)},Ds,dS);}
+   if(s.rem==="base") add({A:Ain,Ir:Ip(a),Ip:Ip(a)},Ds,Ds+hb);
+   add({A:Asub,Ir:Ip(a)*fs,Ip:Ip(a)*fs},0,Ds);
+  }
+  if(s.nv>0){const Ipv=Av*(a*a/16)+s.nv*Math.PI*Math.pow(s.Dv,4)/64;add({A:Av,Ir:Ipv,Ip:Ipv},Ds-s.Lv,Ds);}
+  let Vd=0,VzB=0;E.forEach(o=>{const t0=Math.max(o.top,f),v=o.A*Math.max(0,o.bot-t0);Vd+=v;VzB+=v*(t0+o.bot)/2;});
+  if(s.nh>0){const v=LhTot*seg(zc,rr,f);Vd+=v;VzB+=v*zc;}
+  const zB=VzB/Vd;
+  let Awp=0,Iwr=0,Iwp=0;E.forEach(o=>{if(o.top<=f&&f<o.bot){Awp+=o.A;Iwr+=o.Ir;Iwp+=o.Ip;}});
+  const flt=pair?{z:(pL?dS:g.d)/2,kr:(a/2+w/2)**2+w*w/12,kp:L*L/12}:s.rem==="base"?{z:Ds+hb/2,kr:Ip(a)/Ain,kp:Ip(a)/Ain}:{z:(step?dS:g.d)/2,kr:(Ip(b)-Ip(a))/Math.max(1e-9,Aout-Ain),kp:(Ip(b)-Ip(a))/Math.max(1e-9,Aout-Ain)};
+  const subK=pair?{kr:a*a/12,kp:L*L/12}:{kr:Ip(a)/Ain,kp:Ip(a)/Ain};
+  const ms=[[g.rhoS*Vsub,Ds/2,subK.kr,subK.kp],[g.tree,-g.treeCG,0,0],[mpl,flt.z,flt.kr,flt.kp],[mdeck+mlive,0,flt.kr,flt.kp]];
+  if(wp) ms.push([g.rhoS*Vside,Dp/2,(a/2+w+wp/2)**2+wp*wp/12,pl*pl/12]);
+  const zG=ms.reduce((t,m)=>t+m[0]*m[1],0)/M;
+  const IGr=ms.reduce((t,m)=>t+m[0]*(m[2]+(m[1]-zG)**2),0),IGp=ms.reduce((t,m)=>t+m[0]*(m[3]+(m[1]-zG)**2),0);
+  const BMr=Iwr/Vd,BMp=Iwp/Vd,GMr=zG-zB+BMr,GMp=zG-zB+BMp,gg=9.81;
+  const Th=Awp>0?2*Math.PI*Math.sqrt(M*(1+g.Cah)/(g.rhoW*gg*Awp)):null;
+  const Tr=GMr>0?2*Math.PI*Math.sqrt(IGr*(1+g.Car)/(M*gg*GMr)):null,Tp=GMp>0?2*Math.PI*Math.sqrt(IGp*(1+g.Car)/(M*gg*GMp)):null;
+  st={KG:zmax-zG,KB:zmax-zB,zG,zB,BMr,BMp,GMr,GMp,Awp,Th,Tr,Tp,Vd};
+ }
+ return {st,hf,e,ai,Vact,stepMsg,b,w,hb,Aout,Aplant,Apath,gap,mpl,msub,M,cap,f,sinks,zmax};
+ };
+ let Vrem;
+ if(g.mode==="fb"||g.mode==="sub"){
+  const tgt=g.mode==="sub"?Ds*(1-g.subPct/100):g.fbTarget/1000;let lo=0,hi=60,ok=false;
+  const fb=V=>{const q=run(V);return q.sinks?-1:q.f;};
+  if(fb(0)>=tgt){Vrem=0;warns.push("Even without floats this sits higher than the target freeboard.");}
+  else{for(let i=0;i<70;i++){const m=(lo+hi)/2; if(fb(m)<tgt) lo=m; else hi=m;} Vrem=(lo+hi)/2;}
+ } else {
+  Vrem=g.Vb-Vch; if(Vrem<0){warns.push("Pipes alone exceed V<sub>b</sub>: total buoyancy is higher than the other options.");Vrem=0;}
+ }
+ const q=run(Vrem);
+ if(s.rem==="step"||(s.rem==="pair"&&s.pwt>0)){Vrem=q.Vact;if(q.stepMsg)warns.push(q.stepMsg);warns.push("Stepped float: only the narrow top of the floats cuts the waterline, so the module is less stiff in heave and roll. Check stability (GM).");}
+ const {st,hf,e,ai,b,w,hb,Aout,Aplant,Apath,gap,mpl,msub,M,cap,f,sinks,zmax}=q;
+ if(!sinks && Math.max(0,Ds-f)/Ds<0.3 && fc<1) warns.push("Less than 30% of the substrate is below the waterline: roots get little tidal wetting. Reduce the buoyant volume (or add load) to sit lower.");
+ const Lfl=pair?L:(s.rem==="ring"||s.rem==="step")?c*(a+b)/2:0;
+ if(s.nv>0&&s.nh>0){const vr=vRows(s,{a,L,rem:s.rem});if(vr.overflow)warns.push(`Only ${vr.cap} vertical pipes fit between the horizontal pipes; the rest would hit them.`);}
+ const tn=Math.tan(Math.PI/N[s.shape]),sa=pair?a:a*tn,sb=pair?b:b*tn;
+ if(st&&st.GMr<=0) warns.push("Negative metacentric height (GM ≤ 0): the module is unstable in roll.");
+ if(st&&pair&&st.GMp<=0) warns.push("Negative pitch GM for a single module: it relies on being connected end-to-end to neighbouring modules (or a longer float length L).");
+ return {st,wp,Dp,hf,e,ai,sa,sb,L,Lfl,Vsub,msub,fc,Vcellpl,Vwater,mcell:Vcellpl*g.rhoP,a,b,w,hb,Ain,Aout,Aplant,Apath,ratio:Aplant/Aout,gap,Vch,Vv,Vh,Vrem,Vtot:Vch+Vrem,mpl,plPer:mpl/Aplant,M,cap,reserve:cap/M-1,f,sinks,zmax,draft:sinks?null:zmax-f,subWet:sinks?1:Math.max(0,Ds-f)/Ds,warns};
+}
+
+const fmt=(v,d=2)=>(v==null||!isFinite(v))?"–":v.toFixed(d);
+
+function poly(cx,cy,x,n,scale){const R=x/(2*Math.cos(Math.PI/n))*scale,o=n===6?0:Math.PI/n;let p=[];for(let i=0;i<n;i++){const t=o+i*2*Math.PI/n;p.push((cx+R*Math.cos(t)).toFixed(1)+","+(cy+R*Math.sin(t)).toFixed(1));}return p.join(" ");}
+
+function cellPat(fc){const p=Math.round(fc*100),L=10,q=Math.sqrt(fc)*L,o=(L-q)/2;return {id:"cp"+p,defs:`<defs><pattern id="cp${p}" width="${L}" height="${L}" patternUnits="userSpaceOnUse"><rect x="${o}" y="${o}" width="${q}" height="${q}" fill="#6fb7e3" stroke="#1f5f86" stroke-width=".6"/></pattern></defs>`};}
+function chordAt(shape,a,y){const N_=N[shape],R_=a/(2*Math.cos(Math.PI/N_)),o=N_===6?0:Math.PI/N_,V=[];
+ for(let i=0;i<N_;i++){const t=o+i*2*Math.PI/N_;V.push([R_*Math.cos(t),R_*Math.sin(t)]);}
+ const xs=[];for(let i=0;i<N_;i++){const [x1,y1]=V[i],[x2,y2]=V[(i+1)%N_];if((y-y1)*(y-y2)<=0&&y1!==y2)xs.push(x1+(y-y1)*(x2-x1)/(y2-y1));}return xs.length<2?0:Math.max(...xs)-Math.min(...xs);}
+// vertical pipes placed in the gaps between horizontal pipes (metres, centred on the planter)
+function vRows(s,r){
+ const pair=s.rem==="pair",shape=pair?"square":s.shape,rv=s.Dv/2,rh=s.Dh/2,a=r.a,L=pair?r.L:r.a;
+ let ys;
+ if(pair) ys=[...Array(s.nh)].map((_,i)=>s.nh===1?0:-L/2+rh+i*(L-2*rh)/(s.nh-1));
+ else ys=hPipes(shape,a,s.nh,s.Dh).map(p=>p.y);
+ const rows=[];
+ for(let i=0;i<ys.length-1;i++){const lo=ys[i]+rh,hi=ys[i+1]-rh;if(hi-lo>=s.Dv*1.02){const y=(lo+hi)/2;const len=pair?a:Math.min(chordAt(shape,a,y-rv*0.999),chordAt(shape,a,y+rv*0.999));if(len>s.Dv)rows.push({y,len});}}
+ if(ys.length===1){[-1,1].forEach(sg=>{const lo=sg<0?(pair?-L/2:-a/2):ys[0]+rh,hi=sg<0?ys[0]-rh:(pair?L/2:a/2);if(hi-lo>=s.Dv*1.02){const y=(lo+hi)/2;const len=pair?a:Math.min(chordAt(shape,a,y-rv*0.999),chordAt(shape,a,y+rv*0.999));if(len>s.Dv)rows.push({y,len});}});}
+ const caps=rows.map(q=>Math.max(0,Math.floor(q.len/(s.Dv*1.1))));const capTot=caps.reduce((t,c)=>t+c,0);
+ const pts=[];let left=Math.min(s.nv,capTot);
+ const tot=rows.reduce((t,q)=>t+q.len,0);
+ const cnt=rows.map((q,i)=>Math.min(caps[i],Math.floor(left*q.len/tot)));
+ let rem=left-cnt.reduce((t,c)=>t+c,0);
+ while(rem>0){let best=-1,bv=-1;rows.forEach((q,i)=>{if(cnt[i]<caps[i]){const v=q.len/(cnt[i]+1);if(v>bv){bv=v;best=i;}}});if(best<0)break;cnt[best]++;rem--;}
+ rows.forEach((q,i)=>{const n=cnt[i];const span=q.len-2*rv*1.05;for(let j=0;j<n;j++){const x=n===1?0:-span/2+j*span/(n-1);pts.push([x,q.y]);}});
+ return {pts,overflow:s.nv>capTot,cap:capTot};
+}
+function moduleSvg(s,r,cx,cy,sc,trees){
+ if(s.rem==="pair") s={...s,shape:"square"};
+ const n=N[s.shape],pair=s.rem==="pair";let svg="";
+ if(pair){const A=r.a*sc,Lp=r.L*sc,Wf=r.w*sc,Wp=(r.wp||0)*sc;[[cx-A/2-Wf],[cx+A/2]].forEach(([x])=>svg+=`<rect x="${x}" y="${cy-Lp/2}" width="${Wf}" height="${Lp}" fill="var(--float)" stroke="#000" stroke-width="1"/>`);
+  if(Wp>0){const Pl=Math.min(Wp,Lp);[[cx-A/2-Wf-Wp],[cx+A/2+Wf]].forEach(([x])=>svg+=`<rect x="${x}" y="${cy-Pl/2}" width="${Wp}" height="${Pl}" fill="var(--sub)" stroke="#2f6326" stroke-width="1" stroke-dasharray="3 2"/>`);}
+  const pr=`x="${cx-A/2}" y="${cy-Lp/2}" width="${A}" height="${Lp}"`;svg+=`<rect ${pr} fill="var(--sub)" stroke="#2f6326" stroke-width="1"/>`;
+  if(s.pwt>0&&r.e>0){const E=r.e*sc;[cx-A/2+E,cx+A/2-E].forEach(x=>svg+=`<line x1="${x}" y1="${cy-Lp/2}" x2="${x}" y2="${cy+Lp/2}" stroke="#000" stroke-width="1.4" stroke-dasharray="5 3"/>`);}
+  if((s.cells||0)>0){const cp=cellPat(Math.min(1,s.cells/100));svg+=cp.defs+`<rect ${pr} fill="url(#${cp.id})"/>`;}
+  if(s.nh>0){const rr=s.Dh/2*sc;for(let i=0;i<s.nh;i++){const y=s.nh===1?cy:cy-Lp/2+rr+i*(Lp-2*rr)/(s.nh-1);svg+=`<rect x="${cx-A/2}" y="${y-rr}" width="${A}" height="${2*rr}" rx="${Math.min(rr,3)}" fill="var(--pipe)" opacity=".9" stroke="#9c6a12" stroke-width=".6"/>`;}}
+ } else {
+ svg+=`<polygon points="${poly(cx,cy,r.b,n,sc)}" fill="${s.rem==='base'?'#555':'var(--float)'}" stroke="#000" stroke-width="1"/>`;
+ svg+=`<polygon points="${poly(cx,cy,r.a,n,sc)}" fill="var(--sub)" stroke="#2f6326" stroke-width="1"/>`;
+ if((s.cells||0)>0){const cp=cellPat(Math.min(1,s.cells/100));svg+=cp.defs+`<polygon points="${poly(cx,cy,r.a,n,sc)}" fill="url(#${cp.id})" stroke="none"/>`;}
+ if(s.rem==="step"&&r.e>0) svg+=`<polygon points="${poly(cx,cy,r.ai,n,sc)}" fill="none" stroke="#000" stroke-width="1.4" stroke-dasharray="5 3"/>`;
+ }
+ if(s.nh>0&&!pair){const rr=s.Dh/2*sc;hPipes(s.shape,r.a,s.nh,s.Dh).forEach(p=>{if(p.L<=0)return;const L=p.L*sc,y=cy+p.y*sc;svg+=`<rect x="${cx-L/2}" y="${y-rr}" width="${L}" height="${2*rr}" rx="${Math.min(rr,3)}" fill="var(--pipe)" opacity=".9" stroke="#9c6a12" stroke-width=".6"/>`;});}
+ if(s.nv>0&&s.nh>0){const rr=s.Dv/2*sc;vRows(s,r).pts.forEach(([x,y])=>svg+=`<circle cx="${cx+x*sc}" cy="${cy+y*sc}" r="${rr}" fill="var(--pipe)" stroke="#9c6a12" stroke-width=".6"/>`);}
+ else if(s.nv>0){const rr=s.Dv/2*sc,n=s.nv,pts=[];
+  const Rmax=Math.max(0,Math.min(r.a,r.L||r.a)/2*sc-rr*1.3);
+  if(n===1){pts.push([0,0]);}else{
+   let best=1,bestErr=1e9;
+   for(let k=1;k<=8;k++){const sum=k*(k+1)/2,nk=Math.max(1,Math.round(n*k/sum));const err=Math.abs(Math.log((2*Math.PI*Rmax/nk)/(Rmax/k)));if(err<bestErr){bestErr=err;best=k;}}
+   const k=best,sum=k*(k+1)/2;let left=n;
+   for(let j=k;j>=1;j--){const cnt=j===1?left:Math.min(left,Math.round(n*j/sum));left-=cnt;const rad=Rmax*j/k,off=j%2?0:Math.PI/Math.max(cnt,1);
+    for(let q=0;q<cnt;q++){const t=off+q*2*Math.PI/cnt;pts.push(cnt===1&&j===1&&k>1?[0,0]:[rad*Math.cos(t),rad*Math.sin(t)]);}}
+  }
+  pts.forEach(([dx,dy])=>svg+=`<circle cx="${cx+dx}" cy="${cy+dy}" r="${rr}" fill="var(--pipe)" stroke="#9c6a12" stroke-width=".6"/>`);}
+ if(trees){
+  if(pair){const A=r.a*sc,Lp=r.L*sc,Wf=r.w*sc,Wp=(r.wp||0)*sc;
+   svg+=plantsAlong(cx,cy-Lp/2,cx,cy+Lp/2,r.a,r.L,sc);
+   if(Wp>0)[cx-A/2-Wf-Wp/2,cx+A/2+Wf+Wp/2].forEach(x=>svg+=rootTree(x,cy,0.42*Math.min(r.a,r.L)*sc,Math.min(Wp,Lp)));}
+  else if(r.a>=0.9) svg+=treeSvg(cx,cy,0.42*r.a*sc); else svg+=seedling(cx,cy,0.42*r.a*sc);
+ }
+ return svg;
+}
+function dimV(x,y1,y2,lab,col){col=col||"#b5462b";return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${col}" stroke-width="1.2"/><line x1="${x-3}" y1="${y1}" x2="${x+3}" y2="${y1}" stroke="${col}" stroke-width="1.2"/><line x1="${x-3}" y1="${y2}" x2="${x+3}" y2="${y2}" stroke="${col}" stroke-width="1.2"/><text x="${x+4}" y="${(y1+y2)/2+4}" font-size="11" font-style="italic" font-weight="700" fill="${col}" stroke="#fff" stroke-width="2.5" paint-order="stroke">${lab}</text>`;}
+function dimVL(x,y1,y2,lab,col){col=col||"#b5462b";return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${col}" stroke-width="1.2"/><line x1="${x-3}" y1="${y1}" x2="${x+3}" y2="${y1}" stroke="${col}" stroke-width="1.2"/><line x1="${x-3}" y1="${y2}" x2="${x+3}" y2="${y2}" stroke="${col}" stroke-width="1.2"/><text x="${x-5}" y="${(y1+y2)/2+4}" text-anchor="end" font-size="12" font-style="italic" font-weight="700" fill="${col}" stroke="#fff" stroke-width="2.5" paint-order="stroke">${lab}</text>`;}
+function dimH(y,x1,x2,lab,col){col=col||"#b5462b";return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1.2"/><line x1="${x1}" y1="${y-3}" x2="${x1}" y2="${y+3}" stroke="${col}" stroke-width="1.2"/><line x1="${x2}" y1="${y-3}" x2="${x2}" y2="${y+3}" stroke="${col}" stroke-width="1.2"/><text x="${(x1+x2)/2}" y="${y-4}" text-anchor="middle" font-size="11" font-style="italic" font-weight="700" fill="${col}" stroke="#fff" stroke-width="2.5" paint-order="stroke">${lab}</text>`;}
+function lSection(s,r,big){
+ const pair=s.rem==="pair",base=s.rem==="base",isL=s.rem==="step"||(pair&&s.pwt>0),Ds=effDs(),hf=r.hf,a=r.a,w=r.w,e=isL?r.e:0,wp=pair?(r.wp||0):0,Dp=r.Dp||0,t=g.t/1000;
+ const b=base?a+2*t:r.b,fd=base?0:(isL?Ds+hf:g.d),hb=base?r.hb:0;
+ const bottom=Math.max(Ds,fd,Ds+hb,wp>0?Dp:0);
+ const showT=big&&TREES,Ht=Math.max(0.5,g.treeH/0.95),up=showT?g.treeH+0.3:0;
+ const fsp=showT?100:0,W=big?900:260,H=big?(showT?620:400):150,extM=showT?Math.max(g.canopyW/2,wp>0?b/2-wp/2+g.canopyW/2:0):0,sc=big?Math.min((W-170)/b,(extM>0?(W-260)/(2*extM):Infinity),(H-80-fsp)/(bottom+up)):Math.min((W-80)/b,(H-48)/bottom),cx=W/2,y0=(big?34:22)+up*sc,X=x=>cx+x*sc,Y=z=>y0+z*sc;
+ let svg=`<svg class="sect" viewBox="0 0 ${W} ${H}" style="width:100%;${big?"":"height:150px;"}background:#eef4f2;border-radius:8px;margin-top:6px"><title>Cross-section (vertical plane through the module)</title>`;
+ if(r.f!=null) svg+=`<rect x="0" y="${Y(r.f)}" width="${W}" height="${H-Y(r.f)}" fill="#cfe8f3"/>`;
+ const half=b/2;
+ if(!base)[-1,1].forEach(sg=>{const xo=sg*(half-wp),xi=sg*(a/2),xf=sg*(a/2-e);
+  const pts=(isL?[[xo,0],[xi,0],[xi,Ds],[xf,Ds],[xf,fd],[xo,fd]]:[[xo,0],[xi,0],[xi,fd],[xo,fd]]).map(([x,z])=>`${X(x).toFixed(1)},${Y(z).toFixed(1)}`).join(" ");
+  svg+=`<polygon points="${pts}" fill="var(--float)" stroke="#000"/>`;
+  if(wp>0){const x0=Math.min(sg*half,sg*(half-wp));svg+=`<rect x="${X(x0)}" y="${Y(0)}" width="${wp*sc}" height="${Dp*sc}" fill="var(--sub)" stroke="#2f6326" stroke-dasharray="3 2"/>`;}});
+ if(base) svg+=`<rect x="${X(-half)}" y="${Y(Ds)}" width="${b*sc}" height="${hb*sc}" fill="#555" stroke="#000"/><rect x="${X(-half)}" y="${Y(0)}" width="${t*sc+0.8}" height="${Ds*sc}" fill="#333"/><rect x="${X(half)-t*sc-0.8}" y="${Y(0)}" width="${t*sc+0.8}" height="${Ds*sc}" fill="#333"/>`;
+ svg+=`<rect x="${X(-a/2)}" y="${Y(0)}" width="${a*sc}" height="${Ds*sc}" fill="var(--sub)" stroke="#2f6326"/>`;
+ if((s.cells||0)>0){const cp=cellPat(Math.min(1,s.cells/100));svg+=cp.defs+`<rect x="${X(-a/2)}" y="${Y(0)}" width="${a*sc}" height="${Ds*sc}" fill="url(#${cp.id})"/>`;}
+ // pipes (schematic positions across the section)
+ if(s.nh>0){const rr=s.Dh/2;
+  if(pair) svg+=`<rect x="${X(-a/2)}" y="${Y(Ds-s.Dh)}" width="${a*sc}" height="${s.Dh*sc}" rx="${rr*sc}" fill="var(--pipe)" stroke="#9c6a12" stroke-width=".6"/>`;
+  else hPipes(s.shape,a,s.nh,s.Dh).forEach(p=>{if(p.L>0)svg+=`<circle cx="${X(p.y)}" cy="${Y(Ds-rr)}" r="${rr*sc}" fill="var(--pipe)" stroke="#9c6a12" stroke-width=".6"/>`;});}
+ if(s.nv>0){let xs;
+  if(s.nh>0) xs=[...new Set(vRows(s,r).pts.map(p=>+p[1].toFixed(3)))];
+  else{const n=Math.min(s.nv,Math.max(1,Math.floor(a/(s.Dv*1.6))));xs=[...Array(n)].map((_,i)=>n===1?0:-a/2+s.Dv*0.6+i*(a-s.Dv*1.2)/(n-1));}
+  xs.forEach(x=>svg+=`<rect x="${X(x-s.Dv/2)}" y="${Y(Ds-Math.min(s.Lv,Ds))}" width="${s.Dv*sc}" height="${Math.min(s.Lv,Ds)*sc}" fill="var(--pipe)" stroke="#9c6a12" stroke-width=".6" opacity=".95"/>`);}
+ if(showT){const cw=g.canopyW/1.24;
+  svg+=sideTree(X(0),Y(0),sc,Ht,cw,a,Ds,false);
+  if(wp>0)[-1,1].forEach(sg=>svg+=sideTree(X(sg*(half-wp/2)),Y(0),sc,Ht,cw,wp,Dp,true,sg));}
+ if(showT){const top=Y(-g.treeH),ext=Math.max(g.canopyW/2,wp>0?half-wp/2+g.canopyW/2:0),xL=Math.min(X(ext)+14,W-110);
+  svg+=dimV(xL,top,Y(0),"").replace("</svg>","")+`<text x="${xL+6}" y="${(top+Y(0))/2}" text-anchor="start" font-size="13" font-weight="700" fill="#b5462b" stroke="#fff" stroke-width="3" paint-order="stroke">tree ${fmt(g.treeH)} m</text><text x="${xL+6}" y="${(top+Y(0))/2+15}" text-anchor="start" font-size="10.5" fill="#b5462b">above substrate</text>`;
+  svg+=dimH(top-8,X(-g.canopyW/2),X(g.canopyW/2),`canopy ${fmt(g.canopyW)} m`);}
+ if(showT){const yT=Math.max(Y(bottom)+18,Y(Ds)+40),yB=H-28;if(yB>yT){const F=[[-0.32,0.25,1,"#f2a541"],[0.18,0.55,-1,"#7fb8d8"],[0.42,0.15,-1,"#f2a541"],[-0.08,0.85,1,"#e76f51"],[-0.45,0.7,1,"#7fb8d8"]];
+  F.forEach(([fx,fy,dir,col])=>svg+=fishSvg(cx+fx*(W-120),yT+fy*(yB-yT),Math.max(16,Math.min(34,sc*0.3)),dir,col));}}
+ if(s.path&&!base){const P=Math.max(s.pathW||1.5,w),tk=0.06;[-1,1].forEach(sg=>{const xc=sg*(half-wp-w/2);svg+=`<rect x="${X(xc-P/2).toFixed(1)}" y="${Y(-tk).toFixed(1)}" width="${(P*sc).toFixed(1)}" height="${Math.max(3,tk*sc).toFixed(1)}" fill="#b0824a" stroke="#6b4a22"/>`;});svg+=`<text x="${X(-(half-wp-w/2))}" y="${Y(-tk)-3}" text-anchor="middle" font-size="9" font-weight="700" fill="#6b4a22">path &gt; 1.5 m</text>`;}
+ if(r.f!=null) svg+=`<line x1="0" y1="${Y(r.f)}" x2="${W}" y2="${Y(r.f)}" stroke="#2b6a8a" stroke-width="1.2" stroke-dasharray="6 3"/><text x="${W-4}" y="${Y(r.f)-3}" text-anchor="end" font-size="9" fill="#2b6a8a">waterline</text>`;
+ if(!base) svg+=dimH(Y(0)-6,X(half-wp-w),X(half-wp),big?`w ${fmt(w)} m`:"w");
+ if(e>0.005) svg+=dimH(big?Y(bottom)+40:Y(fd)+12,X(a/2-e),X(a/2),big?`e ${fmt(e)} m`:"e");
+ if(big) svg+=dimH(Y(bottom)+18,X(-a/2),X(a/2),`a ${fmt(a)} m`);
+ svg+=big?dimVL(X(-half)-12,Y(0),Y(Ds),`D<tspan font-size="9" dy="2">s</tspan><tspan dy="-2"> ${fmt(Ds)} m</tspan>`):dimV(X(-half)-26,Y(0),Y(Ds),"D").replace(/>D</,">D<tspan font-size='8' dy='2'>s</tspan><");
+ if(isL&&hf>0) svg+=big?dimVL(X(-half)-12,Y(Ds),Y(fd),`h<tspan font-size="9" dy="2">f</tspan><tspan dy="-2"> ${fmt(hf)} m</tspan>`):dimV(X(-half)-26,Y(Ds),Y(fd),"h").replace(/>h</,">h<tspan font-size='8' dy='2'>f</tspan><");
+ if(base&&hb>0) svg+=dimV(X(-half)-26,Y(Ds),Y(Ds+hb),"h").replace(/>h</,">h<tspan font-size='8' dy='2'>b</tspan><");
+ if(!base) svg+=dimV(X(half)+10,Y(0),Y(fd),big?`d ${fmt(fd)} m`:"d");
+ const cap=base?`h<tspan font-size="8">b</tspan> ${fmt(hb)}`:`w ${fmt(w)}${isL?` · e ${fmt(e)} · h<tspan font-size="8">f</tspan> ${fmt(hf)}`:""} · d ${fmt(fd)}`;
+ svg+=`<text x="4" y="${H-4}" font-size="10" fill="#5b6f6a">Section: ${cap} · D<tspan font-size="8">s</tspan> ${fmt(Ds)} m${(s.nv||s.nh)?" · pipes schematic":""}</text></svg>`;
+ return svg;
+}
+function plan(s,r){
+ const pair=s.rem==="pair",n=N[pair?"square":s.shape],W=260,H=170;
+ const sc=pair?Math.min(W*0.8/r.b,H*0.62/r.L):Math.min(W*0.78,H*0.66)/(r.b/Math.cos(Math.PI/n));
+ const cx=W/2-6,cy=H/2-4;
+ let svg=`<svg class="plan" viewBox="0 0 ${W} ${H}"><title>Click to see two modules together</title>`+moduleSvg(s,r,cx,cy,sc);
+ if(s.path&&pair){const A=r.a*sc,Lp=r.L*sc,Wf=r.w*sc,P=Math.max(s.pathW||1.5,r.w)*sc;[-1,1].forEach(sg=>{const xc=cx+sg*(A/2+Wf/2);svg+=`<rect x="${(xc-P/2).toFixed(1)}" y="${(cy-Lp/2).toFixed(1)}" width="${P.toFixed(1)}" height="${Lp.toFixed(1)}" fill="#b0824a" fill-opacity=".9" stroke="#6b4a22"/><text x="${xc.toFixed(1)}" y="${(cy+3).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff" transform="rotate(-90 ${xc.toFixed(1)} ${cy.toFixed(1)})">path &gt; 1.5 m</text>`;});}
+ if(s.path&&!pair&&n===4){const B=r.b*sc,P=Math.max(s.pathW||1.5,r.w)*sc,W_=r.w*sc;[-1,1].forEach(sg=>{const xc=cx+sg*(B/2-W_/2);svg+=`<rect x="${(xc-P/2).toFixed(1)}" y="${(cy-B/2).toFixed(1)}" width="${P.toFixed(1)}" height="${B.toFixed(1)}" fill="#b0824a" fill-opacity=".9" stroke="#6b4a22"/><text x="${xc.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="middle" font-size="9" font-weight="700" fill="#fff" transform="rotate(-90 ${xc.toFixed(1)} ${cy.toFixed(1)})">path &gt; 1.5 m</text>`;});}
+ if(pair){const A=r.a*sc,Lp=r.L*sc,Wf=r.w*sc;
+  const Wp=(r.wp||0)*sc;svg+=dimH(cy+Lp/2+12,cx-A/2-Wf-Wp,cx+A/2+Wf+Wp,"b");
+  if(Wp>0) svg+=dimH(cy+Lp/4,cx+A/2+Wf,cx+A/2+Wf+Wp,"p","#fff").replace(/stroke="#fff" stroke-width="2.5"/,'stroke="#000" stroke-width="2.5"');
+  svg+=dimH(cy,cx-A/2,cx+A/2,"a","#fff").replace(/stroke="#fff" stroke-width="2.5"/,'stroke="#000" stroke-width="2.5"');
+  svg+=dimH(cy-Lp/4,cx-A/2-Wf,cx-A/2,"w","#fff").replace(/stroke="#fff" stroke-width="2.5"/,'stroke="#000" stroke-width="2.5"');
+  svg+=dimV(cx+A/2+Wf+Wp+6,cy-Lp/2,cy+Lp/2,"L");}
+ else{const Rb=r.b/(2*Math.cos(Math.PI/n))*sc,o=n===6?0:Math.PI/n;let mx=0;for(let i=0;i<n;i++)mx=Math.max(mx,Rb*Math.cos(o+i*2*Math.PI/n));
+  const B=r.b*sc,A=r.a*sc;
+  svg+=dimV(cx+mx+6,cy-B/2,cy+B/2,"b");
+  svg+=dimV(cx-10,cy-A/2,cy+A/2,"a","#fff").replace(/stroke="#fff" stroke-width="2.5"/,'stroke="#000" stroke-width="2.5"');
+  if((s.rem==="ring"||s.rem==="step")&&r.w>0) svg+=dimV(cx+10,cy-B/2,cy-A/2,"w","#fff").replace(/stroke="#fff" stroke-width="2.5"/,'stroke="#000" stroke-width="2.5"');
+  const tn=Math.tan(Math.PI/n),SB=B*tn,SA=A*tn;
+  svg+=dimH(cy-B/2-5,cx-SB/2,cx+SB/2,"s<tspan font-size='8' dy='2'>b</tspan>");
+  svg+=dimH(cy+A/2-6,cx-SA/2,cx+SA/2,"s<tspan font-size='8' dy='2'>a</tspan>","#fff").replace(/stroke="#fff" stroke-width="2.5"/,'stroke="#000" stroke-width="2.5"');}
+ svg+=`<text x="6" y="${H-6}" font-size="10" fill="#5b6f6a">${pair?`a ${fmt(r.a)} · b ${fmt(r.b)} · w ${fmt(r.w)}${r.wp?` · p ${fmt(r.wp)}`:""}${s.pwt>0?` · e ${fmt(r.e)}`:""} · L ${fmt(r.L)} m`:`a ${fmt(r.a)} · b ${fmt(r.b)}${s.rem==="ring"||s.rem==="step"?` · w ${fmt(r.w)}`:""}${s.rem==="step"?` · e ${fmt(r.e)}`:""} · sides ${fmt(r.sa)} / ${fmt(r.sb)} m`}</text></svg>`;
+ return svg;
+}
+const DA=`<defs><marker id="da" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5462b"/></marker></defs>`;
+function arrow(x1,y1,x2,y2,lab,dy){dy=dy==null?-6:dy;const mx=(x1+x2)/2,my=(y1+y2)/2;const vert=Math.abs(x2-x1)<1;
+ return DA+`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#b5462b" stroke-width="1.8" marker-start="url(#da)" marker-end="url(#da)"/>`+
+ (vert?`<text x="${mx-6}" y="${my}" text-anchor="end" dominant-baseline="middle" font-size="12.5" font-weight="700" fill="#b5462b" stroke="#fff" stroke-width="3" paint-order="stroke">${lab}</text>`
+      :`<text x="${mx}" y="${my+dy}" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b5462b" stroke="#fff" stroke-width="3" paint-order="stroke">${lab}</text>`);}
+function boxDims(ox,oy,sc,minx,maxx,miny,maxy){const x0=ox+minx*sc,x1=ox+maxx*sc,y0=oy+miny*sc,y1=oy+maxy*sc;
+ return arrow(x0,y1+16,x1,y1+16,`${fmt(maxx-minx)} m`,14)+arrow(x0-16,y0,x0-16,y1,`${fmt(maxy-miny)} m`);}
+function pairSvg(s,r,dir){
+ const pair=s.rem==="pair",shape=pair?"square":s.shape,n=N[shape];
+ let dx,dy,label;
+ if(dir==="side"){ if(shape==="hex"&&!pair){dx=r.b*Math.cos(Math.PI/6);dy=r.b*Math.sin(Math.PI/6);label="Side by side (hexagons join on a diagonal flat)";} else {dx=r.b;dy=0;label=pair?"Side by side (across the floats)":"Side by side";} }
+ else { dx=0; dy=pair?r.L:r.b; label=pair?"One below the other (along the floats)":"One below the other"; }
+ const hx=pair?r.b/2:r.b/(2*Math.cos(Math.PI/n)), hy=pair?r.L/2:r.b/(2*Math.cos(Math.PI/n));
+ const xs=[-hx,hx,dx-hx,dx+hx],ys=[-hy,hy,dy-hy,dy+hy];
+ const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+ const W=520,H=380,pad=50,sc=Math.min((W-2*pad)/(maxx-minx),(H-2*pad-20)/(maxy-miny));
+ const ox=pad+(W-2*pad-(maxx-minx)*sc)/2-minx*sc, oy=pad+(H-2*pad-20-(maxy-miny)*sc)/2-miny*sc;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px">`;
+ svg+=moduleSvg(s,r,ox,oy,sc)+moduleSvg(s,r,ox+dx*sc,oy+dy*sc,sc);
+ const pe=pair&&dir!=="side"?r.L:(pair&&r.wp>0?r.b:r.a),L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,gap=Math.max(0,L-pe);
+ const x1=ox+ux*pe/2*sc,y1=oy+uy*pe/2*sc,x2=ox+(dx-ux*pe/2)*sc,y2=oy+(dy-uy*pe/2)*sc;
+ if(gap>0.005){svg+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#b5462b" stroke-width="2" marker-start="url(#ar)" marker-end="url(#ar)"/>`;
+  svg+=`<defs><marker id="ar" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5462b"/></marker></defs>`;}
+ const tx=(x1+x2)/2-uy*16+(dy===0?0:18),ty=(y1+y2)/2+ux*16*(dy===0?-1:0)+4;
+ svg+=`<text x="${tx}" y="${ty}" text-anchor="${dy===0?'middle':'start'}" font-size="13" font-weight="700" fill="#b5462b" stroke="#fff" stroke-width="3" paint-order="stroke">${gap>0.005?`gap ${fmt(gap)} m`:"planters touch"}</text>`;
+ svg+=boxDims(ox,oy,sc,minx,maxx,miny,maxy);
+ svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="#5b6f6a">${label}</text></svg>`;
+ return svg;
+}
+function treeSvg(X,Y,R){R=Math.max(4,R);const lobes=[[0,-0.5],[0.48,-0.15],[0.3,0.42],[-0.3,0.42],[-0.48,-0.15],[0,0]];
+ let g=`<g><circle cx="${X+R*0.12}" cy="${Y+R*0.14}" r="${R}" fill="#000" opacity=".12"/>`;
+ lobes.forEach(([dx,dy])=>g+=`<circle cx="${(X+dx*R).toFixed(1)}" cy="${(Y+dy*R).toFixed(1)}" r="${(R*0.52).toFixed(1)}" fill="#1d5c18" fill-opacity=".72" stroke="#123d10" stroke-width=".8"/>`);
+ lobes.forEach(([dx,dy])=>g+=`<circle cx="${(X+dx*R-R*0.14).toFixed(1)}" cy="${(Y+dy*R-R*0.14).toFixed(1)}" r="${(R*0.2).toFixed(1)}" fill="#8fd17a" opacity=".55"/>`);
+ return g+`</g>`;}
+let TREES=false;
+// side view of a mangrove: canopy, trunk, prop roots into the substrate (and out of a small pot)
+function sideTree(X,Yb,sc,Ht,cw,pw,pd,pot,out){const H_=Ht*sc,CW=cw*sc,PW=pw*sc,PD=pd*sc,lw=Math.max(1.2,sc*0.03);let g="<g>";
+ // prop roots: from the lower trunk down into the substrate and out through the planter floor
+ for(let k=0;k<7;k++){const f=(k/6)*2-1,x1=X+f*PW*0.06,y1=Yb-H_*0.14,x2=X+f*PW*(pot?0.4:0.38),x3=x2+f*PW*0.04,y3=Yb+PD*1.25;
+  g+=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} Q${(X+f*PW*0.45).toFixed(1)},${(Yb-H_*0.1).toFixed(1)} ${x2.toFixed(1)},${Yb.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)}" stroke="#6b4a2b" stroke-width="${lw}" fill="none" stroke-linecap="round"/>`;}
+ // fine roots hanging below the planter floor
+ for(let k=0;k<9;k++){const f=(k/8)*2-1,x=X+f*PW*0.42,y1=Yb+PD*0.95,y2=Yb+PD*(1.35+0.25*((k%3)/2));
+  g+=`<path d="M${x.toFixed(1)},${y1.toFixed(1)} q${(PW*0.03).toFixed(1)},${((y2-y1)/2).toFixed(1)} 0,${(y2-y1).toFixed(1)}" stroke="#6b4a2b" stroke-width="${lw*0.6}" fill="none" stroke-linecap="round" opacity=".8"/>`;}
+ if(pot)for(let k=0;k<6;k++){const f0=(k/5)*2-1,f=out?(out>0?Math.abs(f0):-Math.abs(f0))*(k%2?1:0.55):f0,x1=X+f*PW*0.35,y1=Yb+PD*0.9,x2=X+f*PW*1.1,y2=Yb+PD*(1.9+0.3*Math.abs(f));
+  g+=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} Q${(X+f*PW*0.6).toFixed(1)},${(Yb+PD*1.5).toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}" stroke="#6b4a2b" stroke-width="${lw*0.7}" fill="none" stroke-linecap="round" opacity=".85"/>`;}
+ g+=`<rect x="${X-Math.max(2,sc*0.05)}" y="${Yb-H_*0.95+CW*0.4}" width="${Math.max(4,sc*0.1)}" height="${Math.max(4,H_*0.95-CW*0.4-H_*0.13)}" fill="#6b4a2b"/>`;
+ const topY=Yb-H_*0.95,blobs=[[0,0.32,0.5,0.3],[-0.3,0.42,0.32,0.24],[0.3,0.42,0.32,0.24],[-0.18,0.2,0.28,0.2],[0.2,0.21,0.28,0.2],[0,0.52,0.42,0.2]];
+ blobs.forEach(([dx,dy,rx,ry])=>g+=`<ellipse cx="${(X+dx*CW).toFixed(1)}" cy="${(topY+dy*CW).toFixed(1)}" rx="${(rx*CW).toFixed(1)}" ry="${(ry*CW).toFixed(1)}" fill="#1d5c18" fill-opacity=".85" stroke="#123d10" stroke-width=".8"/>`);
+ blobs.forEach(([dx,dy,rx,ry])=>g+=`<ellipse cx="${(X+dx*CW-rx*CW*0.25).toFixed(1)}" cy="${(topY+dy*CW-ry*CW*0.3).toFixed(1)}" rx="${(rx*CW*0.35).toFixed(1)}" ry="${(ry*CW*0.35).toFixed(1)}" fill="#8fd17a" opacity=".5"/>`);
+ return g+"</g>";}
+function fishSvg(X,Y,L,dir,col){const d=dir<0?-1:1,h=L*0.42;return `<g transform="translate(${X.toFixed(1)},${Y.toFixed(1)}) scale(${d},1)"><ellipse cx="0" cy="0" rx="${(L/2).toFixed(1)}" ry="${(h/2).toFixed(1)}" fill="${col}" stroke="#1b3a4b" stroke-width=".8"/><path d="M${(-L/2+1).toFixed(1)},0 l${(-L*0.32).toFixed(1)},${(-h*0.55).toFixed(1)} l0,${(h*1.1).toFixed(1)} z" fill="${col}" stroke="#1b3a4b" stroke-width=".8"/><circle cx="${(L*0.28).toFixed(1)}" cy="${(-h*0.1).toFixed(1)}" r="${Math.max(1.2,L*0.05).toFixed(1)}" fill="#1b3a4b"/></g>`;}
+// full-size tree in a small planter: roots grow out of the planter into the water
+function rootTree(X,Y,R,P){let g="<g>";const Rr=Math.max(R*1.25,P*0.9);
+ for(let k=0;k<10;k++){const t=k*2*Math.PI/10+0.2,x1=X+Math.cos(t)*P*0.45,y1=Y+Math.sin(t)*P*0.45,x2=X+Math.cos(t+0.25)*Rr,y2=Y+Math.sin(t+0.25)*Rr,mx=X+Math.cos(t-0.15)*Rr*0.7,my=Y+Math.sin(t-0.15)*Rr*0.7;
+  g+=`<path d="M${x1.toFixed(1)},${y1.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}" stroke="#7a5230" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".85"/>`;}
+ return g+"</g>"+treeSvg(X,Y,R);}
+function seedling(X,Y,R){R=Math.max(2.5,R);let g="<g>";for(let k=0;k<5;k++){const t=k*2*Math.PI/5-Math.PI/2;g+=`<ellipse cx="${(X+Math.cos(t)*R*0.5).toFixed(1)}" cy="${(Y+Math.sin(t)*R*0.5).toFixed(1)}" rx="${(R*0.5).toFixed(1)}" ry="${(R*0.28).toFixed(1)}" transform="rotate(${(t*180/Math.PI).toFixed(0)} ${(X+Math.cos(t)*R*0.5).toFixed(1)} ${(Y+Math.sin(t)*R*0.5).toFixed(1)})" fill="#2f7a2a" stroke="#123d10" stroke-width=".5"/>`;}return g+`<circle cx="${X}" cy="${Y}" r="${(R*0.15).toFixed(1)}" fill="#8fd17a"/></g>`;}
+// plants along a planter strip from pixel point A to B (strip width W_ and length L_ in metres)
+function plantsAlong(ax,ay,bx,by,W_,L_,sc){let out="";
+ if(W_>=0.9){const n=Math.max(1,Math.round(L_/W_)),R_=0.42*Math.min(W_,L_/n)*sc;for(let i=0;i<n;i++){const t=(i+0.5)/n;out+=treeSvg(ax+(bx-ax)*t,ay+(by-ay)*t,R_);}}
+ else{const n=Math.max(1,Math.floor(L_/(W_*1.3))),R_=0.42*W_*sc;for(let i=0;i<n;i++){const t=(i+0.5)/n;out+=seedling(ax+(bx-ax)*t,ay+(by-ay)*t,R_);}}
+ return out;}
+function forestSvg(s,r){
+ const pair=s.rem==="pair",shape=pair?"square":s.shape,n=N[shape],C0=[];
+ if(shape==="hex"&&!pair){C0.push([0,0]);for(let k=0;k<6;k++){const t=Math.PI/6+k*Math.PI/3;C0.push([r.b*Math.cos(t),r.b*Math.sin(t)]);}
+  for(let k=0;k<6;k++){const t=Math.PI/6+k*Math.PI/3,t2=t+Math.PI/3;C0.push([r.b*(Math.cos(t)+Math.cos(t2)),r.b*(Math.sin(t)+Math.sin(t2))]);C0.push([2*r.b*Math.cos(t),2*r.b*Math.sin(t)]);}}
+ else{const sx=r.b,sy=pair?r.L:r.b;for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++)C0.push([i*sx,j*sy]);}
+ const hx=pair?r.b/2:r.b/(2*Math.cos(Math.PI/n)),hy=pair?r.L/2:hx;
+ const minx=Math.min(...C0.map(c=>c[0]))-hx,maxx=Math.max(...C0.map(c=>c[0]))+hx,miny=Math.min(...C0.map(c=>c[1]))-hy,maxy=Math.max(...C0.map(c=>c[1]))+hy;
+ const W=1060,H=470,pad=50,sc=Math.min((W-2*pad)/(maxx-minx),(H-2*pad-24)/(maxy-miny));
+ const ox=(W-(maxx-minx)*sc)/2-minx*sc,oy=pad+(H-2*pad-24-(maxy-miny)*sc)/2-miny*sc;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px;grid-column:1/-1">`;
+ C0.forEach(([x,y])=>svg+=moduleSvg(s,r,ox+x*sc,oy+y*sc,sc,TREES));
+ let diag="";
+ if(shape==="oct"&&!pair){const u=Math.SQRT1_2,g2=r.b*Math.SQRT2-r.a,x1=ox+u*r.a/2*sc,y1=oy-u*r.a/2*sc,x2=ox+(r.b-u*r.a/2)*sc,y2=oy-(r.b-u*r.a/2)*sc;
+  svg+=`<defs><marker id="ar2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b5462b"/></marker></defs><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#b5462b" stroke-width="2" marker-start="url(#ar2)" marker-end="url(#ar2)"/>`;
+  svg+=`<text x="${(x1+x2)/2+10}" y="${(y1+y2)/2+14}" font-size="13" font-weight="700" fill="#b5462b" stroke="#fff" stroke-width="3" paint-order="stroke">diagonal gap ${fmt(g2)} m</text>`;
+  diag=` · diagonal gap across the hole ${fmt(g2)} m`;}
+ svg+=boxDims(ox,oy,sc,minx,maxx,miny,maxy);
+ if(pair&&r.wp>0){svg+=arrow(ox+r.a/2*sc,oy,ox+(r.a/2+r.w)*sc,oy,`gap ${fmt(r.w)} m`,-8);}
+ else {const nb=pair?[r.b,0]:C0.filter(c=>Math.hypot(c[0],c[1])>1e-6).sort((p,q)=>Math.hypot(p[0],p[1])-Math.hypot(q[0],q[1]))[0];
+  if(nb){const Ld=Math.hypot(nb[0],nb[1]),ux=nb[0]/Ld,uy=nb[1]/Ld,hp=r.a/2,gp=Ld-r.a;
+   if(gp>0.005) svg+=arrow(ox+ux*hp*sc,oy+uy*hp*sc,ox+(nb[0]-ux*hp)*sc,oy+(nb[1]-uy*hp)*sc,`gap ${fmt(gp)} m`,-8);}}
+ svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="#5b6f6a">Floating forest: ${C0.length} modules · gap between planters ${pair?`${fmt(r.gap)} m across the floats, touching along them`:fmt(r.gap)+" m"}${shape==="oct"&&!pair?" · octagons leave square holes between modules"+diag:""}</text></svg>`;
+ return svg;
+}
+function curvePairSvg(s,r,opt){
+ opt=opt||{};
+ const b=r.b,pair=s.rem==="pair",L=pair?r.L:r.b,th=(opt.deg||15)*Math.PI/180,seq=opt.seq||[0,0,1,1,1,1,1,1,0],cent=[];
+ const FL="var(--float)",SB="var(--sub)";
+ const P0=r.wp||0,strip=(x0,x1,f)=>[[x0,0],[x1,0],[x1,L],[x0,L],f];
+ const pq=Math.min(P0,L),sq=(x0,x1)=>{const q=[[x0,(L-pq)/2],[x1,(L-pq)/2],[x1,(L+pq)/2],[x0,(L+pq)/2],SB];q.side=1;return q;};
+ const loc=pair?[...(P0?[sq(0,P0)]:[]),strip(P0,P0+r.w,FL),strip(P0+r.w,P0+r.w+r.a,SB),strip(P0+r.w+r.a,P0+2*r.w+r.a,FL),...(P0?[sq(P0+2*r.w+r.a,b)]:[])]
+  :[[[0,0],[b,0],[b,b],[0,b],FL],[[(b-r.a)/2,(b-r.a)/2],[(b+r.a)/2,(b-r.a)/2],[(b+r.a)/2,(b+r.a)/2],[(b-r.a)/2,(b+r.a)/2],SB]];
+ const mods=[],wedges=[];let O=[0,0],phi=-Math.PI/2;
+ const add=(P,v,k)=>[P[0]+v[0]*k,P[1]+v[1]*k];
+ for(let i=0;i<seq.length;i++){
+  const h=[Math.cos(phi),Math.sin(phi)],rv=[-Math.sin(phi),Math.cos(phi)];
+  mods.push(loc.map(q=>({pts:q.slice(0,4).map(([u,v])=>add(add(O,rv,u),h,v)),fill:q[4],side:q.side})));
+  cent.push(add(add(O,rv,b/2),h,L/2));
+  const TL=add(O,h,L),TR=add(TL,rv,b);
+  if(opt.close&&i===seq.length-1){const phi2=phi+th,rv2=[-Math.sin(phi2),Math.cos(phi2)];wedges.push([TL,TR,add(TR,rv2,-b)]);}
+  if(i<seq.length-1){
+   if(seq[i+1]){const phi2=phi+th,rv2=[-Math.sin(phi2),Math.cos(phi2)],BL2=add(TR,rv2,-b);wedges.push([TL,TR,BL2]);O=BL2;phi=phi2;}
+   else O=TL;
+  }
+ }
+ const pts=mods.flat().flatMap(m=>m.pts).concat(wedges.flat());
+ const minx=Math.min(...pts.map(p=>p[0])),maxx=Math.max(...pts.map(p=>p[0])),miny=Math.min(...pts.map(p=>p[1])),maxy=Math.max(...pts.map(p=>p[1]));
+ const W=1060,H=470,pad=50,sc=Math.min((W-2*pad)/(maxx-minx),(H-2*pad-24)/(maxy-miny));
+ const ox=(W-(maxx-minx)*sc)/2-minx*sc,oy=pad+(H-2*pad-24-(maxy-miny)*sc)/2-miny*sc;
+ const P=q=>q.map(p=>(ox+p[0]*sc).toFixed(1)+","+(oy+p[1]*sc).toFixed(1)).join(" ");
+ let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px;grid-column:1/-1">`;
+ mods.forEach(m=>m.forEach(q=>{svg+=`<polygon points="${P(q.pts)}" fill="${q.fill}" stroke="${q.fill===SB?'#2f6326':'#000'}"/>`;if(q.fill===SB&&(s.cells||0)>0){const cp=cellPat(Math.min(1,s.cells/100));svg+=cp.defs+`<polygon points="${P(q.pts)}" fill="url(#${cp.id})"/>`;}}));
+ wedges.forEach(q=>svg+=`<polygon points="${P(q)}" fill="#e9c46a" stroke="#9c6a12" stroke-dasharray="4 3"/>`);
+ if(TREES) mods.forEach(m=>m.forEach(q=>{if(q.fill!==SB)return;const [p0,p1,p2,p3]=q.pts;if(q.side){const cx_=(p0[0]+p2[0])/2,cy_=(p0[1]+p2[1])/2;svg+=rootTree(ox+cx_*sc,oy+cy_*sc,0.42*Math.min(r.a,r.L)*sc,pq*sc);return;}const W_=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]),L_=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]);const A=[(p0[0]+p1[0])/2,(p0[1]+p1[1])/2],B=[(p3[0]+p2[0])/2,(p3[1]+p2[1])/2];svg+=plantsAlong(ox+A[0]*sc,oy+A[1]*sc,ox+B[0]*sc,oy+B[1]*sc,W_,L_,sc);}));
+ const wedgeW=b*2*Math.sin(th/2);
+ svg+=boxDims(ox,oy,sc,minx,maxx,miny,maxy);
+ let cap=`Modules hinge ${opt.deg||15}° at the inside corner; wedge floats (yellow) fill each bend, ${fmt(wedgeW)} m wide at the outer edge`;
+ if(opt.close){const cx=cent.reduce((t,c)=>t+c[0],0)/cent.length,cy=cent.reduce((t,c)=>t+c[1],0)/cent.length,rmin=Math.min(...cent.map(c=>Math.hypot(c[0]-cx,c[1]-cy)));
+  svg+=`<circle cx="${ox+cx*sc}" cy="${oy+cy*sc}" r="${Math.max(0,(rmin-b/2))*sc*0.98}" fill="#cfe8f3" opacity=".7"/><text x="${ox+cx*sc}" y="${oy+cy*sc-14}" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6a8a">pond</text>`;
+  {const ri=Math.max(0,rmin-b/2);svg+=arrow(ox+(cx-ri)*sc,oy+cy*sc+22,ox+(cx+ri)*sc,oy+cy*sc+22,`open water ${fmt(2*ri)} m`,-6);}
+  cap=`Pond: ${seq.length} modules in a closed ring, ${opt.deg}° per joint with wedge floats (${fmt(wedgeW)} m at the outer edge) · open water ≈ ${fmt(2*rmin-(pair?r.b:r.b))} m across`;}
+ svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="#5b6f6a">${cap}</text></svg>`;
+ return svg;
+}
+function curveSvg(s,r){
+ if(s.rem==="pair"||(s.shape==="square"&&s.rem==="ring")) return curvePairSvg(s,r);
+ const pair=s.rem==="pair",shape=pair?"square":s.shape,n=N[shape];
+ const step=2*Math.PI/n,start=shape==="hex"&&!pair?-Math.PI/6:0;
+ const turns=pair?[0,0,0,0,0,0,0]:shape==="oct"?[0,0,0,1,1,1,2,2,2]:shape==="hex"?[0,0,0,0,1,1,1,1]:[0,0,0,1,1,1];
+ const C0=[[0,0]];let x=0,y=0;
+ turns.forEach(k=>{const t=pair?-Math.PI/2:start-k*step,dist=pair?r.a:r.b;x+=dist*Math.cos(t);y+=dist*Math.sin(t);C0.push([x,y]);});
+ const hx=pair?r.b/2:r.b/(2*Math.cos(Math.PI/n)),hy=pair?r.L/2:hx;
+ const minx=Math.min(...C0.map(c=>c[0]))-hx,maxx=Math.max(...C0.map(c=>c[0]))+hx,miny=Math.min(...C0.map(c=>c[1]))-hy,maxy=Math.max(...C0.map(c=>c[1]))+hy;
+ const W=1060,H=470,pad=50,sc=Math.min((W-2*pad)/(maxx-minx),(H-2*pad-24)/(maxy-miny));
+ const ox=(W-(maxx-minx)*sc)/2-minx*sc,oy=pad+(H-2*pad-24-(maxy-miny)*sc)/2-miny*sc;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px;grid-column:1/-1">`;
+ C0.forEach(([x,y])=>svg+=moduleSvg(s,r,ox+x*sc,oy+y*sc,sc,TREES));
+ const msg=pair?"Rectangular modules can't turn without wedge or filler pieces: shown straight":`Curved path: modules join flat to flat and turn ${Math.round(360/n)}° at each bend · gap between planters ${fmt(r.gap)} m`;
+ svg+=boxDims(ox,oy,sc,minx,maxx,miny,maxy);
+ svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="#5b6f6a">${msg}</text></svg>`;
+ return svg;
+}
+function pondSvg(s,r){
+ const pair=s.rem==="pair";
+ if(pair||(s.shape==="square"&&s.rem==="ring")){const n=16;return curvePairSvg(s,r,{deg:360/n,seq:[0].concat(Array(n-1).fill(1)),close:true});}
+ const shape=s.shape,n=N[shape],C0=[];
+ if(shape==="hex"){const dirs=[...Array(6)].map((_,k)=>Math.PI/6+k*Math.PI/3);
+  for(let k=0;k<6;k++){const t=dirs[k],t2=dirs[(k+1)%6];C0.push([2*r.b*Math.cos(t),2*r.b*Math.sin(t)]);C0.push([r.b*(Math.cos(t)+Math.cos(t2)),r.b*(Math.sin(t)+Math.sin(t2))]);}}
+ else{let x=0,y=0;const m=2;for(let k=0;k<n;k++){const t=-k*2*Math.PI/n;for(let j=0;j<m;j++){C0.push([x,y]);x+=r.b*Math.cos(t);y+=r.b*Math.sin(t);}}}
+ const cx=C0.reduce((t,c)=>t+c[0],0)/C0.length,cy=C0.reduce((t,c)=>t+c[1],0)/C0.length;
+ const rmin=Math.min(...C0.map(c=>Math.hypot(c[0]-cx,c[1]-cy)));
+ const hx=r.b/(2*Math.cos(Math.PI/n));
+ const minx=Math.min(...C0.map(c=>c[0]))-hx,maxx=Math.max(...C0.map(c=>c[0]))+hx,miny=Math.min(...C0.map(c=>c[1]))-hx,maxy=Math.max(...C0.map(c=>c[1]))+hx;
+ const W=1060,H=470,pad=50,sc=Math.min((W-2*pad)/(maxx-minx),(H-2*pad-24)/(maxy-miny));
+ const ox=(W-(maxx-minx)*sc)/2-minx*sc,oy=pad+(H-2*pad-24-(maxy-miny)*sc)/2-miny*sc;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px;grid-column:1/-1">`;
+ svg+=`<circle cx="${ox+cx*sc}" cy="${oy+cy*sc}" r="${(rmin-r.b/2)*sc}" fill="#cfe8f3" opacity=".7"/><text x="${ox+cx*sc}" y="${oy+cy*sc-14}" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6a8a">pond</text>`;
+ C0.forEach(([x,y])=>svg+=moduleSvg(s,r,ox+x*sc,oy+y*sc,sc,TREES));
+ svg+=boxDims(ox,oy,sc,minx,maxx,miny,maxy);
+ {const ri=Math.max(0,rmin-r.b/2);svg+=arrow(ox+(cx-ri)*sc,oy+cy*sc+22,ox+(cx+ri)*sc,oy+cy*sc+22,`open water ${fmt(2*ri)} m`,-6);}
+ svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="#5b6f6a">Pond: ${C0.length} modules in a closed ring, joined flat to flat, no extra pieces · open water ≈ ${fmt(2*rmin-r.b)} m across</text></svg>`;
+ return svg;
+}
+function squarePondSvg(s,r){
+ const pair=s.rem==="pair",b=r.b,a=pair?r.L:r.a,items=[],corners=[];let Hh;
+ if(pair){const m=Math.ceil((b+2*a)/a),Hs=m*a-b;Hh=Hs/2;
+  for(let i=0;i<m;i++){const u=-Hh+(i+0.5)*a,v=Hh-(i+0.5)*a;items.push([u,-Hh-b/2,90],[Hh+b/2,u,0],[v,Hh+b/2,90],[-Hh-b/2,v,0]);}}
+ else{for(let i=-1.5;i<=1.5;i++)for(let j=-1.5;j<=1.5;j++)if(Math.abs(i)===1.5||Math.abs(j)===1.5)items.push([i*b,j*b,0]);Hh=b;}
+ const ext=Hh+b;const W=1060,H=470,pad=50,sc=(H-2*pad-24)/(2*ext);
+ const ox=W/2,oy=pad+(H-2*pad-24)/2;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px;grid-column:1/-1">`;
+ svg+=`<rect x="${ox-Hh*sc}" y="${oy-Hh*sc}" width="${2*Hh*sc}" height="${2*Hh*sc}" fill="#cfe8f3"/><text x="${ox}" y="${oy-14}" text-anchor="middle" font-size="13" font-weight="700" fill="#2b6a8a">pond</text>`;
+ items.forEach(([x,y,rot])=>{const X=ox+x*sc,Y=oy+y*sc;svg+=rot?`<g transform="rotate(${rot} ${X} ${Y})">${moduleSvg(s,r,X,Y,sc,TREES)}</g>`:moduleSvg(s,r,X,Y,sc,TREES);});
+ corners.forEach(([x,y])=>svg+=`<rect x="${ox+(x-b/2)*sc}" y="${oy+(y-b/2)*sc}" width="${b*sc}" height="${b*sc}" fill="#e9c46a" stroke="#9c6a12" stroke-dasharray="4 3"/>`);
+ const cap=pair?`Square pond: ${items.length} modules in a pinwheel (each side runs past the corner), no extra pieces · open water ${fmt(2*Hh)} m × ${fmt(2*Hh)} m`
+  :`Square pond: ${items.length} modules joined flat to flat, no extra pieces · open water ${fmt(2*Hh)} m × ${fmt(2*Hh)} m`;
+ svg+=boxDims(ox,oy,sc,-ext,ext,-ext,ext);
+ svg+=arrow(ox-Hh*sc,oy+22,ox+Hh*sc,oy+22,`open water ${fmt(2*Hh)} m`,-6);
+ svg+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" font-size="12" fill="#5b6f6a">${cap}</text></svg>`;
+ return svg;
+}
+let MODAL_I=null;
+let MODAL_KIND="pair";
+function openSection(i){
+ MODAL_I=i;MODAL_KIND="sec";const s=cols[i],r=compute(s),m=document.getElementById("modal");
+ m.querySelector(".mtitle").textContent=s.name+" · cross-section";
+ m.querySelector(".mbody").innerHTML=`<div style="grid-column:1/-1">${lSection(s,r,true)}</div>`;
+ m.style.display="flex";
+}
+function openPair(i){
+ MODAL_I=i;MODAL_KIND="pair";const s=cols[i],r=compute(s),m=document.getElementById("modal");
+ m.querySelector(".mtitle").textContent=s.name;
+ m.querySelector(".mbody").innerHTML=pairSvg(s,r,"side")+pairSvg(s,r,"below")+forestSvg(s,r)+curveSvg(s,r)+pondSvg(s,r)+((s.rem==="pair"||(s.shape==="square"&&s.rem==="ring"))?squarePondSvg(s,r):"");
+ m.style.display="flex";
+}
+
+function renderGlobals(){
+ const el=document.getElementById("globals");
+ const RG={treeCG:[0,5,0.1],Cah:[0,2,0.1],Car:[0,1,0.05],treeH:[1,12,0.5],canopyW:[0.5,8,0.25],Vp:[0.5,6,0.1],Ds:[0.2,1.5,0.05],Vb:[0.5,10,0.1],d:[0.3,2.5,0.05],rhoS:[600,2600,50],tree:[0,500,10],t:[2,15,1],rhoP:[900,1500,10],qDeck:[0,100,5],qLive:[0,5,0.5],rhoW:[1000,1030,1],gapMax:[0,3,0.1],pathMin:[0,3,0.1],cellPl:[1,20,1],fbTarget:[0,800,10],subPct:[0,100,5]};
+ const SL=(k,st)=>{const [mn,mx,ss]=RG[k]||[0,10,st];return `<span class="rr"><input type="range" min="${mn}" max="${mx}" step="${ss}" data-g="${k}" value="${g[k]}"><input type="number" step="${st}" data-g="${k}" value="${g[k]}"></span>`;};
+ const GC={treeCG:"stab",Cah:"stab",Car:"stab",treeH:"geo",canopyW:"geo",Vp:"geo",Ds:"geo",Vb:"geo",d:"geo",rhoS:"mat",tree:"mat",t:"mat",rhoP:"mat",qDeck:"mat",qLive:"mat",rhoW:"mat",cellPl:"mat",gapMax:"crit",pathMin:"crit"};
+ el.innerHTML=`<div class="glegend" style="grid-column:1/-1"><span><i style="background:#3a7bd5"></i>Geometry</span><span><i style="background:#b0651b"></i>Materials &amp; loads</span><span><i style="background:#2d8a3e"></i>Layout criteria</span><span><i style="background:#8a5cc7"></i>Float sizing</span><span><i style="background:#1f7fa8"></i>Stability &amp; motions</span></div>`+G_DEF.map(([k,l,,st])=>`<label class="gc-${GC[k]||"mat"}">${l}${SL(k,st)}</label>`).join("")+
+ `<label class="gc-size">Float sizing<select data-g="mode"><option value="vol"${g.mode==="vol"?" selected":""}>Same total buoyant volume for all</option><option value="fb"${g.mode==="fb"?" selected":""}>Size floats to a target freeboard</option><option value="sub"${g.mode==="sub"?" selected":""}>Size floats to a submerged share of the substrate</option></select></label>`+
+ (g.mode==="sub"?`<label class="gc-size">Substrate submerged (% of D<sub>s</sub>)${SL("subPct",5)}</label><div class="note" style="align-self:end">→ ${fmt(g.Ds*g.subPct/100)} m submerged, ${fmt(g.Ds*(1-g.subPct/100))} m above water = freeboard ${fmt(g.Ds*(1-g.subPct/100)*1000,0)} mm</div>`:g.mode==="fb"?`<label class="gc-size">Target freeboard (mm)${SL("fbTarget",10)}</label>`:"")+
+ `<label class="gc-mat">Count planter shell as plastic<select data-g="shell"><option value="1"${g.shell?" selected":""}>Yes</option><option value="0"${!g.shell?" selected":""}>No</option></select></label>`;
+ el.querySelectorAll("[data-g]").forEach(i=>i.addEventListener("input",e=>{const k=e.target.dataset.g;el.querySelectorAll(`[data-g="${k}"]`).forEach(x=>{if(x!==e.target&&x.tagName==="INPUT")x.value=e.target.value;});g[k]=k==="shell"?e.target.value==="1":k==="mode"?e.target.value:parseFloat(e.target.value)||0;if(k==="mode"){renderGlobals();}else if(k==="subPct"||k==="Ds"){const n=document.querySelector("#globals .note");if(n)n.textContent=`→ ${fmt(g.Ds*g.subPct/100)} m submerged, ${fmt(g.Ds*(1-g.subPct/100))} m above water = freeboard ${fmt(g.Ds*(1-g.subPct/100)*1000,0)} mm`;}renderResults();}));
+}
+
+let view="simple";
+const isComplex=s=>s.rem==="step"||s.pwt>0||(s.cells||0)>0;
+const visible=()=>cols.map((s,i)=>i).filter(i=>view==="complex"||!isComplex(cols[i]));
+function renderCols(){
+ const el=document.getElementById("cols");const CX=view==="complex";
+ el.innerHTML=visible().map(i=>{const s=cols[i];const shp=s.rem==="pair"?"square":s.shape,TY={ring:"Perimeter floats",base:"Buoyant base",pair:"Two parallel floats",step:"Stepped (L) floats"};return `<div class="col" data-i="${i}" data-shape="${shp}"${s.fromGuide?' style="outline:3px solid #d32f2f;outline-offset:2px"':""}>
+  <div><span class="shp">${SHAPE[shp]}</span><span class="typ">${TY[s.rem]||""}${s.pwt>0?" · L-shaped":""}${(s.cells||0)>0?" · MastaVault":""}</span></div>
+  <div class="top"><input data-k="name" value="${s.name.replace(/"/g,'&quot;')}"><button class="x" data-del="${i}" title="Remove">×</button></div>
+  <div class="pp">
+   <label>Shape<select data-k="shape">${Object.keys(SHAPE).map(o=>`<option value="${o}"${s.shape===o?" selected":""}>${SHAPE[o]}</option>`).join("")}</select></label>
+   <label style="grid-column:span 2">Remaining buoyancy in<select data-k="rem"><option value="ring"${s.rem==="ring"?" selected":""}>Perimeter floats (ring)</option><option value="base"${s.rem==="base"?" selected":""}>Buoyant base under planter</option><option value="pair"${s.rem==="pair"?" selected":""}>Two parallel floats (square only)</option>${CX?`<option value="step"${s.rem==="step"?" selected":""}>Stepped (L) floats: narrow top, foot under planter</option>`:""}</select></label>
+  </div>
+  ${s.rem==="step"?`<div class="pp"><label style="grid-column:span 2">Top width w (m)<input type="number" min="0.02" step="0.05" data-k="wt" value="${s.wt||0.15}"></label><label>Float depth d (m) · 0 = common d${s.wb>0?" (solved from bottom width)":""}<input type="number" min="0" step="0.05" data-k="dt" value="${s.dt||0}"${s.wb>0?" disabled":""}></label><label style="grid-column:span 3">Bottom width w<sub>b</sub> = w + e (m) · 0 = auto (foot sized to buoyancy at depth d); &gt; 0 = depth d solved<input type="number" min="0" step="0.05" data-k="wb" value="${s.wb||0}"></label></div>`:""}
+  ${s.rem==="pair"?`<div class="pp"><label style="grid-column:span 2">Attached non-buoyant planters: width p (m) · 0 = none<input type="number" min="0" step="0.1" data-k="side" value="${s.side||0}"></label><label>Their depth D<sub>p</sub> (m)<input type="number" min="0.05" step="0.05" data-k="sideD" value="${s.sideD||0.4}"></label></div>${CX?`<div class="pp"><label style="grid-column:span 2">L-shaped floats: top width w (m) · 0 = plain floats<input type="number" min="0" step="0.05" data-k="pwt" value="${s.pwt||0}"></label><label>Float depth d (m) · 0 = common d${s.pwb>0?" (solved from bottom width)":""}<input type="number" min="0" step="0.05" data-k="pdt" value="${s.pdt||0}"${s.pwb>0?" disabled":""}></label><label style="grid-column:span 3">Bottom width w<sub>b</sub> = w + e (m) · 0 = auto; &gt; 0 = depth d solved<input type="number" min="0" step="0.05" data-k="pwb" value="${s.pwb||0}"></label></div>`:""}`:""}
+  ${s.rem==="pair"?`<div class="pp"><label style="grid-column:span 3">Float length L (m) · 0 = same as planter width<input type="number" min="0" step="0.1" data-k="Lf" value="${s.Lf||0}"></label></div>`:""}
+  ${CX?`<div class="sub cells">Soil cells (MastaVault)</div>
+  <div class="pp"><label style="grid-column:span 3">% of planter volume in cells (replaces substrate with water)<input type="number" min="0" max="100" step="5" data-k="cells" value="${s.cells||0}"></label></div>`:""}
+  <div class="sub pipes">Vertical pipes</div>
+  <div class="pp"><label>Number<input type="number" min="0" step="1" data-k="nv" value="${s.nv}"></label><label>Diameter (m)<input type="number" step="0.05" data-k="Dv" value="${s.Dv}"></label><label>Length (m) · max = D<sub>s</sub><input type="number" step="0.05" data-k="Lv" value="${s.Lv}"></label></div>
+  <div class="sub pipes">Horizontal pipes</div>
+  <div class="pp"><label>Number<input type="number" min="0" step="1" data-k="nh" value="${s.nh}"></label><label>Diameter (m)<input type="number" step="0.05" data-k="Dh" value="${s.Dh}"></label><label>Length<input disabled value="= planter"></label></div>
+  <div class="out"></div>
+ </div>`;}).join("");
+ el.querySelectorAll(".col").forEach(c=>{const i=+c.dataset.i;
+  c.querySelectorAll("[data-k]").forEach(inp=>inp.addEventListener("input",e=>{const k=e.target.dataset.k;cols[i][k]=(k==="name"||k==="shape"||k==="rem")?e.target.value:Math.max(0,parseFloat(e.target.value)||0);if(k==="wb"||k==="pwb"){const dk=k==="wb"?"dt":"pdt",di=c.querySelector(`[data-k="${dk}"]`);if(di)di.disabled=cols[i][k]>0;}if(k==="rem"||k==="shape")renderCols();else renderResults();}));});
+ el.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",()=>{cols.splice(+b.dataset.del,1);renderCols();}));
+ renderResults();
+}
+
+function renderResults(){
+ const R=cols.map(compute);
+ document.querySelectorAll(".col").forEach(c=>{const i=+c.dataset.i,s=cols[i],r=R[i];
+  const forest=r.gap<=g.gapMax;
+  const status=r.sinks?`<span class="tag bad">Sinks: capacity ${fmt(r.cap,0)} kg &lt; load ${fmt(r.M,0)} kg</span>`:
+   `<span class="tag ${r.reserve<0.1?'mid':'ok'}">Floats · reserve ${fmt(r.cap-r.M,0)} kg (${fmt(r.reserve*100,0)}%)${N_("res")}</span>`;
+  c.querySelector(".out").innerHTML=plan(s,r)+((view==="complex"||s.rem==="step"||(s.rem==="pair"&&s.pwt>0))?lSection(s,r):"")+`
+  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">${status}${(s.rem==="pair"&&s.side>0)?`<span class="tag mid">Floating forest: lower density${N_("forest")}</span>`:forest?`<span class="tag ok">Floating forest OK${N_("forest")}</span>`:`<span class="tag bad">Floating forest not OK${N_("forest")}</span>`}${(()=>{const att=s.rem==="pair"&&s.side>0,plain=s.rem==="pair"&&!att,ok=att||forest||(!plain&&(s.shape==="hex"||s.shape==="oct"||r.gap>=g.pathMin)),ppm=plain&&!ok;return `<span class="tag ${ok?'ok':'bad'}"><b>"mangroves–path–mangroves"</b> ${ok?'OK':'not OK'}${ppm?' (this is <b>"path–mangroves–path"</b>)':''}${N_("mpm")}</span>`;})()}</div>
+  <table class="res">
+   <tr class="grp geo"><td colspan="2">Geometry${N_("geo")}</td></tr>
+   <tr><td>Planter inner width a${s.rem==="pair"?" (across floats)":""}</td><td>${fmt(r.a)} m</td></tr>
+   <tr><td>Outer width b</td><td>${fmt(r.b)} m</td></tr>${s.rem==="pair"?"":`<tr><td>Planter side length s<sub>a</sub></td><td>${fmt(r.sa)} m</td></tr><tr><td>Outer side length s<sub>b</sub></td><td>${fmt(r.sb)} m</td></tr>`}
+   <tr><td>${s.rem==="ring"?"Ring float width w":s.rem==="step"?"Top width w":s.rem==="pair"?(s.pwt>0?"Each float top width w":"Each float width w"):"Base height h<sub>b</sub>"}</td><td>${s.rem==="base"?fmt(r.hb):fmt(r.w)} m</td></tr>
+   ${(s.rem==="step"||(s.rem==="pair"&&s.pwt>0))?`<tr><td>Foot extension under planter e</td><td>${fmt(r.e)} m</td></tr><tr><td>Float depth d / foot height h<sub>f</sub> = d − D<sub>s</sub></td><td>${fmt(effDs()+r.hf)} / ${fmt(r.hf)} m</td></tr>`:""}
+   ${s.rem==="pair"&&r.wp>0?`<tr><td>Attached planters (each side) p × depth</td><td>${fmt(r.wp)} × ${fmt(r.Dp)} m</td></tr>`:""}
+   <tr><td>${s.rem==="pair"?"Float length L":(s.rem==="ring"||s.rem==="step")?"Ring float length (centreline)":"Float length"}</td><td>${s.rem==="base"?"–":fmt(r.Lfl)+" m"}</td></tr>
+   <tr><td>Gap between planters${s.rem==="pair"?(s.side>0?" (one float; attached planters of neighbours touch)":" (across floats; ~0 along them)"):""}</td><td>${fmt(r.gap)} m</td></tr>
+   <tr class="grp area"><td colspan="2">Areas${N_("area")}</td></tr>
+   <tr><td>Planting area</td><td>${fmt(r.Aplant)} m²</td></tr>
+   <tr><td>Footprint</td><td>${fmt(r.Aout)} m²</td></tr>
+   <tr><td>Planting ratio</td><td>${fmt(r.ratio*100,0)}%</td></tr>
+   <tr class="grp mass"><td colspan="2">Volumes, plastic &amp; load${N_("mass")}</td></tr>
+   <tr><td>Chambers V<sub>ch</sub> (vert + horiz)</td><td>${fmt(r.Vch)} m³</td></tr>${r.fc>0?`<tr><td>Substrate / water pockets</td><td>${fmt(r.Vsub)} / ${fmt(r.Vwater)} m³</td></tr><tr><td>Soil-cell plastic</td><td>${fmt(r.mcell,0)} kg</td></tr>`:""}
+   <tr><td>${s.rem==="ring"?"Ring":s.rem==="step"?"Stepped float":s.rem==="pair"?"Two floats":"Base"} volume V<sub>rem</sub></td><td>${fmt(r.Vrem)} m³</td></tr>
+   <tr><td>Plastic</td><td>${fmt(r.mpl,0)} kg</td></tr>
+   <tr><td>Plastic per m² planting</td><td>${fmt(r.plPer,1)} kg/m²</td></tr>
+   <tr><td>Total load M</td><td>${fmt(r.M,0)} kg</td></tr>
+   <tr class="grp flo"><td colspan="2">Flotation${N_("flo")}</td></tr>
+   <tr><td>Reserve buoyancy (extra load to deck awash)</td><td>${r.sinks?"–":fmt(r.cap-r.M,0)+" kg ("+fmt(r.reserve*100,0)+"%)"}</td></tr>
+   <tr><td>Freeboard (deck to water)</td><td>${r.sinks?"–":fmt(r.f*1000,0)+" mm"}</td></tr>
+   <tr><td>Draft (water to lowest point)</td><td>${r.sinks?"–":fmt(r.draft)+" m"}</td></tr>
+   <tr><td>Substrate below waterline</td><td>${fmt(r.subWet*100,0)}%</td></tr>
+   ${r.st?`<tr class="grp stab"><td colspan="2">Stability &amp; natural periods${LIMS}</td></tr>
+   <tr><td>Centre of gravity KG (above keel)</td><td>${fmt(r.st.KG)} m</td></tr>
+   <tr><td>Centre of buoyancy KB (above keel)</td><td>${fmt(r.st.KB)} m</td></tr>
+   <tr><td>BM = I<sub>wp</sub>/V${s.rem==="pair"?" (roll / pitch)":""}</td><td>${fmt(r.st.BMr)}${s.rem==="pair"?" / "+fmt(r.st.BMp):""} m</td></tr>
+   <tr><td>Metacentric height GM${s.rem==="pair"?" (roll / pitch)":""}</td><td style="color:${r.st.GMr>0?'inherit':'#b5462b'}">${fmt(r.st.GMr)}${s.rem==="pair"?" / "+fmt(r.st.GMp):""} m</td></tr>
+   <tr><td>Heave natural period T<sub>h</sub></td><td>${r.st.Th?fmt(r.st.Th)+" s":"–"}</td></tr>
+   <tr><td>Roll natural period T<sub>r</sub>${s.rem==="pair"?" / pitch T<sub>p</sub>":""}</td><td>${r.st.Tr?fmt(r.st.Tr):"unstable"}${s.rem==="pair"?" / "+(r.st.Tp?fmt(r.st.Tp):"–"):""} s</td></tr>`:""}
+  </table>${r.warns.map(w=>`<div class="warn">⚠ ${w}</div>`).join("")}`;
+  const pv=c.querySelector("svg.plan");pv.style.cursor="zoom-in";pv.addEventListener("click",()=>openPair(i));const sv=c.querySelector("svg.sect");if(sv){sv.style.cursor="zoom-in";sv.addEventListener("click",()=>{TREES=true;openSection(i);});}});
+ const metrics=[
+  ["Planting ratio (%)",r=>r.ratio*100,0,true,"#2d8a3e"],
+  ["Gap between planters (m)",r=>r.gap,2,false,"#3a7bd5"],
+  ["Plastic per m² planting (kg/m²)",r=>r.plPer,1,false,"#b0651b"],
+  ["Reserve buoyancy (%)",r=>r.sinks?0:r.reserve*100,0,true,"#1f7fa8"],
+  ["Draft (m)",r=>r.sinks?0:r.draft,2,false,"#5b6f8a"],
+  ["Footprint (m²)",r=>r.Aout,2,false,"#8a5cc7"],
+ ];
+ const VI=visible();
+ document.getElementById("bars").innerHTML=metrics.map(([t,fn,dp,hi,col])=>{const vals=R.map(fn),mx=Math.max(...VI.map(i=>Math.abs(vals[i])),1e-9);
+  return `<div><div class="sub" style="margin-bottom:6px;color:${col};border-color:${col}">${t} · ${hi?"higher is better":"lower is better"}</div>${VI.map(i=>cols[i]).map((s,j)=>{const i=VI[j];return `<div class="bar"><span title="${s.name}">${s.name.length>20?s.name.slice(0,19)+"…":s.name}</span><div style="background:#eef2f1;border-radius:3px"><div class="b" style="background:${col};width:${Math.max(0,vals[i])/mx*100}%"></div></div><span>${fmt(vals[i],dp)}</span></div>`;}).join("")}</div>`;}).join("");
+}
+
+document.querySelector("#modal .mbody").addEventListener("click",e=>{if(e.target.closest("svg")&&MODAL_I!=null){TREES=!TREES;(MODAL_KIND==="sec"?openSection:openPair)(MODAL_I);}});
+document.getElementById("mclose").addEventListener("click",()=>document.getElementById("modal").style.display="none");
+document.getElementById("modal").addEventListener("click",e=>{if(e.target.id==="modal")e.target.style.display="none";});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("modal").style.display="none";});
+document.getElementById("addBtn").addEventListener("click",()=>{cols.push({name:"New option",shape:"hex",rem:"ring",nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3});renderCols();});
+document.getElementById("resetBtn").addEventListener("click",()=>{cols=JSON.parse(JSON.stringify(DEFAULTS));renderCols();});
+document.getElementById("popBtn").addEventListener("click",()=>{const sec=document.getElementById("gsec"),on=sec.classList.toggle("docked");document.body.classList.toggle("has-dock",on);document.getElementById("popBtn").textContent=on?"⇲ Dock back":"⇱ Pop out (keep visible while scrolling)";});
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>{view=b.dataset.view;
+document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.toggle("on",x===b));
+const P=view==="plots";document.getElementById("optsec").style.display=P?"none":"";document.getElementById("cmpsec").style.display=P?"none":"";document.getElementById("plotsec").style.display=P?"":"none";
+if(P)renderPlots();else renderCols();}));
+/* ---------- Plots tab ---------- */
+const PX_G=[["Vp","Planter (substrate) volume V_p","m³",0.5,6],["Ds","Substrate depth D_s","m",0.2,1.5],["Vb","Total buoyant volume V_b (same-volume sizing)","m³",1,10],["d","Float depth d","m",0.3,2.5],
+ ["fbTarget","Target freeboard (freeboard sizing)","mm",50,500],["subPct","Substrate submerged, % of D_s (submerged sizing)","%",0,100],
+ ["rhoS","Saturated substrate density ρ_s","kg/m³",600,2600],["tree","Tree mass above water","kg",0,500],["treeCG","Tree centre of mass above deck","m",0,5],
+ ["Cah","Heave added-mass coefficient C_a,h","–",0,2],["Car","Roll/pitch added-inertia coefficient C_a,r","–",0,1],
+ ["t","Plastic wall thickness t","mm",2,15],["rhoP","Plastic density","kg/m³",900,1500],["qDeck","Decking/frame on paths","kg/m²",0,100],["qLive","Live load on paths","kPa",0,5],
+ ["rhoW","Water density","kg/m³",995,1035],["cellPl","Soil cell plastic (% of cell volume)","%",0,20]];
+const PX_O=[["cells","Soil cells (MastaVault), % of planter volume","%",0,90],["wt","Stepped float top width w","m",0.05,0.6],["dt","Stepped float depth (0 = common d)","m",0.6,2.5],["wb","Stepped float bottom width w_b (0 = auto)","m",0.2,1.2],
+ ["pwt","Parallel L-float top width","m",0.05,0.8],["pdt","Parallel L-float depth","m",0.6,2.5],["pwb","Parallel L-float bottom width w_b (0 = auto)","m",0.2,1.2],["side","Attached non-buoyant planter width p","m",0,1.5],["sideD","Attached planter depth D_p","m",0.1,1],
+ ["Lf","Parallel float length L (0 = planter width)","m",1,6],["nv","Number of vertical pipes","",0,30],["Dv","Vertical pipe diameter","m",0.1,0.6],["Lv","Vertical pipe length","m",0.3,2],
+ ["nh","Number of horizontal pipes","",0,12],["Dh","Horizontal pipe diameter","m",0.1,0.6]];
+const PY=[
+ ["gap","Gap between planters","m",r=>r.gap],["ratio","Planting ratio (planting area / footprint)","%",r=>r.ratio*100],
+ ["Aplant","Planting area","m²",r=>r.Aplant],["Apath","Float/path area","m²",r=>r.Apath],["Aout","Footprint","m²",r=>r.Aout],
+ ["a","Planter inner width a","m",r=>r.a],["b","Outer width b","m",r=>r.b],["w","Float (top) width w","m",r=>r.w],["e","Foot extension e (L/stepped floats)","m",r=>r.e],
+ ["Vrem","Float volume V_rem","m³",r=>r.Vrem],["Vch","Buoyancy chamber volume","m³",r=>r.Vch],["Vtot","Total buoyant volume","m³",r=>r.Vtot],["Vsub","Substrate volume","m³",r=>r.Vsub],
+ ["mpl","Plastic mass","kg",r=>r.mpl],["plPer","Plastic per m² planting","kg/m²",r=>r.plPer],["msub","Substrate mass","kg",r=>r.msub],["M","Total module mass","kg",r=>r.M],
+ ["f","Freeboard","mm",r=>r.sinks?null:r.f*1000],["draft","Draft below planter base","m",r=>r.draft],["subWet","Substrate below waterline","%",r=>r.subWet*100],
+ ["resKg","Reserve buoyancy","kg",r=>r.cap-r.M],["res","Reserve buoyancy","% of mass",r=>r.reserve*100],
+ ["KG","Centre of gravity KG (above keel)","m",r=>r.st&&r.st.KG],["KB","Centre of buoyancy KB (above keel)","m",r=>r.st&&r.st.KB],
+ ["BMr","BM roll","m",r=>r.st&&r.st.BMr],["GMr","Metacentric height GM, roll","m",r=>r.st&&r.st.GMr],["GMp","Metacentric height GM, pitch","m",r=>r.st&&r.st.GMp],
+ ["Th","Heave natural period T_h","s",r=>r.st&&r.st.Th],["Tr","Roll natural period T_r","s",r=>r.st&&r.st.Tr],["Tp","Pitch natural period T_p","s",r=>r.st&&r.st.Tp]];
+const PX_ALL=[...PX_G.map(x=>[...x,"g"]),...PX_O.map(x=>[...x,"o"])];
+const P_TYPE=s=>s.rem==="pair"?(s.side>0?["#e87ba4","Parallel + attached pots"]:s.pwt>0?["#a0672a","Parallel L-floats"]:["#6250d6","Two parallel floats"]):
+ s.rem==="step"?["#eb6834","Stepped (L) floats"]:s.rem==="base"?["#0f5f73","Buoyant base"]:s.nh>0?["#1baf7a","Perimeter + horizontal pipes"]:s.nv>0?["#eda100","Perimeter + vertical pipes"]:["#2a78d6","Perimeter floats"];
+const P_MK=s=>s.rem==="pair"?"square":s.shape;
+const pMarker=(sh,x,y,c,hollow)=>{const f=hollow?"#fff":c;return sh==="square"?`<rect x="${x-3.2}" y="${y-3.2}" width="6.4" height="6.4" fill="${f}" stroke="${c}" stroke-width="1.3"/>`:
+ sh==="oct"?`<path d="M${x},${y-4.3}L${x+4.3},${y}L${x},${y+4.3}L${x-4.3},${y}Z" fill="${f}" stroke="${c}" stroke-width="1.3"/>`:`<circle cx="${x}" cy="${y}" r="3.5" fill="${f}" stroke="${c}" stroke-width="1.3"/>`;};
+const pSw=s=>{const [c]=P_TYPE(s),cl=(s.cells||0)>0;return `<svg width="30" height="12"><line x1="1" y1="6" x2="29" y2="6" stroke="${c}" stroke-width="2.2" ${cl?'stroke-dasharray="5 3"':""}/>${pMarker(P_MK(s),15,6,c,cl)}</svg>`;};
+const TT=(t,h)=>`<span class="tti">i<span class="ttx"><b>${h}.</b> ${t}</span></span>`;
+const NOTE={
+ geo:["Idealised plan geometry: prismatic floats and planter walls, wall thickness ignored in the widths (except the buoyant base). The planter is sized to hold V<sub>p</sub> at depth D<sub>s</sub>, plus any chambers inside it. Connectors, frames, ribs and fixings are not included.","Geometry notes"],
+ area:["Planting area = planter inner area minus vertical pipes, plus any attached pots. Footprint is one module's outline and does not include gaps between modules. Paths are counted on the float tops whatever their width.","Area notes"],
+ mass:["Plastic = wall area × thickness × density (thin-wall estimate): no ribs, fittings, connectors, frames or ballast. Substrate at constant saturated density. Tree is a point mass. Deck and live loads act on the path area only.","Mass notes"],
+ flo:["Hydrostatic, still water. The planter is porous: submerged substrate is buoyed by the water around it. Reserve buoyancy is to deck awash. No waves or overtopping, biofouling, water uptake by floats or long-term creep.","Flotation notes"],
+ stab:["Each module is a single, free-floating rigid body (floats, planter, saturated substrate, deck and tree move as one), not connected to neighbours, piles or moorings, and with no flexing between planter and floats. Linear stability (small angles), constant added-mass coefficients, no damping, wind on the canopy, waves or sloshing. Soil-cell water is free-flooding (no mass, no buoyancy). For comparing options, not for predicting motions of a connected or moored installation.","Limitations"],
+ forest:["Layout rule of thumb: gap between planters ≤ the set maximum, so canopies and roots can close over the floats. Not an ecological or growth check.","Floating forest"],
+ mpm:["Width rule only: a float path at least the set minimum width (AS 3962: fingers 0.9 m, walkways 1.5 m) between planting. Not a check of deck strength, freeboard under load, handrails or access.","Mangroves–path–mangroves"],
+ res:["Reserve = extra load the module can take before the deck is awash, from still-water hydrostatics.","Reserve buoyancy"],
+ plots:["Each sweep changes one parameter and keeps everything else at the common inputs and each option's own settings. Breaks in a line mean the module sinks, or (for roll/pitch periods) GM ≤ 0. Option-setting sweeps are applied to every selected option, even where they have no effect.","Plot notes"]};
+const N_=k=>TT(...NOTE[k]);
+document.addEventListener("mouseover",e=>{const t=e.target.closest&&e.target.closest(".tti");if(!t)return;const x=t.querySelector(".ttx");x.style.transform="translateX(-50%)";x.style.marginLeft="0";
+ requestAnimationFrame(()=>{const r=x.getBoundingClientRect(),W=document.documentElement.clientWidth;if(r.left<8)x.style.marginLeft=(8-r.left)+"px";else if(r.right>W-8)x.style.marginLeft=(W-8-r.right)+"px";});});const LIMS=N_("stab");
+let PST={x:"d",xaxis:"param",ys:["gap","ratio","GMr","Tr"],sel:null,ymax:{}};
+function pInit(){
+ const px=document.getElementById("px");
+ px.innerHTML=`<optgroup label="Common inputs">${PX_G.map(([k,l,u])=>`<option value="${k}">${l}${u?" ("+u+")":""}</option>`).join("")}</optgroup><optgroup label="Option settings (applied to every selected option)">${PX_O.map(([k,l,u])=>`<option value="${k}">${l}${u?" ("+u+")":""}</option>`).join("")}</optgroup>`;
+ px.value=PST.x;
+ const xa=document.createElement("label");xa.innerHTML=`Horizontal axis<select id="pxaxis"><option value="param">The varied parameter</option>${PY.map(([k,l,u])=>`<option value="${k}">Output: ${l} (${u})</option>`).join("")}</select>`;
+ px.parentElement.after(xa);xa.style.marginTop="6px";
+ document.getElementById("pys").innerHTML=PY.map(([k,l,u])=>`<label><input type="checkbox" value="${k}"${PST.ys.includes(k)?" checked":""}> ${l} <span style="color:var(--mut)">(${u})</span></label>`).join("");
+ const setRange=()=>{const d=PX_ALL.find(x=>x[0]===PST.x);document.getElementById("pmin").value=d[3];document.getElementById("pmax").value=d[4];};
+ setRange();
+ px.addEventListener("change",()=>{PST.x=px.value;setRange();renderPlots();});
+ document.getElementById("pxaxis").addEventListener("change",e=>{PST.xaxis=e.target.value;renderPlots();});
+ ["pmin","pmax","pn"].forEach(id=>document.getElementById(id).addEventListener("input",renderPlots));
+ document.getElementById("pys").addEventListener("change",()=>{PST.ys=[...document.querySelectorAll("#pys input:checked")].map(i=>i.value);renderPlots();});
+ document.querySelectorAll(".pbtn").forEach(b=>b.addEventListener("click",()=>{const m=b.dataset.sel;PST.sel=new Set(cols.map((s,i)=>i).filter(i=>m==="all"||(m==="simple"&&!isComplex(cols[i]))));pOpts();renderPlots();}));
+ document.getElementById("pcsv").addEventListener("click",pCsv);
+ document.getElementById("ppngall").addEventListener("click",async()=>{for(const yk of PST.ys){await pSaveChart(yk,"png");}});
+}
+function pOpts(){
+ if(!PST.sel)PST.sel=new Set(cols.map((s,i)=>i));
+ const el=document.getElementById("popts");
+ el.innerHTML=cols.map((s,i)=>`<label title="${P_TYPE(s)[1]}"><input type="checkbox" value="${i}"${PST.sel.has(i)?" checked":""}>${pSw(s)}${s.name}</label>`).join("");
+ el.querySelectorAll("input").forEach(c=>c.addEventListener("change",()=>{c.checked?PST.sel.add(+c.value):PST.sel.delete(+c.value);renderPlots();}));
+}
+function pData(){
+ const d=PX_ALL.find(x=>x[0]===PST.x),lo=parseFloat(document.getElementById("pmin").value),hi=parseFloat(document.getElementById("pmax").value);
+ const n=Math.max(3,Math.min(60,parseInt(document.getElementById("pn").value)||21)),xs=[];
+ for(let i=0;i<n;i++){let v=lo+(hi-lo)*i/(n-1);if(PST.x==="nv"||PST.x==="nh")v=Math.round(v);if(!xs.includes(v))xs.push(v);}
+ const g0={...g},sel=[...PST.sel].filter(i=>i<cols.length),out={xs,d,rows:{}};
+ sel.forEach(i=>out.rows[i]=[]);
+ xs.forEach(x=>{
+  if(d[5]==="g"){g[PST.x]=x;if(PST.x==="fbTarget")g.mode="fb";if(PST.x==="subPct")g.mode="sub";if(PST.x==="Vb")g.mode="vol";}
+  sel.forEach(i=>{const s=d[5]==="o"?{...cols[i],[PST.x]:x}:cols[i];let r=null;try{r=compute(s);}catch(e){}out.rows[i].push(r);});
+  Object.assign(g,g0);});
+ return out;
+}
+const pNum=v=>(v==null||!isFinite(v))?null:v;
+const pNice=(lo,hi,n=5)=>{if(hi===lo){hi+=1;lo-=lo>0?0:1;}const st=Math.pow(10,Math.floor(Math.log10((hi-lo)/n))),m=[1,2,2.5,5,10].map(k=>k*st).find(k=>(hi-lo)/k<=n)||st*10;
+ const a=Math.floor(lo/m)*m,b=Math.ceil(hi/m)*m,t=[];for(let v=a;v<=b+m*1e-6;v+=m)t.push(+v.toFixed(10));return {a,b,t};};
+const pFmt=v=>Math.abs(v)>=1000?v.toFixed(0):Math.abs(v)>=100?v.toFixed(0):Math.abs(v)>=10?v.toFixed(1):v.toFixed(2);
+let P_DATA=null,P_SC={};
+function renderPlots(){
+ if(view!=="plots")return;
+ document.getElementById("plotsNote").innerHTML=N_("plots");
+ if(!document.getElementById("pys").children.length)pInit();
+ pOpts();
+ const D=P_DATA=pData(),sel=Object.keys(D.rows).map(Number),el=document.getElementById("pcharts");
+ const xd=D.d,XA=PST.xaxis,xDef=PY.find(y=>y[0]===XA);
+ const xOf=(i,j)=>XA==="param"?D.xs[j]:(D.rows[i][j]&&!D.rows[i][j].sinks?pNum(xDef[3](D.rows[i][j])):null);
+ const xlab=XA==="param"?`${xd[1]}${xd[2]?" ("+xd[2]+")":""}`:`${xDef[1]} (${xDef[2]})`;
+ const cur=xd[5]==="g"?g[PST.x]:null;
+ if(!sel.length||!PST.ys.length){el.innerHTML=`<p class="note">Select at least one output and one float option.</p>`;return;}
+ el.innerHTML=PST.ys.map(yk=>{const Y=PY.find(y=>y[0]===yk);
+  const W=520,H=320,ml=58,mr=14,mt=12,mb=46,pw=W-ml-mr,ph=H-mt-mb;
+  const ser=sel.map(i=>({i,pts:D.xs.map((_,j)=>{const r=D.rows[i][j];const y=(!r||(r.sinks&&yk!=="M"&&yk!=="mpl"))?null:pNum(Y[3](r));return [xOf(i,j),y];})}));
+  const all=ser.flatMap(s=>s.pts).filter(p=>p[0]!=null&&p[1]!=null);
+  if(!all.length)return `<div class="pchart"><h4>${Y[1]} (${Y[2]})</h4><p class="note">No valid values (module sinks or unstable over this range).</p></div>`;
+  let ylo=Math.min(...all.map(p=>p[1])),yhi=Math.max(...all.map(p=>p[1]));if(yk.startsWith("GM")||yk==="resKg"||yk==="res")ylo=Math.min(ylo,0);if(ylo>0&&ylo<0.35*yhi)ylo=0;
+  const um=PST.ymax[yk];if(um!=null&&isFinite(um))yhi=Math.min(yhi,um);if(yhi<=ylo)yhi=ylo+1;
+  const XS=pNice(Math.min(...all.map(p=>p[0])),Math.max(...all.map(p=>p[0]))),YS=pNice(ylo,yhi);
+  const sx=v=>ml+(v-XS.a)/(XS.b-XS.a)*pw,sy=v=>mt+ph-(v-YS.a)/(YS.b-YS.a)*ph;P_SC[yk]={sx,sy};
+  let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" data-y="${yk}" style="display:block;overflow:visible"><defs><clipPath id="cp_${yk}"><rect x="${ml}" y="${mt}" width="${pw}" height="${ph}"/></clipPath></defs>`;
+  YS.t.forEach(t=>svg+=`<line x1="${ml}" x2="${ml+pw}" y1="${sy(t)}" y2="${sy(t)}" stroke="#e4e3df"/><text x="${ml-6}" y="${sy(t)+3.5}" text-anchor="end" font-size="10.5" fill="#5b6f6a">${pFmt(t)}</text>`);
+  XS.t.forEach(t=>svg+=`<line x1="${sx(t)}" x2="${sx(t)}" y1="${mt}" y2="${mt+ph}" stroke="#eeeeea"/><text x="${sx(t)}" y="${mt+ph+15}" text-anchor="middle" font-size="10.5" fill="#5b6f6a">${pFmt(t)}</text>`);
+  svg+=`<line x1="${ml}" x2="${ml+pw}" y1="${mt+ph}" y2="${mt+ph}" stroke="#8a9592"/><line x1="${ml}" x2="${ml}" y1="${mt}" y2="${mt+ph}" stroke="#8a9592"/>`;
+  if(YS.a<0&&YS.b>0)svg+=`<line x1="${ml}" x2="${ml+pw}" y1="${sy(0)}" y2="${sy(0)}" stroke="#d03b3b" stroke-width="1.2"/>${yk.startsWith("GM")?`<text x="${ml+pw-4}" y="${sy(0)+12}" text-anchor="end" font-size="10" fill="#d03b3b">GM &lt; 0: unstable</text>`:""}`;
+  if(yk==="gap"){const gm=g.gapMax,pm=g.pathMin;[[gm,"#2d8a3e",`floating forest ≤ ${gm} m`,"start",ml+4,-4],[pm,"#b0651b",`min. path ${pm} m`,"end",ml+pw-4,12]].forEach(([v,c,t,an,tx,dy])=>{if(v>YS.a&&v<YS.b)svg+=`<line x1="${ml}" x2="${ml+pw}" y1="${sy(v)}" y2="${sy(v)}" stroke="${c}" stroke-dasharray="5 4"/><text x="${tx}" y="${sy(v)+dy}" text-anchor="${an}" font-size="10" fill="${c}" stroke="#fff" stroke-width="3" paint-order="stroke">${t}</text>`;});}
+  if(XA==="param"&&cur!=null&&cur>=XS.a&&cur<=XS.b)svg+=`<line x1="${sx(cur)}" x2="${sx(cur)}" y1="${mt}" y2="${mt+ph}" stroke="#5b6f6a" stroke-dasharray="2 3"/><text x="${sx(cur)+3}" y="${mt+10}" font-size="10" fill="#5b6f6a">current</text>`;
+  svg+=`<g clip-path="url(#cp_${yk})">`;
+  ser.forEach(({i,pts})=>{const s=cols[i],[c]=P_TYPE(s),cl=(s.cells||0)>0;let dpath="",pen=false;
+   pts.forEach(([x,y])=>{if(x==null||y==null){pen=false;return;}dpath+=(pen?"L":"M")+sx(x).toFixed(1)+","+sy(y).toFixed(1);pen=true;});
+   svg+=`<path d="${dpath}" fill="none" stroke="${c}" stroke-width="2" ${cl?'stroke-dasharray="6 4"':""} data-i="${i}" class="pl"/>`;
+   const every=Math.max(1,Math.round(pts.length/8));pts.forEach(([x,y],j)=>{if(x!=null&&y!=null&&j%every===0)svg+=pMarker(P_MK(s),+sx(x).toFixed(1),+sy(y).toFixed(1),c,cl);});});
+  svg+=`</g><text x="${ml+pw/2}" y="${H-8}" text-anchor="middle" font-size="11.5" fill="#16302b">${xlab}</text>
+  <text transform="translate(13 ${mt+ph/2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="#16302b">${Y[2]}</text>
+  <line class="xh" y1="${mt}" y2="${mt+ph}" stroke="#16302b" stroke-width=".8" style="display:none"/><rect class="hit" x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="transparent"/></svg>`;
+  return `<div class="pchart" data-y="${yk}"><h4>${Y[1].replace(/_([a-z,]+)/g,"<sub>$1</sub>")}${N_(["KG","KB","BMr","GMr","GMp","Th","Tr","Tp"].includes(yk)?"stab":["f","draft","subWet","resKg","res"].includes(yk)?"flo":["mpl","plPer","msub","M","Vrem","Vch","Vtot","Vsub"].includes(yk)?"mass":["ratio","Aplant","Apath","Aout"].includes(yk)?"area":"geo")}</h4><span class="ymax"><button class="psave" data-sv="${yk}" data-fmt="png">⤓ PNG</button><button class="psave" data-sv="${yk}" data-fmt="svg">⤓ SVG</button> y max <input type="number" data-ym="${yk}" value="${um!=null?um:""}" placeholder="auto"></span>${svg}<div class="ptip"></div></div>`;}).join("");
+ el.querySelectorAll(".psave").forEach(b=>b.addEventListener("click",()=>pSaveChart(b.dataset.sv,b.dataset.fmt)));
+ el.querySelectorAll("[data-ym]").forEach(inp=>inp.addEventListener("change",()=>{const v=parseFloat(inp.value);PST.ymax[inp.dataset.ym]=isFinite(v)?v:null;renderPlots();}));
+ // hover
+ el.querySelectorAll(".pchart").forEach(ch=>{const svg=ch.querySelector("svg");if(!svg)return;const yk=ch.dataset.y,Y=PY.find(y=>y[0]===yk),tip=ch.querySelector(".ptip"),xh=svg.querySelector(".xh"),hit=svg.querySelector(".hit");
+  hit.addEventListener("mousemove",ev=>{const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+   // nearest sample by screen x
+   let bestJ=0,bd=1e9;const SC=P_SC[yk];
+   if(XA==="param"){D.xs.forEach((x,j)=>{const dd=Math.abs(SC.sx(x)-p.x);if(dd<bd){bd=dd;bestJ=j;}});}
+   else{sel.forEach(i=>D.rows[i].forEach((r,j)=>{const xv=xOf(i,j),yv=r&&!r.sinks?pNum(Y[3](r)):null;if(xv==null||yv==null)return;const dd=Math.hypot(SC.sx(xv)-p.x,SC.sy(yv)-p.y);if(dd<bd){bd=dd;bestJ=j;}}));}
+   const lines=sel.map(i=>{const r=D.rows[i][bestJ];const y=r&&!r.sinks?pNum(Y[3](r)):null;const xv=xOf(i,bestJ);return {i,y,xv,sinks:r&&r.sinks};}).sort((a,b)=>(b.y??-1e9)-(a.y??-1e9));
+   xh.style.display=XA==="param"?"":"none";
+   if(XA==="param"){const pos=SC.sx(D.xs[bestJ]);xh.setAttribute("x1",pos);xh.setAttribute("x2",pos);}
+   tip.innerHTML=`<div style="margin-bottom:3px;color:var(--mut)">${xd[1]} = <b>${pFmt(D.xs[bestJ])}</b> ${xd[2]||""}</div>`+lines.map(l=>{const s=cols[l.i],[c]=P_TYPE(s);return `<div><span class="sw" style="background:${c}"></span>${s.name.length>34?s.name.slice(0,33)+"…":s.name}: <b>${l.sinks?"sinks":l.y==null?"–":pFmt(l.y)}</b>${XA!=="param"&&l.xv!=null?` <span style="color:var(--mut)">(x ${pFmt(l.xv)})</span>`:""}</div>`;}).join("");
+   tip.style.display="block";const cr=ch.getBoundingClientRect();let lx=ev.clientX-cr.left+14;if(lx+tip.offsetWidth>cr.width)lx=ev.clientX-cr.left-tip.offsetWidth-14;tip.style.left=Math.max(0,lx)+"px";tip.style.top=Math.max(0,ev.clientY-cr.top-20)+"px";});
+  hit.addEventListener("mouseleave",()=>{tip.style.display="none";xh.style.display="none";});});
+}
+function pCsv(){const D=P_DATA||pData(),sel=Object.keys(D.rows).map(Number);
+ let csv=["option","float type",D.d[1]+(D.d[2]?" ("+D.d[2]+")":""),"sinks",...PY.map(y=>`${y[1]} (${y[2]})`)].map(v=>`"${v}"`).join(",")+"\n";
+ sel.forEach(i=>D.xs.forEach((x,j)=>{const r=D.rows[i][j];csv+=[`"${cols[i].name}"`,`"${P_TYPE(cols[i])[1]}"`,x,r&&r.sinks?1:0,...PY.map(y=>{const v=r?pNum(y[3](r)):null;return v==null?"":+v.toFixed(5);})].join(",")+"\n";}));
+ pSave(`MICI_data_${pTag()}.csv`,csv);}
+function pSave(fn,data){return (async()=>{let dl=null;try{if(window.claude&&window.claude.use)dl=await window.claude.use("downloads");}catch(e){}
+  if(dl){try{await dl.save({filename:fn,data});}catch(e){}return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(data instanceof Blob?data:new Blob([data],{type:"text/plain"}));a.download=fn;a.click();})();}
+const pv=v=>(+(+v).toFixed(3)).toString();
+function pRange(){return [pv(document.getElementById("pmin").value),pv(document.getElementById("pmax").value)];}
+function pFixed(){const x=PST.x,isG=PX_G.some(q=>q[0]===x),m=x==="fbTarget"?"fb":x==="subPct"?"sub":x==="Vb"?"vol":g.mode;
+ const L=[["sizing",m==="vol"?"sameVol":m==="fb"?"freeboard":"submerged"]];
+ if(m==="vol"&&x!=="Vb")L.push(["Vb",g.Vb]);if(m==="fb"&&x!=="fbTarget")L.push(["fb",g.fbTarget+"mm"]);if(m==="sub"&&x!=="subPct")L.push(["sub",g.subPct+"%"]);
+ ["Vp","Ds","d","rhoS","tree","treeCG","t"].forEach(k=>{if(k!==x)L.push([k,g[k]]);});
+ if(!isG)L.push([x,"swept"]);return L;}
+function pTag(yk){const [lo,hi]=pRange(),xa=PST.xaxis==="param"?"":`_xaxis-${PST.xaxis}`;
+ return `${yk?yk+"_vs_":"sweep_"}${PST.x}${lo}-${hi}${xa}_`+pFixed().filter(q=>q[1]!=="swept").map(([k,v])=>k+(typeof v==="number"?pv(v):v)).join("_")+`_${Object.keys(P_DATA?P_DATA.rows:{}).length}opts`;}
+function pCaption(){const [lo,hi]=pRange(),d=PX_ALL.find(q=>q[0]===PST.x);
+ const U={Vb:"m³",Vp:"m³",Ds:"m",d:"m",rhoS:"kg/m³",tree:"kg",treeCG:"m",t:"mm"};
+ return `Varied: ${d[1]} ${lo}–${hi}${d[2]?" "+d[2]:""}. Fixed: `+pFixed().filter(q=>q[1]!=="swept"&&q[0]!=="sizing").map(([k,v])=>`${k} ${typeof v==="number"?pv(v):v}${U[k]?" "+U[k]:""}`).join(", ")+`. Sizing: ${pFixed()[0][1]}.`;}
+function pExportSvg(yk){
+ const ch=document.querySelector(`.pchart[data-y="${yk}"] svg`);if(!ch)return null;
+ const Y=PY.find(y=>y[0]===yk),sel=Object.keys(P_DATA.rows).map(Number);
+ const W=520,top=26,h0=320,colW=W/2,rows=Math.ceil(sel.length/2),legH=rows*15+8,cap=pCaption(),capL=[];
+ let line="";cap.split(" ").forEach(w=>{if((line+" "+w).length>92){capL.push(line);line=w;}else line=line?line+" "+w:w;});capL.push(line);
+ const H=top+h0+legH+capL.length*13+10;
+ const inner=ch.innerHTML.replace(/<line class="xh"[^>]*><\/line>|<line class="xh"[^>]*\/>/g,"").replace(/<rect class="hit"[^>]*><\/rect>|<rect class="hit"[^>]*\/>/g,"");
+ let o=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif"><rect width="${W}" height="${H}" fill="#fff"/>`;
+ o+=`<text x="10" y="18" font-size="13" font-weight="700" fill="#16302b">${Y[1].replace(/_([a-z,]+)/g,"$1")} (${Y[2]})</text><g transform="translate(0 ${top})">${inner}</g>`;
+ sel.forEach((i,n)=>{const s=cols[i],[c]=P_TYPE(s),cl=(s.cells||0)>0,x=10+(n%2)*colW,y=top+h0+12+Math.floor(n/2)*15;
+  o+=`<line x1="${x}" x2="${x+22}" y1="${y-4}" y2="${y-4}" stroke="${c}" stroke-width="2" ${cl?'stroke-dasharray="5 3"':""}/>${pMarker(P_MK(s),x+11,y-4,c,cl)}<text x="${x+28}" y="${y}" font-size="9.5" fill="#16302b">${(s.name.length>50?s.name.slice(0,49)+"…":s.name).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</text>`;});
+ capL.forEach((l,k)=>o+=`<text x="10" y="${top+h0+legH+12+k*13}" font-size="9.5" fill="#5b6f6a">${l.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</text>`);
+ return {svg:o+"</svg>",W,H};}
+async function pSaveChart(yk,fmt){const e=pExportSvg(yk);if(!e)return;const fn=`MICI_${pTag(yk)}.${fmt}`;
+ if(fmt==="svg")return pSave(fn,e.svg);
+ const img=new Image(),sc=3;await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(e.svg);});
+ const cv=document.createElement("canvas");cv.width=e.W*sc;cv.height=e.H*sc;const cx=cv.getContext("2d");cx.scale(sc,sc);cx.drawImage(img,0,0);
+ const blob=await new Promise(r=>cv.toBlob(r,"image/png"));return pSave(fn,blob);}
+const _renderResults0=renderResults;renderResults=function(){_renderResults0();if(view==="plots")renderPlots();};
+
+renderGlobals();renderCols();
+window.addEventListener("message",e=>{const m=e.data;if(!m||m.type!=="mici-float")return;
+ const o={name:"From design guide – "+m.label,shape:m.shape||"square",rem:m.rem,nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3};if(m.rem==="step"){o.wt=0.2;o.wb=0.6;}Object.assign(o,m.extra||{});delete o.path;o.fromGuide=true;
+ cols.unshift(o);const want=isComplex(o)?"complex":(view==="plots"?"simple":view);const b=document.querySelector(`nav.tabs button[data-view="${want}"]`);
+ if(b&&view!==want)b.click();else renderCols();const s=document.getElementById("optsec");if(s)s.scrollIntoView({behavior:"smooth"});});
+
+window.miciSchematic=spec=>{const s=Object.assign({nv:0,Dv:0.3,Lv:0.9,nh:0,Dh:0.3},spec);if(s.rem==="step"&&s.wt==null)s.wt=0.2;if(s.rem==="step"&&s.wb==null)s.wb=0.6;const r=compute(s);const T0=TREES;let big,bigN,curve="",pond="",curveT="",pondT="",planT="";
+ try{TREES=false;bigN=lSection(s,r,true);try{curve=curveSvg(s,r);pond=pondSvg(s,r);}catch(e){}
+  TREES=true;big=lSection(s,r,true);try{curveT=curveSvg(s,r);pondT=pondSvg(s,r);}catch(e){}
+  const W=600,H=380,ex=Math.max(r.b,r.L||r.b)*1.25,sc=Math.min((W-60)/ex,(H-60)/ex);planT=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;background:#eef4f2;border-radius:8px">${moduleSvg(s,r,W/2,H/2,sc,true)}</svg>`;}
+ finally{TREES=T0;}
+ return {plan:plan(s,r),sec:lSection(s,r),big,bigN,curve,pond,planT,curveT,pondT};};
+</script>
+</body>
+</html>

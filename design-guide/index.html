@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MICI Module Design Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: left = one question at a time with options, trade-offs and notes; right = illustration of the selected option + running brief and fit check. */
+  --bg: #eef2ef;
+  --surface: #ffffff;
+  --ink: #15302b;
+  --muted: #56706a;
+  --line: #cfdbd6;
+  --leaf: #2f7d4f;
+  --leaf-soft: #dcefe3;
+  --accent: #0f6b74;
+  --accent-ink: #ffffff;
+  --water: #d4e7ec;
+  --cost: #a5470f;
+  --cost-soft: #fbe8d8;
+  --open: #6a4fa3;
+  --open-soft: #ece6f7;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Source Sans 3", "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1917; --surface: #15241f; --ink: #e3eee9; --muted: #93aba3; --line: #2a3d37;
+    --leaf: #6cc28d; --leaf-soft: #1c3727; --accent: #4fb3bd; --accent-ink: #08201f; --water: #17323a;
+    --cost: #eda46a; --cost-soft: #3a2614; --open: #b9a4ea; --open-soft: #2a2340; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1917; --surface: #15241f; --ink: #e3eee9; --muted: #93aba3; --line: #2a3d37;
+  --leaf: #6cc28d; --leaf-soft: #1c3727; --accent: #4fb3bd; --accent-ink: #08201f; --water: #17323a;
+  --cost: #eda46a; --cost-soft: #3a2614; --open: #b9a4ea; --open-soft: #2a2340; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.5; }
+header { padding: 20px max(16px, 3vw) 6px; display: grid; gap: 4px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: 32px; margin: 0; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 80ch; }
+main { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; padding: 12px max(16px, 3vw) 32px; align-items: start; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.steps button { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+.steps button.done { color: var(--ink); border-color: var(--leaf); }
+.steps button.current { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.steps button:disabled { cursor: default; opacity: .5; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.15; margin: 4px 0 8px; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin: 0; }
+.why { color: var(--muted); margin: 0 0 12px; max-width: 70ch; }
+.tradeoff { border-left: 4px solid var(--accent); background: var(--water); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 0 0 16px; }
+.versus { display: flex; flex-wrap: nowrap; align-items: center; gap: 12px; margin: 6px 0 10px; color: var(--accent); }
+.versus span { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; text-wrap: balance; font-family: var(--font-display); font-weight: 700; font-size: clamp(18px, 4.5vw, 26px); line-height: 1.1; color: var(--ink); background: var(--surface); border: 2px solid var(--accent); border-radius: 8px; padding: 6px 12px; }
+.versus svg { width: 56px; height: 18px; flex: none; }
+.tradeoff b { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); display: block; }
+.options { display: grid; gap: 10px; }
+.opt { text-align: left; font: inherit; color: inherit; background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; padding: 10px; cursor: pointer; display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; }
+.opt.noimg { grid-template-columns: 1fr; padding: 12px 14px; }
+.opt img { width: 96px; height: 72px; object-fit: cover; border-radius: 5px; display: block; }
+.opt:hover { border-color: var(--accent); }
+.opt.blocked { opacity: .55; cursor: not-allowed; }
+.opt.blocked:hover { border-color: var(--line); }
+.opt.blocked span { color: var(--cost); }
+.opt[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); box-shadow: inset 4px 0 0 var(--accent); }
+.opt strong { font-size: 17px; display: block; }
+.opt span { color: var(--muted); font-size: 14.5px; }
+.multi-note { font-size: 13.5px; color: var(--muted); margin: -4px 0 10px; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.detail { margin-top: 18px; display: grid; gap: 14px; }
+.detail-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.tg { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .tg { grid-template-columns: 1fr; } }
+.col { border-radius: 8px; padding: 12px 14px; }
+.col.gain { background: var(--leaf-soft); }
+.col.cost { background: var(--cost-soft); }
+.col h4 { margin: 0 0 6px; font-family: var(--font-mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; }
+.col.gain h4 { color: var(--leaf); }
+.col.cost h4 { color: var(--cost); }
+.col ul { margin: 0; padding-left: 18px; font-size: 15px; }
+.col li { margin: 3px 0; }
+.notes { display: grid; gap: 6px; }
+.item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-size: 15px; }
+.tag { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 4px; white-space: nowrap; margin-top: 2px; }
+.t-spec { background: var(--water); color: var(--accent); }
+.t-logic { background: var(--leaf-soft); color: var(--leaf); }
+.t-rule { background: var(--ink); color: var(--surface); }
+.t-open { background: var(--open-soft); color: var(--open); }
+.nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 600; border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.side { display: grid; gap: 20px; }
+@media (min-width: 901px) { .side { position: sticky; top: 12px; } }
+.fig img.main { width: 100%; height: auto; display: block; border-radius: 8px; background: var(--water); }
+.fig .noimage { aspect-ratio: 4 / 3; display: grid; place-items: center; text-align: center; padding: 20px; border-radius: 8px; background: var(--water); color: var(--muted); }
+.fig figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+.thumbs { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.thumbs button { padding: 0; border: 2px solid transparent; border-radius: 6px; background: none; cursor: pointer; }
+.thumbs button[aria-pressed="true"] { border-color: var(--accent); }
+.vthumb { display: flex; align-items: center; justify-content: center; width: 72px; height: 54px; overflow: hidden; border-radius: 4px; background: #eef4f2; }
+.vthumb svg { max-width: 72px; max-height: 54px; width: auto !important; height: auto !important; pointer-events: none; }
+.vlab { display: block; font-size: 10px; color: #5b6f6a; text-align: center; margin-top: 2px; }
+.schem-one .t { display: none; }
+.schem:hover .schem-one .t { display: block; }
+.schem:hover .schem-one .n:has(+ .t) { display: none; }
+.schem-one svg { width: 100%; height: auto; max-height: 520px; }
+.thumbs img { width: 72px; height: 54px; object-fit: cover; border-radius: 4px; display: block; }
+.thumb-text { width: 72px; height: 54px; padding: 2px; line-height: 1.15; display: grid; place-items: center; border-radius: 4px; background: var(--water); color: var(--muted); font-size: 11px; text-align: center; }
+.brief { display: grid; gap: 12px; }
+.brief dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 15px; }
+.brief dt { color: var(--muted); }
+.brief dd { margin: 0; font-weight: 600; }
+.flags { display: grid; gap: 8px; }
+.flag { border-left: 4px solid var(--cost); background: var(--cost-soft); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 14.5px; }
+.flag.ok { border-color: var(--leaf); background: var(--leaf-soft); }
+.key { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.final-step { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; }
+.final-step h3 span { font-family: var(--font-body); font-weight: 400; color: var(--muted); font-size: 15px; }
+.copied { font-size: 13px; color: var(--leaf); margin-left: 8px; }
+@media (prefers-reduced-motion: no-preference) { .opt, .btn { transition: border-color .15s, background .15s; } }
+.lightbox { position: fixed; inset: 0; z-index: 50; background: rgba(5, 15, 13, .88); display: none; align-items: center; justify-content: center; padding: 24px; cursor: zoom-out; }
+.lightbox.open { display: flex; }
+.lightbox .lb-nav { top: 50%; transform: translateY(-50%); font-size: 34px; line-height: 1; padding: 8px 16px; }
+#lb-prev { left: 16px; right: auto; }
+#lb-dl { right: 96px; }
+#lb-next { right: 16px; }
+#lb-count { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); color: #fff; font: 600 14px var(--font-body); opacity: .85; }
+.lightbox.single .lb-nav, .lightbox.single #lb-count, .lightbox.svg .lb-nav, .lightbox.svg #lb-count { display: none; }
+#fig { position: relative; }
+.fignav { position: absolute; z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(0,0,0,.45); color: #fff; font-size: 24px; line-height: 36px; padding: 0; cursor: pointer; transform: translateY(-50%); }
+.fignav:hover { background: rgba(0,0,0,.7); }
+#lb-svg { display: none; width: min(1100px, 100%); max-height: 100%; overflow: auto; background: #fff; border-radius: 8px; padding: 10px; cursor: default; }
+.lightbox.svg #lb-svg { display: block; }
+.lightbox.svg #lb-img { display: none; }
+#lb-svg:hover .t { display: block; }
+#lb-svg:hover .n:has(+ .t) { display: none; }
+#lb-svg svg { max-height: calc(100vh - 80px); }
+img.main { cursor: zoom-in; }
+.lightbox img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+.lightbox button { position: absolute; top: 14px; right: 16px; font: 600 15px var(--font-body); color: #fff; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.4); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+img { cursor: zoom-in; }
+.sthumb { --float: #1e1e1e; --sub: #4f9a3f; --pipe: #e3a33b; display: block; width: 96px; height: 72px; flex: none; background: #eef4f2; border-radius: 5px; overflow: hidden; }
+.sthumb svg { width: 96px !important; height: 72px !important; display: block; }
+.sthumb svg text, .sthumb svg line { display: none; }
+.cthumb { position: relative; display: block; width: 96px; height: 72px; flex: none; }
+.cthumb img { width: 96px; height: 72px; object-fit: cover; border-radius: 5px; display: block; }
+.sthumb img.cbadge, .cthumb img.cbadge { position: absolute; right: -6px; bottom: -6px; width: 46px; height: 35px; object-fit: contain; background: #fff; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.schem { --float: #1e1e1e; --sub: #4f9a3f; --pipe: #e3a33b; display: block; width: 100%; margin-top: 8px; padding: 8px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; text-align: left; font: inherit; }
+.schem:hover { border-color: var(--accent); }
+.schem svg { width: 100%; height: auto; display: block; }
+.schem-sec { margin-top: 6px; }
+.schem-curve { margin-top: 6px; display: grid; gap: 6px; }
+.schem-curve svg { background: #eef4f2; border-radius: 6px; }
+.schem-go { display: block; margin-top: 6px; font-weight: 600; color: #0f6b74; font-size: 14px; }
+.toptabs { display: flex; gap: 6px; margin: 8px 0 4px; flex-wrap: wrap; }
+.toptabs button { font: 600 15px var(--font-body); padding: 7px 14px; border-radius: 8px; border: 1.5px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.toptabs button.on { background: var(--accent); color: var(--accent-ink); }
+#pane-calc { padding: 0 max(16px, 3vw) 20px; }
+#calcFrame { width: 100%; height: calc(100vh - 120px); min-height: 700px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.calcnote { margin: 6px 0 10px; padding: 8px 12px; border-left: 4px solid var(--leaf); background: var(--leaf-soft); border-radius: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>MICI Module Design Guide</h1>
+  <nav class="toptabs" role="tablist"><button data-pane="guide" class="on" role="tab">Design guide</button><button data-pane="calc" role="tab">Float calculator</button></nav>
+  <p>A questionnaire that takes a MICI project from the type of structure the client wants to mooring; the questions shown depend on earlier answers. Every option lists what you gain and what you give up, and the fit check flags choices that work against each other. </p>
+</header>
+<main id="pane-guide">
+  <section class="panel" id="q" aria-live="polite"></section>
+  <aside class="side">
+    <figure class="panel fig" id="fig" style="margin:0"></figure>
+    <section class="panel brief" id="brief"></section>
+  </aside>
+</main>
+
+<section id="pane-calc" hidden><div id="calcNote" class="calcnote" hidden></div><iframe id="calcFrame" src="calculator.html" title="MICI Float Comparison Calculator"></iframe></section>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Enlarged image"><button type="button" id="lb-close">Close</button><button type="button" class="lb-nav" id="lb-prev" aria-label="Previous image">‹</button><button type="button" class="lb-nav" id="lb-next" aria-label="Next image">›</button><span id="lb-count"></span><button type="button" id="lb-dl" hidden>Download</button><img id="lb-img" alt=""><div id="lb-svg" class="schem-one"></div></div>
+<script>
+const TAGS = { spec: "Functional spec", logic: "Design logic", rule: "Project rule", open: "Open question" };
+const IMG = {
+  narrowFloat: ["img/narrow-float.jpg", "A narrow, deep pontoon float (Marine Dock Systems): less width at the surface for the same buoyancy."],
+  mv1: ["img/mastavault-1.jpg", "MastaVault UrbanTree soil cells, double layer: two layers of cell frames stacked on top of each other, about 95% void, with tree pits left open for planting (Polyfabrics demonstration)."],
+  mv2: ["img/mastavault-2.jpg", "MastaVault soil cells assembled into a raised block with deck panels on top and an open tree pit in the centre (Polyfabrics demonstration)."],
+  mv3: ["img/mastavault-3.jpg", "Single layer of MastaVault cell frames being assembled, with planted pots set into the cells (Polyfabrics demonstration)."],
+  lFloat: ["img/l-float.svg", "Stepped (L) float (illustration): narrow at the waterline, with a foot that extends under the edge of the planter. Used in pairs or around the planter, with the feet pointing inwards."],
+  lightSubHex: ["img/lightweight-substrate-hex.jpg", "Hexagonal module filled with lightweight substrate: LECA, pumice, perlite and scoria."],
+  lightSubOct: ["img/lightweight-substrate-oct.jpg", "Octagonal module filled with lightweight substrate: LECA, pumice, perlite and scoria."],
+  hexForest: ["img/hex-forest.jpg", "Floating forest on hexagonal modules with perimeter floats: modules joined edge to edge, trees spreading their roots over the substrate."],
+  hexComm: ["img/hex-community.jpg", "Hexagonal modules at community scale: mangroves and a seedling nursery, a boardwalk from the shore to a fishing deck, fish pens in open modules and a moored fish-aggregating device."],
+  hexCommPool: ["img/hex-community-pool.jpg", "Hexagonal modules at community scale: a walkway from the shore, mangroves and a nursery, a swimming pool and fish pens in open modules, a fishing deck with a boat landing, and a moored fish-aggregating device."],
+  commParkPool: ["img/community-park-pool.jpg", "Community floating mangrove park: a boardwalk from the shore through mature mangroves, open ponds with fish, a swimming pool with a shaded seating deck, a fishing spot and a kayak landing."],
+  commSunset: ["img/community-sunset.jpg", "Community floating mangrove park at sunset: a boardwalk from the village, a mangrove ring around an open pond, a seedling nursery, fish pens, a swimming pool, a fishing spot, a kayak landing and a moored fish-aggregating device."],
+  resortSunset: ["img/resort-sunset2.jpg", "Island resort at sunset: overwater villas along a mangrove-lined boardwalk, a pool deck, and a mangrove ring around a lagoon with turtles and wading birds, with kayaks and paddleboards around it."],
+  commSunset2: ["img/community-sunset-bridge.jpg", "Community floating mangrove park at sunset: a footbridge across the mangrove-ringed pond, a seedling nursery, fish pens, a swimming pool, a fishing spot and a kayak landing, linked to the village by a boardwalk."],
+  commBamboo: ["img/community-bamboo.jpg", "Low-cost community version: bamboo rafts lashed together, with a mangrove nursery, fish pens, a mangrove-ringed pond, a swimming enclosure and a kayak landing, linked to the village by a bamboo walkway."],
+  commBambooSolar: ["img/community-bamboo-solar.jpg", "Low-cost community version with power: bamboo rafts with a floating solar array and battery box, a mangrove nursery, fish pens, a mangrove-ringed pond, a swimming enclosure and a kayak landing."],
+  commBambooVillage: ["img/community-bamboo-village.jpg", "Low-cost community version at village scale: bamboo rafts with a floating solar array, mangrove nurseries tended by villagers, fish pens, a mangrove-ringed pond, a swimming enclosure, a thatched meeting shelter, a fishing deck and a boat and kayak landing."],
+  tMarinaPrivate: ["img/marina-private-jetties.jpg", "Greening private waterfront jetties, before and after: floating mangrove planters fill the gaps between the private pontoons along the seawall."],
+  tMarinaPlan: ["img/marina-aerial-plan.jpg", "Greening a whole marina from above, before and after: floating mangrove strips line the basin edges, sit between the pontoon fingers and ring the central island."],
+  pmpWalk: ["img/pmp-boardwalk.jpg", "Straight path–mangroves–path jetty: two boardwalks either side of a central mangrove strip, with kayak landings off the outer edges."],
+  cluster: ["img/module-cluster.jpg", "Cluster of self-buoyant planting modules with perimeter floats and no internal buoyancy, joined into a small floating mangrove island."],
+  smallHex: ["img/small-hex-forest.jpg", "Small hexagonal modules joined into a floating forest: each tree spreads its canopy and roots over several modules."],
+  smallHexOne: ["img/small-hex-one-tree.jpg", "One mangrove planted in a small hexagonal module, with its roots spreading across the neighbouring modules."],
+  smallOct: ["img/small-oct-forest.jpg", "Small octagonal modules joined into a floating forest: each tree spreads its canopy and roots over several modules."],
+  smallOctForest: ["img/small-oct-forest-wide.jpg", "Floating forest on small octagonal modules: one tree per group of modules, roots spreading over the substrate, with square gaps between the octagons."],
+  smallOctComm: ["img/small-oct-community.jpg", "Small octagonal modules at community scale: mangroves and a seedling nursery, a boardwalk from the shore to a fishing deck, fish pens in open modules and a moored fish-aggregating device."],
+  smallOctTop: ["img/small-oct-top.jpg", "Top view: octagonal modules in groups of four, with one tree per group spreading its canopy and roots over all four modules."],
+  smallOctOne: ["img/small-oct-one-tree.jpg", "One mangrove spreading over three small octagonal modules: its roots grow into all three planters."],
+  smallOctJetS: ["img/small-oct-jetty-straight.jpg", "Straight mangroves–path–mangroves on octagonal modules, four across: decking over the middle, one tree per pair of modules on either side."],
+  smallOctJetC: ["img/small-oct-jetty-curved.jpg", "Curved path on the same octagonal modules: the decking curves between the trees, four modules across."],
+  wideFloat: ["img/wide-float.jpg", "A single wide pontoon float: the wide floats carry the planter and double as the outer paths."],
+  mdsWide: ["img/mds-wide-floats.jpg", "Wide-float module: float paths either side of a 2.0 m planter."],
+  nPerim: ["img/floats-around.jpg", "Option 1: narrow deep perimeter floats around the planter (square module shown; hexagonal, octagonal and other polygonal modules work the same way)."],
+  nVertPair: ["img/vertical-trio.jpg", "Option 2: internal buoyancy chambers. Vertical chambers in a hexagonal module: empty, with seedlings, and with a mature tree. The chambers can provide adjustable buoyancy, as they are easily filled with water or air. More complex geometries are also possible.", "img/vertical-empty.jpg"],
+  nSmall: ["img/small-modules.jpg", "Option 3: smaller modules. One large mangrove spreads over several small modules, with narrow floats between them (Atlan-like)."],
+  nLight: ["img/lightweight-substrate.jpg", "Option 4: lightweight substrate (LECA, pumice, perlite, scoria). A lighter planter load needs less buoyancy, so the floats can be narrower."],
+  nHexPark: ["img/type-hexpark2.jpg", "Floating eco-park on hexagonal modules: mangroves around open ponds, a boardwalk through the planting and a fishing jetty.", null, "Illustration: Example of final MICI configuration"],
+  nEnd: ["img/end-result.jpg", "End result: a self-buoyant hexagonal module (left) assembled into a curved mangroves–path–mangroves promenade (right). The hexagonal modules are fully tessellated except for the small pond, and the path sits on top of them: the same modules serve as planters and as floats for the path.", null, "Illustration: Example of final MICI configuration"],
+  nHoriz: ["img/horizontal-trio.jpg", "Option 2: internal buoyancy chambers. Horizontal chambers (Biomatrix style) at water level in a hexagonal module: empty, with seedlings, and with a mature tree.", "img/horizontal-empty.jpg"],
+  wideRetrofit: ["img/wide-retrofit.jpg", "Retrofit: small non-buoyant mangrove planters attached to the sides of a wide-float pontoon turn a pontoon with a small planting area-to-path ratio into mangroves–path–mangroves. The planters do not need to be large, because the roots can grow out of them into the surrounding water. Less substrate means less buoyancy is needed."],
+  lightSub: ["img/lightweight-substrate.jpg", "Lightweight substrate in the planter: LECA, pumice, perlite and scoria."],
+  tResortBefore: ["img/type-image1.jpg", "Resort overwater villas before and after: mangroves added along the walkway."],
+  tParkRing: ["img/type-image2.jpg", "Floating eco-park with a ring-shaped mangrove walkway and kayak access."],
+  tParkPair: ["img/type-image3.jpg", "Resort jetty with a mangrove island, ring pond and kayak landing."],
+  tHexPark: ["img/type-hexpark2.jpg", "Floating eco-park on hexagonal modules: mangroves around open ponds, a boardwalk through the planting and a fishing jetty."],
+  tCommMain: ["img/type-community.jpg", "Community-driven MICI: bamboo mangrove nursery rafts, oyster farming, a community boat landing, and a submerged reef-ball breakwater below."],
+  tJetty: ["img/type-jetty.jpg", "Linear floating jetty with mangrove planters attached along both sides of the walkway; fishing and water access from the edge."],
+  jRetro: ["img/jetty-retrofit.jpg", "Wide-float jetty with small non-buoyant mangrove planters attached along the edge. The planters can be small because the roots grow out of them into the water."],
+  jNarrow: ["img/jetty-narrow.jpg", "Narrow-float hexagonal planting modules along both edges of the jetty, with the path running down the middle."],
+  jNarrowC: ["img/jetty-narrow-curved.jpg", "Curved jetty: narrow-float hexagonal planting modules along both edges, with the path curving through and a circular lookout."],
+  jRetroC: ["img/jetty-retrofit-curved.jpg", "Curved wide-float jetty with small non-buoyant mangrove planters attached along the edges, around a central pond."],
+  jPmpC: ["img/jetty-pmp-curved.jpg", "Curved path–mangroves–path jetty: mangroves along the centre, wide float paths on both outer edges with kayak landings, steps to the water and fishing spots."],
+  jPmpC2: ["img/jetty-pmp-curved3.jpg", "Curved path–mangroves–path jetty: a central mangrove strip between two float paths, with kayak landings and fishing spots on the outer edges."],
+  jPmpS: ["img/jetty-pmp-straight2.jpg", "Straight path–mangroves–path jetty: mangroves down the centre between two float paths, with kayak landings and fishing spots on the outer edges."],
+  jPmpNarrow: [null, "Narrow floats along the outer edges with the path deck overhanging the floats and/or the planter edge. Image to come."],
+  tCommHex: ["img/type-community-hex.jpg", "Community-scale floating platform on hexagonal modules: mature mangroves and a nursery of seedlings, a boardwalk to a fishing deck, fish pens in open modules and a moored fish-aggregating raft."],
+  tCommNursery: ["img/type-image4.jpg", "Community-scale mangrove rafts: simple structures, sustainable materials."],
+  tCommLanding: ["img/type-image5.jpg", "Community boat landing and walkway with mangrove planters."],
+  tMarina2: ["img/type-marina3.jpg", "Greening a marina island, before and after: floating mangrove planters line the revetment, with a raised boardwalk and lookouts through the planting."],
+  tMarina: ["img/type-marina-aerial.jpg", "Greening a marina, before and after: mangrove pontoons fill the empty gap between the curved pontoon and the island dock, and line an unused berth."],
+  mds: ["img/mds-two-floats.jpg", "Narrower floats either side of the 2 m × 2 m mesh planter: more planting area, less buoyancy per float."],
+  around: ["img/floats-around.jpg", "Additional floats around the planter, so each float can be narrower."],
+  octMature: ["img/oct-chambers-mature.jpg", "Self-buoyant octagonal module with buoyancy chambers, mature tree."],
+  vEmpty: ["img/vertical-empty.jpg", "Vertical buoyancy chambers inside the planter, before filling."],
+  vSeed: ["img/vertical-seedlings.jpg", "Vertical chambers with substrate and seedlings planted between them."],
+  vMature: ["img/vertical-mature.jpg", "Vertical chambers, mature tree with roots spreading around the chambers."],
+  hEmpty: ["img/horizontal-empty.jpg", "Horizontal buoyancy chambers (Biomatrix style) at water level, before filling."],
+  hSeed: ["img/horizontal-seedlings.jpg", "Horizontal chambers with substrate and seedlings."],
+  hMature: ["img/horizontal-mature.jpg", "Horizontal chambers, mature tree with roots spreading over the substrate."],
+  resort: ["img/eco-resort.jpg", "Eco-resort configuration: octagonal planters set into a deck network with pools."],
+  hex: ["img/hex-module.jpg", "Self-buoyant hexagonal module with perforated walls: planting runs to the module edge."],
+  prom: ["img/promenade.jpg", "Curved mangroves–path–mangroves promenade. The path sits on top of fully tessellated hexagonal modules (except for the small pond), which act as floats for the path."]
+};
+
+const ALL_STEPS = [
+  {
+    id: "config", short: "Configuration",
+    title: "Configuration",
+    q: "What type of MICI is desired?",
+    why: "The configuration sets the scale, the materials, the human uses and how demanding the design and approvals will be. Other ideas are welcome.",
+    frame: "Choose by need",
+    cols: ["Best for", "Design considerations"],
+    tradeoff: "Pick the configuration that matches what the client needs: its purpose, its users, its budget and how long it must last.",
+    options: [
+      { id: "linear", label: "Linear or curved floating jetty", sub: "Marina, walkway or floating-jetty concept: a boardwalk you walk along, with mangroves attached, for example mangroves in the middle with the path split in two.", imgs: ["prom", "tJetty"],
+        gains: ["Marinas, waterfront promenades and floating jetties", "Clients who need a walkway to or along the water", "A familiar marina-style structure that can be extended in length", "Keeping access to the water when the paths are on the outside"],
+        costs: ["Long runs bend in waves of similar length, so connections need care", "Pedestrian live load governs the walkway modules", "Materials matched to exposure and design life"],
+        notes: [["logic", "Materials: concrete for longer design life and more exposed locations; HDPE modules (larger than 0.5 m × 0.5 m × 0.5 m cubes, at least one mangrove per module); or PU."], ["logic", "Supplier references: Marine Dock Systems, supplier of the quoted MDS module; Marine Structures and Superior Industrial (marinestructures.com.au), with projects in Fiji (Denarau, Yasawa) and Australia."]] },
+      { id: "park", label: "Floating eco-park or island resort", sub: "A recreational floating park within a resort, in any shape (hexagonal, octagonal, circular, heart-shaped), with tourism and human-use amenities.", imgs: ["resortSunset", "tHexPark", "tParkRing", "tParkPair", "tResortBefore", "resort", "hexForest"],
+        gains: ["Resorts, tourism operators and eco-parks", "Recreation, education and visitor amenities: kayak and boat landing, swimming pool, water park", "Any shape that suits the site or the concept", "Projects that need strong visitor and funding appeal"],
+        costs: ["Largest, most complex structure, with several module types", "Planting-dominated, so narrow floats are needed", "Large deck areas and crowds make live load and stability govern", "Benefits go mainly to resort owners and visitors"],
+        notes: [["rule", "Keep ecological claims proportionate to the planted area: habitat mimicry, not restoration."]] },
+      { id: "community", label: "Community-driven structure", sub: "Smaller and structurally simpler: piles or posts and/or a submerged breakwater (reclaimed material, reef balls, geobags or similar) with mangroves growing on it, combined with aquaculture, fishing or boat landing.", imgs: ["commBambooVillage", "commParkPool", "commSunset", "commSunset2", "commBamboo", "commBambooSolar", "hexCommPool", "tCommMain", "tCommNursery", "tCommLanding", "tCommHex"],
+        gains: ["Local communities rather than resort owners", "Mangrove nurseries, oyster farming, fishing and boat landing", "Low budgets and quicker approval (UNESCO-aligned, sustainable, low danger if destroyed in a cyclone)"],
+        costs: ["Designed for a smaller extreme storm event (ARI): shorter design life, may need rebuilding after a cyclone", "Fixed or submerged structures depend on suitable seabed and water depth", "Sustainable, biodegradable, inexpensive materials", "Less human-use space than a floating park"],
+        notes: [["logic", "Cheaper, more sustainable and temporary variant: low-cost rafts with a bamboo or timber frame on recycled floats and coir or jute planter bags, built and repaired locally (see Float shape)."], ["logic", "Variant: artificial atoll-like structures made of submerged breakwaters (rocks, artificial reef, reef balls, geobags) with mangroves growing on them, combined with aquaculture."], ["open", "Other ideas that would help local communities are welcome."]] },
+      { id: "marina", label: "\"Green the whole marina\"", sub: "Planting the spaces marinas already have, for example the currently empty gap between pontoon and dock.", imgs: ["tMarina2", "tMarina", "tMarinaPrivate", "tMarinaPlan"],
+        gains: ["Existing marinas with unused water that is otherwise wasted: gaps between pontoon and dock, unused berths, revetments", "Operators who want greening without losing berths", "Sheltered water with existing structures to attach to"],
+        costs: ["Must fit around existing pontoons, piles and vessel movements", "Needs the marina operator on board", "Planter size limited by gap width"],
+        notes: [] }
+    ]
+  },
+  {
+    id: "jettyLayout", short: "Jetty layout", when: () => has("config", "linear"),
+    title: "Jetty layout",
+    q: "Where should the mangroves sit relative to the path?",
+    why: "This decides whether people on the jetty can reach the water.",
+    versus: ["Planting on the edges", "Water access"],
+    tradeoff: "Mangroves on the outside edges give continuous planting but block access to the water; paths on the outside keep the water accessible.",
+    options: [
+      { id: "mpm", label: "mangroves–path–mangroves", sub: "Path in the middle, mangroves along both outside edges.", imgs: ["tJetty", "prom"],
+        gains: ["Continuous planting and shade on both sides of the walkway", "Strongest visual and ecological result for a jetty"],
+        costs: ["Little or no access to the water from the path: no kayak or boat landing, berthing or fishing unless dedicated landing modules are added"],
+        notes: [["logic", "Achievable with narrow-float planting modules, or by attaching small non-buoyant planters to a wide-float pontoon (retrofit)."]] },
+      { id: "pmp", label: "path–mangroves–path", sub: "Mangroves in the middle, paths along both outside edges.", imgs: ["pmpWalk", "jPmpC", "mdsWide"],
+        gains: ["Paths on the outside edges give direct access to the water: kayak and small-boat landing, berthing, fishing", "Works with the current MDS module: the wide floats are the paths", "No extra buoyancy needed: the floats can be wide and the substrate can be heavy (gravel, sand or mud)"],
+        costs: ["Lower planting share; mangroves only along the centre line"], notes: [] }
+    ]
+  },
+  {
+    id: "jettyShape", short: "Jetty shape", when: () => has("config", "linear"),
+    ctx: [{ when: () => has("jettyLayout", "pmp"), options: { curved: { imgs: ["jPmpC", "jPmpC2"] }, straight: { imgs: ["pmpWalk", "jPmpS"] } } }],
+    title: "Jetty shape",
+    q: "Should the jetty be straight or curved?",
+    why: "The jetty's shape affects module geometry, connections and how the structure responds to waves.",
+    tradeoff: "Simplicity and ease of extension against visual interest and fit to the site.",
+    options: [
+      { id: "straight", label: "Straight", sub: "A linear run of modules.", imgs: ["tJetty"],
+        gains: ["Simplest connections and fabrication; rectangular modules work directly", "Easy to extend in length", "Predictable load paths"],
+        costs: ["Long straight runs see bending from waves of similar length, so joints need articulation", "Less visual interest"], notes: [] },
+      { id: "curved", label: "Curved", sub: "A curving promenade that can follow the shoreline or frame views.", imgs: ["prom"],
+        gains: ["Stronger visual and amenity value", "Can follow the shoreline or wrap around features"],
+        costs: ["More complex geometry and angled connections", "Connector loads vary along the curve"],
+        notes: [["rule", "Curvature belongs in the deck and path layer, not the float layer: polygonal modules (for example hexagonal) can form the curve."]] }
+    ]
+  },
+  {
+    id: "limits", short: "Limits", multi: true, exclusive: "none",
+    title: "Constraints",
+    q: "Is anything off the table?",
+    why: "These limits decide which ways of replacing float buoyancy survive. The spec asks to minimise plastic and avoid materials that leach or shed microplastics.",
+    tradeoff: "Every limit removes float solutions. \"Minimise plastic\" and \"No lightweight substrate\" cannot be combined: lightweight substrate is currently the only way to truly minimise plastic. Internal buoyancy compartments help only partly: they replace heavy substrate with air so the main floats can be smaller, but the compartments are plastic themselves.",
+    options: [
+      { id: "minplastic", blockedBy: { limits: "nolight", reason: "Not possible together with \"No lightweight substrate\": lightweight substrate is currently the only way to truly minimise plastic. Internal compartments help only partly: they replace heavy substrate with air so the floats can be smaller, but are plastic themselves." }, label: "Minimise plastic", sub: "Prefer options that do not add plastic volume.", imgs: [],
+        gains: ["Lower leaching and microplastic risk", "Lower material cost"],
+        costs: ["Rules out extra floats and smaller planters, which add plastic comparable to the large floats; internal chambers reduce plastic only indirectly, by making the planter lighter", "Leaves lighter substrate as the main route to a high planting ratio"], notes: [] },
+      { id: "noroot", label: "No inside-planter buoyancy compartments", sub: "Keep buoyancy chambers out of the planter.", imgs: [],
+        gains: ["Unrestricted root space", "Simpler planting and substrate replacement"],
+        costs: ["Rules out vertical, horizontal and more complex internal buoyancy compartments", "No internal support for pedestrians on the planting surface"], notes: [] },
+      { id: "nolight", blockedBy: { limits: "minplastic", reason: "Not possible together with \"Minimise plastic\": lightweight substrate is currently the only way to truly minimise plastic. Internal compartments help only partly: they replace heavy substrate with air so the floats can be smaller, but are plastic themselves." }, label: "No lightweight substrate", sub: "Must work with gravel, sand or mud.", imgs: [],
+        gains: ["Any local substrate can be used"],
+        costs: ["Heavy load must be carried by floats or chambers, which means more plastic", "Rules out the only plastic-free buoyancy route"], notes: [] },
+      { id: "none", label: "No restrictions", sub: "All options stay open.", imgs: [],
+        gains: ["Widest choice of solutions"], costs: ["Plastic use and root restriction then need to be weighed per option"], notes: [] }
+    ]
+  },
+  {
+    id: "ratio", short: "Float shape",
+    ctx: [{
+      when: () => has("config", "linear") && has("jettyLayout", "mpm") && has("jettyShape", "curved"),
+      q: "Which floats should carry the mangroves along the jetty edges?",
+      why: "The options are the float types from the Float calculator. Pick one here, then size it in the calculator to get the widths, freeboard and planting ratio.",
+      versus: null,
+      frame: "Float shape",
+      tradeoff: "Wide parallel floats keep a standard, proven pontoon with small planters attached. Perimeter and stepped floats give continuous planting along the edges, but the buoyancy has to come from narrow floats around or under the planter. Hexagons follow a curve most easily.",
+      list: [
+        { id: "pairRetro", label: "Wide floats + small non-buoyant planters attached", sub: "A standard wide-float pontoon forms the path; small planters are attached along both sides (retrofit). Calculator: square – two parallel floats + non-buoyant planters.", imgs: ["jRetroC", "jRetro"], calc: { rem: "pair", shape: "square", side: 0.8, sideD: 0.4, label: "Square – two parallel floats + non-buoyant planters on both sides" },
+          gains: ["Uses a standard, proven wide-float pontoon as the path", "Can retrofit an existing jetty", "Planters can be small because the roots grow out of them into the water"],
+          costs: ["The attached planters add load that the main floats must carry", "Edges with planters lose access to the water", "Square modules follow a curve only through angled joints or the deck layer"],
+          notes: [["logic", "Lightweight substrate in the attached planters reduces the load on the main floats."]] },
+        { id: "sqRing", label: "Narrow floats: square – perimeter floats", sub: "Square planting modules with narrow floats on all four sides.", imgs: ["nPerim"], calc: { rem: "ring", shape: "square", label: "Square – perimeter floats" },
+          gains: ["Simplest planting module to fabricate and connect", "Continuous planting along both edges"],
+          costs: ["Square modules leave wedge-shaped gaps on a curve", "Two module types: planting modules and path modules"], notes: [] },
+        { id: "hexRing", label: "Narrow floats: hexagonal – perimeter floats", sub: "Self-buoyant hexagonal planting modules along both edges.", custom: true, imgs: ["jNarrowC", "nEnd", "hex", "hexComm", "hexCommPool"], calc: { rem: "ring", shape: "hex", label: "Hexagonal – perimeter floats" },
+          gains: ["Hexagons tessellate and follow a curve without infill", "Buoyancy spread around the whole perimeter", "Continuous planting along both edges"],
+          costs: ["Six connection faces to detail and maintain", "Zig-zag edges along the path"], notes: [] },
+        { id: "octRing", label: "Narrow floats: octagonal – perimeter floats", sub: "Octagonal planting modules with deck or square infill between.", imgs: ["smallOctJetS", "smallOctJetC", "octMature", "resort"], calc: { rem: "ring", shape: "oct", label: "Octagonal – perimeter floats" },
+          gains: ["Infill spaces become decks, lookouts or ponds", "Buoyancy spread around the whole perimeter"],
+          costs: ["Does not tessellate alone: needs a second infill module type", "Two moulds or fabrications"], notes: [] },
+        { id: "sqStep", label: "Narrow floats: square – stepped (L) floats", sub: "Narrow at the surface, with a foot under the edge of the planter.", custom: true, thumbFit: "contain", imgs: ["lFloat"], calc: { rem: "step", shape: "square", label: "Square – stepped (L) floats" },
+          gains: ["Narrow at the waterline, so more of the surface is planting", "The foot keeps buoyancy that a plain narrow float would lose"],
+          costs: ["Risk of low or negative roll stability: narrow waterline, high centre of gravity (check GM > 0)", "The foot takes up part of the space below the planter", "Square modules leave wedge-shaped gaps on a curve"], notes: [["rule", "Stability: the metacentre M must stay above the centre of gravity G (metacentric height GM = KB + BM − KG > 0), otherwise the module capsizes. Stepped (L) floats are risky here: they are narrow at the waterline, so the waterplane and therefore BM = I/V are small, while the heavy substrate and the tree keep G high. GM can become small or negative, so check GM in the Float calculator before choosing them."]] },
+        { id: "hexStep", label: "Narrow floats: hexagonal – stepped (L) floats", sub: "Hexagonal modules with stepped floats; can be combined with MastaVault soil cells.", custom: true, thumbFit: "contain", imgs: ["lFloat"], calc: { rem: "step", shape: "hex", label: "Hexagonal – stepped (L) floats" },
+          gains: ["Narrow at the waterline and follows a curve without infill", "The foot keeps buoyancy that a plain narrow float would lose"],
+          costs: ["Risk of low or negative roll stability: narrow waterline, high centre of gravity (check GM > 0)", "The foot takes up part of the space below the planter", "Most complex float geometry to fabricate"], notes: [["rule", "Stability: the metacentre M must stay above the centre of gravity G (metacentric height GM = KB + BM − KG > 0), otherwise the module capsizes. Stepped (L) floats are risky here: they are narrow at the waterline, so the waterplane and therefore BM = I/V are small, while the heavy substrate and the tree keep G high. GM can become small or negative, so check GM in the Float calculator before choosing them."]] },
+        { id: "octStep", label: "Narrow floats: octagonal – stepped (L) floats", sub: "Octagonal modules with stepped floats and deck or square infill between.", custom: true, thumbFit: "contain", imgs: ["lFloat"], calc: { rem: "step", shape: "oct", label: "Octagonal – stepped (L) floats" },
+          gains: ["Narrow at the waterline", "Infill spaces become decks, lookouts or ponds"],
+          costs: ["Risk of low or negative roll stability: narrow waterline, high centre of gravity (check GM > 0)", "Needs a second infill module type", "The foot takes up part of the space below the planter"], notes: [["rule", "Stability: the metacentre M must stay above the centre of gravity G (metacentric height GM = KB + BM − KG > 0), otherwise the module capsizes. Stepped (L) floats are risky here: they are narrow at the waterline, so the waterplane and therefore BM = I/V are small, while the heavy substrate and the tree keep G high. GM can become small or negative, so check GM in the Float calculator before choosing them."]] },
+        { id: "smallHex", draw: true, drawShape: "hex", label: "Hexagonal multimodule: one tree over several modules", sub: "Small hexagonal planters with narrow floats between; each tree spreads its canopy and roots over three to four modules.", custom: true, thumbFit: "contain", imgs: ["smallHex", "smallHexOne", "nSmall"],
+          gains: ["Narrow floats between small modules", "Continuous canopy: each tree spreads over three to four modules", "Hexagons follow a curve easily", "Small, light modules that are easy to handle and replace"],
+          costs: ["More modules and connections per tree", "More plastic per planted area", "Floats run under the tree, so roots are split between planters"],
+          notes: [] },
+        { id: "smallOct", draw: true, drawShape: "oct", jetty: true, custom: true, label: "Octagonal multimodule: one tree over several modules", sub: "Groups of four small octagonal modules per tree. The middle row can carry the path, with decking on the substrate and/or FRP mesh, for mangroves–path–mangroves, straight or curved.", custom: true, thumbFit: "contain", imgs: ["smallOctTop", "smallOctOne", "smallOctForest", "smallOctComm"],
+          gains: ["Easy mangroves–path–mangroves: the path runs over the middle row of modules", "Works for straight and curved jetties", "Continuous canopy: each tree spreads over about four modules", "Small, light modules that are easy to handle and replace"],
+          costs: ["More modules and connections per tree", "Decking or FRP mesh over planted modules must allow for root and stem growth", "Further design development beyond the quoted MDS module"],
+          notes: [["logic", "Also works for a straight or curved jetty: run the path down the middle row of modules, with decking on top of the substrate and/or FRP mesh everywhere else, for an easy mangroves–path–mangroves layout."]]}
+      ]
+    }, {
+      when: () => has("config", "linear") && has("jettyLayout", "mpm"),
+      q: "How should the mangroves along the jetty edges be supported?",
+      why: "A mangroves–path–mangroves jetty can be built in two ways: with narrow-float planting modules along the edges, or with a wide-float pontoon as the path and small planters attached to its sides.",
+      versus: null,
+      frame: "Float shape",
+      tradeoff: "Narrow floats give continuous planting but the lost buoyancy must be made up. Wide floats keep a standard, proven pontoon, but the attached planters add load to the main floats.",
+      options: {
+        ring: { label: "Narrow floats: planting modules along both edges", sub: "Self-buoyant planting modules form the outside edges; path modules sit in the middle.", thumb: null, imgs: ["jNarrow"],
+          gains: ["Continuous planting along both edges", "Planting modules carry their own buoyancy, independent of the path", "Larger root zones than attached planters"],
+          costs: ["Buoyancy lost by narrowing the floats must be made up (next question)", "Two module types: planting modules and path modules", "No access to the water from the path unless landing modules are added"],
+          notes: [] },
+        pair: { label: "Wide floats + small non-buoyant planters attached", sub: "A standard wide-float pontoon forms the path; small planters are attached along both sides (retrofit).", imgs: ["jRetro", "wideRetrofit"],
+          calc: { rem: "pair", shape: "square", side: 0.8, sideD: 0.4, label: "Square – two parallel floats + non-buoyant planters on both sides" },
+          gains: ["Uses a standard, proven wide-float pontoon as the path", "Can retrofit an existing jetty", "Planters can be small because the roots grow out of them into the water, so less substrate is needed"],
+          costs: ["The attached planters add load that the main floats must carry", "Edges with planters lose access to the water", "Planter attachments need to be designed for wave and wind loads"],
+          notes: [["logic", "Lightweight substrate in the attached planters reduces the load on the main floats."]] }
+      }
+    }, {
+      when: () => has("config", "linear") && has("jettyLayout", "pmp") && has("jettyShape", "curved"),
+      q: "How should the central mangroves and the outer paths be supported?",
+      why: "In a path–mangroves–path jetty the paths run along the outside edges, so they stay close to the water for landings and fishing. The question is whether the paths sit on the main floats or on separate walkway modules.",
+      versus: null,
+      frame: "Float shape",
+      tradeoff: "Wide floats double as the outer paths and carry heavy substrate with no extra buoyancy. Narrow floats give the centre more planting; the outer paths can still sit on them, with the deck overhanging the float and/or the edge of the planter next to it.",
+      options: {
+        pair: { calc: { rem: "pair", shape: "square", path: true, label: "Square – two parallel floats" }, label: "Wide floats: the floats are the outer paths", sub: "Current MDS module: 1.2 m float path | 2.0 m planter | 1.2 m float path.", thumbFit: "contain", imgs: ["wideFloat", "mdsWide"],
+          gains: ["No extra buoyancy needed: the floats can be wide and the substrate can be heavy (gravel, sand or mud)", "Outer paths give direct access to the water: kayak and small-boat landing, steps to the water, fishing", "Already designed and quoted"],
+          costs: ["Planting is about 45% of the module width", "Mangroves only along the centre line"], notes: [] },
+        ring: { calc: { rem: "ring", shape: "square", path: true, label: "Square – perimeter floats" }, label: "Narrow rectangular floats: path overhanging the floats", sub: "Narrow rectangular floats along the outer edges carry the paths. The deck can be wider than the float, overhanging it and/or the edge of the planter next to it. Separate walkway modules are an alternative.", thumb: "img/narrow-float.jpg", thumbFit: "contain", imgs: ["narrowFloat"],
+          gains: ["More planting area in the centre", "Outer paths with water access are kept: the path can be wider than the float", "No separate walkway modules needed"],
+          costs: ["Buoyancy lost by narrowing the floats must be made up (next question)", "An overhanging deck needs brackets or a frame, and its load sits off the float centre line, so check heel under pedestrian load", "Overhanging the planter edge shades part of the planting", "More design development than the quoted MDS module"], notes: [["logic", "The narrow rectangular floats can be two parallel floats, one under each path, or four perimeter floats around the planter."], ["logic", "path–mangroves–path is possible with narrow floats: the path does not have to be as narrow as the float."]] }
+      }
+    }, {
+      when: () => has("config", "linear") && has("jettyLayout", "pmp"),
+      q: "How should the central mangroves and the outer paths be supported?",
+      why: "In a path–mangroves–path jetty the paths run along the outside edges, so they stay close to the water for landings and fishing. The question is whether the paths sit on the main floats or on separate walkway modules.",
+      versus: null,
+      frame: "Float shape",
+      tradeoff: "Wide floats double as the outer paths and carry heavy substrate with no extra buoyancy. Narrow floats give the centre more planting; the outer paths can still sit on them, with the deck overhanging the float and/or the edge of the planter next to it.",
+      options: {
+        pair: { calc: { rem: "pair", shape: "square", path: true, label: "Square – two parallel floats" }, label: "Wide floats: the floats are the outer paths", sub: "Current MDS module: 1.2 m float path | 2.0 m planter | 1.2 m float path.", imgs: ["jPmpS", "mdsWide"],
+          gains: ["No extra buoyancy needed: the floats can be wide and the substrate can be heavy (gravel, sand or mud)", "Outer paths give direct access to the water: kayak and small-boat landing, steps to the water, fishing", "Already designed and quoted"],
+          costs: ["Planting is about 45% of the module width", "Mangroves only along the centre line"], notes: [] },
+        ring: { calc: { rem: "ring", shape: "square", path: true, label: "Square – perimeter floats" }, label: "Narrow rectangular floats: path overhanging the floats", sub: "Narrow rectangular floats along the outer edges carry the paths. The deck can be wider than the float, overhanging it and/or the edge of the planter next to it. Separate walkway modules are an alternative.", thumb: "img/narrow-float.jpg", thumbFit: "contain", imgs: ["narrowFloat"],
+          gains: ["More planting area in the centre", "Outer paths with water access are kept: the path can be wider than the float", "No separate walkway modules needed"],
+          costs: ["Buoyancy lost by narrowing the floats must be made up (next question)", "An overhanging deck needs brackets or a frame, and its load sits off the float centre line, so check heel under pedestrian load", "Overhanging the planter edge shades part of the planting", "More design development than the quoted MDS module"], notes: [["logic", "The narrow rectangular floats can be two parallel floats, one under each path, or four perimeter floats around the planter."], ["logic", "path–mangroves–path is possible with narrow floats: the path does not have to be as narrow as the float."]] }
+      }
+    }],
+    title: "Float shape",
+    q: "Which float shape should carry the planter?",
+    why: "The float shape sets how much buoyancy the module has, how much of the module is planting and how much is path, and whether the paths sit on the floats. Each module must float at least one 4 m tree in a 2 m × 2 m root zone about 0.4–0.5 m deep. Choose a shape here, then size it in the Float calculator tab.",
+    versus: ["Planting area", "Float & path area"],
+    tradeoff: "Wide parallel floats give buoyancy and outside paths with water access, but take planting area. The other shapes free planting area by moving the buoyancy elsewhere (around the planter, under it, or into a stepped foot), and their dimensions follow from the calculator.",
+    options: [
+      { id: "lowcost", onlyIf: () => has("config", "community"), label: "Low-cost raft: bamboo or timber frame on recycled floats", sub: "Cheaper, more sustainable and temporary: a bamboo or timber frame on recycled drums or sealed bottles, with coir or jute planter bags. Built and repaired locally.", imgs: ["commBamboo", "tCommNursery"],
+        gains: ["Low cost, local and largely biodegradable materials", "Built, repaired and moved by the community without specialist equipment", "Suits nurseries, pilots and seasonal use: seedlings can be moved to the shore once established"],
+        costs: ["Temporary: bamboo, timber and natural-fibre bags degrade and need regular replacement", "Recycled floats vary in size and condition, so buoyancy is less predictable", "Lower wave and storm resistance: move to shelter or remove before cyclones", "Not for mature trees or heavy human use"],
+        notes: [["logic", "Use recycled floats that are clean, sealed and food-grade where possible, and recover them at the end of life so they do not become marine debris."]] },
+      { id: "pair", blockedBy: { config: "park", reason: "Not suitable for a floating eco-park: wide float paths leave too little planting area. Choose another float shape." }, label: "Two wide parallel floats", sub: "1.2 m float path | 2.0 m planter | 1.2 m float path (current MDS). Suits kayak and boat landings, and anything else that needs a path on the outside edge.", imgs: ["mdsWide", "wideRetrofit"], calc: { rem: "pair", label: "Two parallel floats" },
+        gains: ["Two layouts from one module: path–mangroves–path, with kayak and boat landings and access to the water, or mangroves–path–mangroves by attaching small non-buoyant mangrove planters to the sides of the pontoon (a retrofit option)", "The floats double as wide walkways along both edges", "Paths on the outside edges give direct access to the water: kayak and small-boat landings, berthing, fishing, swimming access, sampling and monitoring from the edge", "More freedom of substrate: 2,000 L floats can support a planter filled with gravel, sand or mud, with no need for extra plastic in the planter or specialist lightweight substrate", "Already designed and quoted"],
+        costs: ["Planting is about 45% of the module width (2.0 of 4.4 m)", "Modules side by side give alternating 2.4 m deck strips and 2 m planting strips, so no continuous forest", "Less root habitat per square metre of pontoon"],
+        notes: [["logic", "Tiled side by side the result is striped, not a chessboard: each planter sits between two float strips, and neighbouring strips merge."], ["spec", "Boat landing adds berthing loads, which the mooring and connections must resist (spec 1.5)."]] },
+      { id: "ring", label: "Square module with perimeter floats", sub: "Narrow floats on all four sides of a square planter.", thumb: "img/narrow-perimeter.jpg", imgs: ["nPerim"], calc: { rem: "ring", shape: "square", label: "Perimeter floats" },
+        gains: ["Each float can be narrow, so planters sit close together and canopy and root zone can be continuous", "Floating forest and mangroves–path–mangroves layouts become possible", "Works with square, hexagonal and octagonal modules"],
+        costs: ["Mangroves line the outside edges, so there is little or no access to the water unless dedicated access modules are added", "A narrower waterplane reduces stability under uneven pedestrian loads", "Further design development beyond the quoted MDS module"],
+        notes: [["logic", "Where two modules meet, their perimeter floats sit side by side and together form a wider path."]] },
+      { id: "hexRing", label: "Hexagonal module with perimeter floats", sub: "Self-buoyant hexagonal planting module with narrow floats on all six sides.", custom: true, imgs: ["hex", "jNarrowC", "mv1", "mv2", "mv3", "hexComm", "hexCommPool"], calc: { rem: "ring", shape: "hex", label: "Hexagonal – perimeter floats" },
+        calcVariants: [
+          { short: "Perimeter floats only", rem: "ring", shape: "hex", label: "Hexagonal – perimeter floats" },
+          { short: "+ horizontal pipes", rem: "ring", shape: "hex", nh: 6, label: "Hexagonal – perimeter floats + horizontal pipes" },
+          { short: "+ vertical pipes", rem: "ring", shape: "hex", nv: 12, label: "Hexagonal – perimeter floats + vertical pipes" },
+          { short: "+ MastaVault soil cells", rem: "ring", shape: "hex", cells: 40, label: "Hexagonal – perimeter floats + MastaVault soil cells" },
+          { short: "Stepped (L) floats + MastaVault", rem: "step", shape: "hex", wt: 0.2, wb: 0.6, cells: 40, label: "Hexagonal – stepped (L) floats + MastaVault" }
+        ],
+        gains: ["Hexagons tessellate in two directions without infill and follow a curve", "Buoyancy spread around the whole perimeter", "Planting can be continuous across modules"],
+        costs: ["Six connection faces to detail and maintain", "Zig-zag edges along straight paths", "Further design development beyond the quoted MDS module"], notes: [] },
+      { id: "octRing", label: "Octagonal module with perimeter floats", sub: "Octagonal planting modules with narrow floats on all eight sides, and deck or square infill between.", custom: true, imgs: ["smallOctJetS", "smallOctJetC", "octMature", "resort"], calc: { rem: "ring", shape: "oct", label: "Octagonal – perimeter floats" },
+        gains: ["Infill spaces become decks, nodes or pools", "Buoyancy spread around the whole perimeter", "Strong eco-resort look"],
+        costs: ["Does not tessellate alone: needs a second infill module type", "Two moulds or fabrications", "Further design development beyond the quoted MDS module"], notes: [] },
+      { id: "step", blockedBy: { jettyLayout: "pmp", reason: "Not suitable for path–mangroves–path: stepped (L) floats are poor for stability, and this layout prefers wide floats under the outer paths." }, label: "Square module with stepped (L) floats", sub: "Narrow at the surface, with a foot that extends under the edge of the planter.", custom: true, thumbFit: "contain", imgs: ["lFloat"], calc: { rem: "step", shape: "square", label: "Square – stepped (L) floats" },
+        gains: ["Narrow at the waterline, so more of the surface is planting", "The foot under the planter keeps buoyancy that a plain narrow float would lose", "Can be combined with soil cells (for example MastaVault)"],
+        costs: ["Risk of low or negative roll stability: narrow waterline, high centre of gravity (check GM > 0)", "The foot takes up part of the space below the planter", "More complex float geometry to fabricate", "Further design development beyond the quoted MDS module"],
+        notes: [["rule", "Stability: the metacentre M must stay above the centre of gravity G (metacentric height GM = KB + BM − KG > 0), otherwise the module capsizes. Stepped (L) floats are risky here: they are narrow at the waterline, so the waterplane and therefore BM = I/V are small, while the heavy substrate and the tree keep G high. GM can become small or negative, so check GM in the Float calculator before choosing them."], ["logic", "Set top width and bottom width in the Float calculator (All floats view)."]] },
+      { id: "hexStep", blockedBy: { jettyLayout: "pmp", reason: "Not suitable for path–mangroves–path: stepped (L) floats are poor for stability, and this layout prefers wide floats under the outer paths." }, label: "Hexagonal module with stepped (L) floats", sub: "Hexagonal modules with stepped floats; can be combined with MastaVault soil cells.", custom: true, thumbFit: "contain", imgs: ["lFloat"], calc: { rem: "step", shape: "hex", label: "Hexagonal – stepped (L) floats" },
+        gains: ["Narrow at the waterline and follows a curve without infill", "The foot keeps buoyancy that a plain narrow float would lose"],
+        costs: ["Risk of low or negative roll stability: narrow waterline, high centre of gravity (check GM > 0)", "The foot takes up part of the space below the planter", "Most complex float geometry to fabricate"], notes: [["rule", "Stability: the metacentre M must stay above the centre of gravity G (metacentric height GM = KB + BM − KG > 0), otherwise the module capsizes. Stepped (L) floats are risky here: they are narrow at the waterline, so the waterplane and therefore BM = I/V are small, while the heavy substrate and the tree keep G high. GM can become small or negative, so check GM in the Float calculator before choosing them."]] },
+      { id: "octStep", blockedBy: { jettyLayout: "pmp", reason: "Not suitable for path–mangroves–path: stepped (L) floats are poor for stability, and this layout prefers wide floats under the outer paths." }, label: "Octagonal module with stepped (L) floats", sub: "Octagonal modules with stepped floats and deck or square infill between.", custom: true, thumbFit: "contain", imgs: ["lFloat"], calc: { rem: "step", shape: "oct", label: "Octagonal – stepped (L) floats" },
+        gains: ["Narrow at the waterline", "Infill spaces become decks, lookouts or ponds"],
+        costs: ["Risk of low or negative roll stability: narrow waterline, high centre of gravity (check GM > 0)", "Needs a second infill module type", "The foot takes up part of the space below the planter"], notes: [["rule", "Stability: the metacentre M must stay above the centre of gravity G (metacentric height GM = KB + BM − KG > 0), otherwise the module capsizes. Stepped (L) floats are risky here: they are narrow at the waterline, so the waterplane and therefore BM = I/V are small, while the heavy substrate and the tree keep G high. GM can become small or negative, so check GM in the Float calculator before choosing them."]] },
+      { id: "smallHex", draw: true, drawShape: "hex", label: "Hexagonal multimodule: one tree over several modules", sub: "Small hexagonal planters with narrow floats between; each tree spreads its canopy and roots over three to four modules.", custom: true, thumbFit: "contain", imgs: ["smallHex", "smallHexOne", "nSmall"],
+        gains: ["Narrow floats between small modules", "Continuous canopy: each tree spreads over three to four modules", "Hexagons follow a curve easily", "Small, light modules that are easy to handle and replace"],
+        costs: ["More modules and connections per tree", "More plastic per planted area", "Floats run under the tree, so roots are split between planters"],
+        notes: [] },
+      { id: "smallOct", draw: true, drawShape: "oct", jetty: true, custom: true, label: "Octagonal multimodule: one tree over several modules", sub: "Groups of four small octagonal modules per tree. The middle row can carry the path, with decking on the substrate and/or FRP mesh, for mangroves–path–mangroves, straight or curved.", imgs: ["smallOctTop", "smallOctOne", "smallOctForest", "smallOctComm"],
+          gains: ["Easy mangroves–path–mangroves: the path runs over the middle row of modules", "Works for straight and curved jetties", "Continuous canopy: each tree spreads over about four modules", "Small, light modules that are easy to handle and replace"],
+          costs: ["More modules and connections per tree", "Decking or FRP mesh over planted modules must allow for root and stem growth", "Further design development beyond the quoted MDS module"],
+          notes: [["logic", "Also works for a straight or curved jetty: run the path down the middle row of modules, with decking on top of the substrate and/or FRP mesh everywhere else, for an easy mangroves–path–mangroves layout."]]}
+    ]
+  },
+  {
+    id: "buoyancy", short: "Root zone solutions", multi: true, when: () => narrowF(),
+    ctx: [{ when: () => fixedShape() === "hex", options: { lighter: { thumb: "img/lightweight-substrate-hex.jpg", thumbFit: "contain", imgs: ["lightSubHex"] }, more: { label: "Perimeter floats (hexagonal), without internal buoyancy", sub: "Narrow floats on all six sides of the hexagonal planter instead of two wide ones; no buoyancy chambers inside the planter.", thumb: null, imgs: ["hex", "cluster"] } } },
+      { when: () => fixedShape() === "oct", options: { small: { jetty: true, imgs: ["smallOctTop", "smallOctOne", "nSmall"] }, lighter: { thumb: "img/lightweight-substrate-oct.jpg", thumbFit: "contain", imgs: ["lightSubOct"] }, more: { label: "Perimeter floats (octagonal), without internal buoyancy", sub: "Narrow floats on all eight sides of the octagonal planter instead of two wide ones; no buoyancy chambers inside the planter.", thumb: null, imgs: ["octMature"] } } },
+      { when: () => fixedShape() === "rect", options: { more: { label: "Perimeter floats (square), without internal buoyancy", sub: "Narrow floats on all four sides of the square planter instead of two wide ones; no buoyancy chambers inside the planter.", thumb: null, imgs: ["around"] } } }],
+    title: "How to achieve narrower floats",
+    q: "Narrower main floats lose buoyancy. How will you make it up?",
+    why: "Choose one or more of the solutions from the previous question. They can be combined, and the spec asks for buoyancy that can be adjusted as biomass grows.",
+    tradeoff: "Buoyancy against plastic use and root space. Perimeter floats add plastic outside the planter; internal chambers take root space, but by replacing heavy substrate with air they let the main floats shrink; smaller modules add plastic per planted area; lightweight substrate adds neither but rules out heavy natural substrate.",
+    options: [
+      { calc: { rem: "ring", label: "perimeter floats" }, id: "more", label: "Perimeter floats (square, hexagonal, octagonal or other polygons)", sub: "Floats on three or more sides of the planter instead of two wide ones.", imgs: ["around", "hex"],
+        gains: ["Twice as many floats can be half as wide", "Nothing added inside the root zone", "Floats on all sides shield substrate and roots from waves", "Buoyancy spread around the planter, so more even support"],
+        costs: ["Plastic use about the same as the two large floats", "More parts and connections per module", "Narrow float strips still sit between neighbouring planters"],
+        notes: [["spec", "Spec 1.4 lists additional floats around the planter to keep primary floats narrow and to add buoyancy as biomass grows."]] },
+      { calc: { rem: "ring", nv: 12, label: "perimeter floats + vertical pipes" }, id: "vertical", blockedBy: { limits: "noroot", reason: "Ruled out by your limits: no inside-planter buoyancy compartments." }, label: "Internal buoyancy compartments: vertical", sub: "Upright pods fixed to the planter base or walls.", imgs: ["vEmpty", "vSeed", "vMature"],
+        gains: ["Indirectly reduces plastic: the chambers fill space with air that would otherwise be heavy substrate, so the planter is lighter and the main floats can be smaller", "Adds buoyancy without widening the floats; spread evenly across the planter", "Draft adjustable by filling with water or air as biomass grows", "Supports and compacts the substrate and roots", "Can carry decking on top to make human modules"],
+        costs: ["Takes volume that would otherwise be substrate and root space", "The chambers themselves are plastic inside the root zone; the net saving depends on how much float volume they replace", "Roots grow around the pods; long-term effect on root form unknown"],
+        notes: [["open", "Effect of compartments on root architecture and tree stability."]] },
+      { calc: { rem: "ring", nh: 6, label: "perimeter floats + horizontal pipes" }, id: "horizontal", blockedBy: { limits: "noroot", reason: "Ruled out by your limits: no inside-planter buoyancy compartments." }, label: "Internal buoyancy compartments: horizontal (Biomatrix style)", sub: "Pipe tier at about water level beneath the planting.", imgs: ["hEmpty", "hSeed", "hMature"],
+        gains: ["Indirectly reduces plastic: the chambers fill space with air that would otherwise be heavy substrate, so the planter is lighter and the main floats can be smaller", "Adds buoyancy without widening the floats; spread evenly across the planter", "Gives a base for the planting medium and supports pedestrians", "Adjustable with water or air fill"],
+        costs: ["Only effective when sitting right at the water surface, so less flexible than vertical compartments", "The chambers themselves are plastic inside the root zone; the net saving depends on how much float volume they replace", "Forms a layer roots must grow around to reach the water"],
+        notes: [["spec", "Spec 1.4 suggests a second tier of pipes at about water level beneath the planting area."]] },
+      { id: "complex", blockedBy: { limits: "noroot", reason: "Ruled out by your limits: no inside-planter buoyancy compartments." }, label: "Internal buoyancy compartments: more complex geometries", sub: "Combinations of vertical and horizontal chambers, or shaped chambers fitted to the planter.", imgs: [],
+        gains: ["Indirectly reduces plastic: the chambers fill space with air that would otherwise be heavy substrate, so the planter is lighter and the main floats can be smaller", "Buoyancy, root support and substrate retention can be tuned to the planter shape", "Can combine adjustable draft (water or air fill) with a walkable base"],
+        costs: ["More complex to fabricate and to fill or adjust", "Adds plastic in the root zone and takes root space", "No prototype yet"],
+        notes: [["open", "Untested; needs a concept sketch before it can be compared with vertical and horizontal chambers."]] },
+      { draw: true, id: "small", label: "Smaller modules: one plant grows over several modules", sub: "Atlan-like: smaller planters with narrow floats between; one larger tree spans two to four modules.", imgs: ["smallHex", "smallHexOne", "nSmall"],
+        gains: ["Narrow floats (oyster floats are about half the current width)", "Fine-grained, flexible layouts"],
+        costs: ["More plastic per planted area", "Oyster floats hold about a quarter of the volume: eight are needed per 2 m × 2 m unless combined with another solution", "Floats run under the tree, so roots are split between planters"], notes: [["logic", "Also works for a straight or curved jetty: run the path down the middle row of modules, with decking on top of the substrate and/or FRP mesh everywhere else, for an easy mangroves–path–mangroves layout."], ] },
+      { id: "lighter", blockedBy: { limits: "nolight", reason: "Ruled out by your limits: no lightweight substrate." }, label: "Lightweight substrate", sub: "Scoria, LECA, pumice, perlite, expanded glass or ecolite, at least in the layer above the waterline.", thumbFit: "contain", imgs: ["lightSub"],
+        gains: ["The only solution that adds effective buoyancy without adding plastic and without taking root space", "Scoria costs about the same as regular gravel", "Lighter modules to lift, transport and install"],
+        costs: ["Rules out heavy natural substrate (gravel, sand, mud)", "Some media (LECA, pumice) float or migrate when loose, so retention needs care", "Fewer nutrients than natural sediment"],
+        notes: [["logic", "Weight above the waterline counts in full (wet weight); below it only the submerged weight counts. Lightening the top layer gives most of the saving."], ["open", "Agree whether lightweight substrate is acceptable and, if not, record the specific reason."]] },
+      { calc: { rem: "ring", cells: 40, label: "perimeter floats + MastaVault soil cells" }, id: "cells", label: "Soil cells (for example MastaVault Urban Tree)", sub: "Rigid open skeleton, about 95% void, lined with geotextile.", imgs: ["mv1", "mv2", "mv3"],
+        gains: ["Walkable surface without separate paths, which suits the floating forest", "Reinforces and retains substrate; walls shield it from waves", "Cells left water-only reduce substrate weight"],
+        costs: ["Adds little buoyancy itself: a structural and weight-saving option, not a float", "Works best combined with lightweight substrate", "Another product in the root zone"], notes: [] },
+      { id: "tall", label: "Taller, narrower floats", sub: "Same volume, less width.", imgs: [],
+        gains: ["Narrower float strips without adding float count", "Nothing added inside the root zone"],
+        costs: ["A narrower waterplane reduces stability under uneven pedestrian loads", "Planter depth follows draft plus freeboard (0.7 m on the MDS), so geometry changes", "Same plastic as the large floats"],
+        notes: [["logic", "Check stability under uneven loading before narrowing floats (spec 1.3)."]] },
+    ]
+  },
+  {
+    id: "substrate", short: "Substrate", when: () => wideF(),
+    title: "Substrate weight",
+    q: "Which substrate must the module be able to carry?",
+    why: "Substrate weight decides how much buoyancy the floats must supply, and so which float solution you need. Below the waterline substrate counts at its submerged weight; above it, at its wet weight, which stays roughly constant through capillary rise (spec 1.3). The layer above the water costs the most buoyancy per litre.",
+    versus: ["Substrate choice", "Float size"],
+    tradeoff: "Heavy natural substrates are the reason the MDS floats grew from 900 L to 2,000 L; with narrow floats, the heavier the substrate, the more perimeter floats or internal buoyancy chambers you need.",
+    options: [
+      { id: "heavy", label: "Heavy natural: gravel, pebbles, sand, mud", sub: "About twice the density of water.", imgs: [],
+        gains: ["Any locally available substrate can be used", "Good plant anchorage at depth", "Gravel and pebbles give a firm surface"],
+        costs: ["Largest buoyancy demand: wide floats (2 m × 1.2 m × 0.98 m for 2,000 L) or, with narrow floats, extra floats or chambers", "Heaviest saturated module to lift, transport and install", "Sand and mud need good retention and are poor to walk on"],
+        notes: [["logic", "This was the basis for choosing 2,000 L floats over the 900 L floats in the first quote."]] },
+      { id: "light", label: "Lightweight: scoria, LECA, pumice, expanded glass, ecolite", sub: "Low-density mineral media.", thumbFit: "contain", imgs: ["lightSub"],
+        gains: ["Raises effective buoyancy without adding plastic and without taking root space", "Allows narrower floats, so a larger planting share", "Lighter modules to handle", "Scoria costs about the same as regular gravel"],
+        costs: ["Some media (LECA, pumice) can float or migrate when loose, so retention needs care", "Fewer nutrients than natural sediment", "Locks the design to sourcing a specific medium at each site"],
+        notes: [["open", "Agree whether lightweight substrate is acceptable and, if not, record the specific reason so the design can respond to it."]] },
+      { id: "layered", label: "Layered: light top layer, heavier below", sub: "Lightweight media above the waterline, natural substrate below.", imgs: [],
+        gains: ["Most of the weight saving, because weight above the waterline counts in full", "Heavier material where anchorage matters", "Less reliance on one medium"],
+        costs: ["Layers can mix over time and with plant growth", "Two materials to source and place", "Light surface layer needs retention against waves and wind"],
+        notes: [["open", "How stable the layering stays over several years is untested."]] }
+    ]
+  },
+  {
+    id: "access", short: "Access", multi: true,
+    title: "Access over the planting area",
+    q: "How should people move through the planting area?",
+    why: "The spec requires formal walkways about 1.0 m clear and that people can walk through the mangroves for access and maintenance.",
+    tradeoff: "Walkability against open root zone and buoyancy. Anything people walk on adds live load and needs freeboard and stability.",
+    options: [
+      { id: "substrate", label: "Walk on the substrate itself", sub: "Compact, stable planting surface.", imgs: ["hMature"],
+        gains: ["Uninterrupted planting surface, the floating forest experience", "No extra decking material"],
+        costs: ["Substrate must be compact enough to walk on and hold plants (spec 1.2)", "Trampling compacts the surface and can damage roots and seedlings", "Needs freeboard on the walkable surface under load"], notes: [] },
+      { id: "panels", label: "Removable FRP panels", sub: "On the MDS: two 0.25 m panels about 0.66 m apart, splitting the planter into three.", imgs: [],
+        gains: ["Firm footing with access to every plant", "Panels can be lifted for planting and substrate work"],
+        costs: ["Shades and covers part of the planting area", "Panels need supports across the planter"], notes: [] },
+      { id: "fullmesh", label: "Full FRP mesh cover", sub: "Mesh over the whole planter, plants grow through openings.", imgs: [],
+        gains: ["Walk anywhere safely", "Protects substrate from wind and wave scour"],
+        costs: ["Openings must suit growing stems and prop roots", "Harder access to the substrate below", "More material and cost"], notes: [] },
+      { id: "formal", label: "Formal walkways", sub: "Dedicated walkways, about 1.0 m clear, alongside or through the planting.", imgs: [],
+        gains: ["Firm, safe and accessible route for everyone", "No pedestrian load on the planters"],
+        costs: ["Takes deck area away from planting", "On their own they don't let people walk through the planting area, as the spec requires: combine with another option"], notes: [] }
+    ]
+  },
+  {
+    id: "shape", short: "Module shape", when: () => !fixedShape(),
+    title: "Module shape",
+    q: "Which module shape?",
+    why: "Rectangular, hexagonal and octagonal are the viable shapes for modularity, simple hydrostatics and rotomoulding.",
+    tradeoff: "Simple connections against layout freedom and even buoyancy.",
+    options: [
+      { id: "rect", blockedIf: () => !!fixedShape() && fixedShape() !== "rect", blockedIfReason: () => `Fixed by your float shape: ${SHAPE_NAME[fixedShape()]} module.`, label: "Square or rectangular", sub: "The MDS 2 m × 2 m planter.", imgs: ["mdsWide"],
+        gains: ["Simplest connections and fabrication", "Straight walkways and grids", "Fits the existing MDS connector system"],
+        costs: ["Buoyancy concentrated along two edges", "Curves only through the deck layer"], notes: [] },
+      { id: "hex", blockedIf: () => !!fixedShape() && fixedShape() !== "hex", blockedIfReason: () => `Fixed by your float shape: ${SHAPE_NAME[fixedShape()]} module.`, label: "Hexagonal", sub: "Self-buoyant module, walls on all sides.", imgs: ["hex"],
+        gains: ["Tessellates in two directions without infill, which suits forests", "Buoyancy spread around the whole perimeter", "Natural curves for promenades"],
+        costs: ["Six connection faces to detail and maintain", "Zig-zag edges along straight paths"], notes: [] },
+      { id: "oct", blockedIf: () => !!fixedShape() && fixedShape() !== "oct", blockedIfReason: () => `Fixed by your float shape: ${SHAPE_NAME[fixedShape()]} module.`, label: "Octagonal", sub: "Planters with deck or square infill between.", imgs: ["octMature", "resort"],
+        gains: ["Infill spaces become decks, nodes or pools", "Strong eco-resort look"],
+        costs: ["Does not tessellate alone: needs a second infill module type", "Two moulds or fabrications"], notes: [] }
+    ]
+  },
+  {
+    id: "site", short: "Site – wave exposure",
+    title: "Site – wave exposure",
+    q: "What is the site exposure?",
+    why: "MICI is a sheltered-water system. Wave categories follow Table 1 of the MICI framework paper.",
+    tradeoff: "Exposure against float material, module length and mooring effort.",
+    options: [
+      { id: "sydney", label: "Sheltered, outside the cyclone belt", sub: "Waves under 0.5–1.0 m, for example Sydney harbours.", imgs: [],
+        gains: ["Rotomoulded HDPE floats suit sheltered sites", "Lighter connections and mooring"],
+        costs: ["Still design for extreme events such as East Coast Lows", "Boat wake may govern over wind waves"], notes: [["rule", "Manly Lagoon survived an East Coast Low, but it is an ecological trial, not structural validation."]] },
+      { id: "fiji", label: "Sheltered, cyclone region", sub: "For example Suva or Levuka.", imgs: [],
+        gains: ["Small waves keep wave loads modest"],
+        costs: ["Cyclonic wind (about 46–52 m/s for Fiji, AS/NZS 1170.2) becomes the critical case", "Canopy wind load grows with planting share and tree age, so forest layouts are hit hardest", "Survival strategy needed: ride it out or remove and shelter"], notes: [["rule", "Low fetch alone is not a sufficient suitability test."], ["open", "Mooring under cyclonic loading."]] },
+      { id: "moderate", label: "Moderate exposure", sub: "Waves under 1.5 m, behind reefs or breakwaters.", imgs: [],
+        gains: ["Larger range of possible sites"],
+        costs: ["Concrete floats suit exposed sites better than HDPE", "Long rigid runs see bending from waves of similar length", "Engineered mooring and connections from the outset"], notes: [] },
+      { id: "exposed", label: "Exposed: waves over 1.5 m", sub: "Open coast.", imgs: [],
+        gains: ["None for MICI"],
+        costs: ["Outside the MICI envelope: shelter the site first or choose another"], notes: [["rule", "Long pontoons are incompatible with open-ocean exposure because of the length-to-wavelength bending problem."]] }
+    ]
+  },
+  {
+    id: "depth", short: "Site – depth",
+    title: "Site – depth",
+    q: "What is the water depth at the site?",
+    why: "Depth, together with the tidal range, decides which mooring systems are practical and whether the floats and roots stay clear of the seabed at low tide. Measure at the lowest tide.",
+    tradeoff: "Shallow water makes mooring simple and cheap but risks grounding; deep water avoids grounding but needs longer, more expensive moorings.",
+    options: [
+      { id: "shallow", label: "Shallow: under about 2 m", sub: "Sheltered lagoons, inner marinas, nearshore flats.", imgs: [],
+        gains: ["Piles are short and cheap", "Short mooring chains; small swing circle", "Easy access for installation and maintenance"],
+        costs: ["Risk of the floats or hanging roots touching the seabed at low tide", "Check float draft plus root depth against the lowest tide"], notes: [] },
+      { id: "mid", label: "Moderate: about 2–5 m", sub: "Most marinas and sheltered bays.", imgs: [],
+        gains: ["Both piles and catenary moorings are practical", "Clear of the seabed at low tide in most cases"],
+        costs: ["Mooring choice depends on seabed type and tidal range"], notes: [] },
+      { id: "deep", label: "Deep: about 5–20 m", sub: "Outer harbours, behind reefs, deeper bays.", imgs: [],
+        gains: ["No grounding risk", "Suits fully floating structures"],
+        costs: ["Piles become long and expensive; catenary or taut moorings usually preferred", "Longer chains and a larger swing circle", "Installation needs a work boat and divers"], notes: [] }
+    ]
+  },
+  {
+    id: "mooring", short: "Mooring",
+    title: "Mooring",
+    q: "How will the pontoon be held in place?",
+    why: "Mooring points must be accessible and must not interfere with the root zone, planting area or walkways. The MDS quote asks for bridle, catenary, piled and rigid-arm options.",
+    tradeoff: "Footprint and simplicity against site constraints and loads.",
+    options: [
+      { id: "pile", label: "Piled", sub: "Pile guides, vertical movement only.", imgs: [],
+        gains: ["No swing circle; small footprint", "Suits marinas with piles"],
+        costs: ["Needs pileable seabed and piles above the highest design water level", "Guide wear and impact loads"], notes: [] },
+      { id: "catenary", label: "Catenary or bridle", sub: "Chains and anchors, single or bridled.", imgs: [],
+        gains: ["Works in most water depths", "No piling equipment"],
+        costs: ["Swing or watch circle needs clear water", "Chain length set by depth and tide range, so measure the site first"], notes: [["rule", "Lesson from Walu Bay: attach chains to an engineered fixing with a load path that does not depend on degradable members."]] },
+      { id: "arm", label: "Rigid arm to shore or structure", sub: "Strut connection.", imgs: [],
+        gains: ["Fixed position next to an existing wharf or seawall", "Direct access from land"],
+        costs: ["Transfers loads into the shore structure", "Hinges must allow full tidal range"], notes: [] },
+      { id: "open", label: "Keep it open", sub: "Design fixings for all types.", imgs: [],
+        gains: ["One module design for many sites"],
+        costs: ["Fixings sized for the worst case on every module", "Higher cost per module"], notes: [] }
+    ]
+  }
+];
+
+const answers = {};
+let STEPS = ALL_STEPS;
+let current = 0;
+let focusOpt = {};   // last clicked option per step, for the illustration
+let imgIndex = 0, calcView = 0, calcVar = 0, calcShow = null;
+
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+const TERMS = /(mangroves[–-]path[–-]mangroves|path[–-]mangroves[–-]path|floating forest)/gi;
+const fmt = s => esc(s).replace(TERMS, m => `<b>"${m}"</b>`);
+const qt = s => String(s).replace(TERMS, m => `"${m}"`);
+const tagHtml = t => `<span class="tag t-${t}">${TAGS[t]}</span>`;
+const sel = id => answers[id];
+const wideF = () => typeof answers.ratio === "string" && answers.ratio.startsWith("pair");
+const SHAPE_OF = { smallHex: "hex", smallOct: "oct", ring: "rect", step: "rect", hexRing: "hex", hexStep: "hex", octRing: "oct", octStep: "oct", sqRing: "rect", sqStep: "rect", pair: "rect", pairRetro: "rect" };
+const SHAPE_NAME = { rect: "square or rectangular", hex: "hexagonal", oct: "octagonal" };
+const fixedShape = () => SHAPE_OF[answers.ratio];
+const narrowF = () => !!answers.ratio && !wideF();
+const has = (id, opt) => { const a = answers[id]; return Array.isArray(a) ? a.includes(opt) : a === opt; };
+const optsOf = step => { const a = answers[step.id]; if (!a) return []; return step.options.filter(o => Array.isArray(a) ? a.includes(o.id) : o.id === a); };
+const answered = step => optsOf(step).length > 0;
+
+function conflicts() {
+  const out = [];
+  const narrow = narrowF();
+  if (narrow && (answers.buoyancy || []).length === 1 && has("buoyancy", "cells")) out.push("Soil cells add little buoyancy on their own. Combine them with lightweight substrate, perimeter floats or internal chambers.");
+  if (has("limits", "noroot") && ["vertical", "horizontal", "complex"].some(x => has("buoyancy", x))) out.push("No inside-planter buoyancy compartments are allowed, but internal chambers are selected.");
+  if (has("limits", "nolight") && (has("buoyancy", "lighter") || has("substrate", "light") || has("substrate", "layered"))) out.push("Lightweight substrate is ruled out but chosen elsewhere.");
+  if (has("limits", "minplastic") && ["more", "small", "tall"].some(x => has("buoyancy", x))) out.push("Plastic is to be minimised, but the chosen float solution adds plastic comparable to the large floats.");
+  if (has("limits", "minplastic") && !has("buoyancy", "lighter") && ["vertical", "horizontal", "complex"].some(x => has("buoyancy", x))) out.push("Internal compartments reduce plastic only partly. To truly minimise plastic, add lightweight substrate.");
+  if (narrow && has("limits", "minplastic") && has("limits", "nolight")) out.push("Minimising plastic and ruling out lightweight substrate together leave no way to replace the buoyancy lost from narrower floats.");
+  if (wideF() && has("access", "fullmesh")) out.push("With wide floats the paths are already on the floats. Full mesh over the planter is optional unless people must reach the plants from above.");
+  if (has("config", "park") && has("site", "fiji")) out.push("Floating park in a cyclone region: plan to design it for the full cyclone case or to remove and shelter it before landfall.");
+  if (has("jettyLayout", "pmp") && narrowF()) out.push("Path–mangroves–path on narrow floats: the outside paths need a deck that overhangs the floats and/or the planter edge (or separate walkway modules). Check the path width and heel under pedestrian load.");
+  if (has("jettyLayout", "mpm") && wideF()) out.push("A mangroves–path–mangroves jetty on wide floats needs small non-buoyant planters attached along the outside edges (retrofit).");
+  if (has("depth", "deep") && has("mooring", "pile")) out.push("Piles in deep water are long and expensive. Consider catenary or taut moorings.");
+  if (has("depth", "shallow") && narrowF()) out.push("Shallow site: check that the floats and hanging roots stay clear of the seabed at the lowest tide.");
+  if ((answers.access || []).length === 1 && has("access", "formal")) out.push("Formal walkways alone do not meet the spec requirement to walk through the planting area. Combine them with another access option.");
+  if (has("access", "substrate") && !has("buoyancy", "cells") && (has("substrate", "heavy") || has("substrate", "light"))) out.push("Walking directly on substrate needs a compact surface. Consider soil cells or panels, especially with sand, mud or loose light media.");
+  if (has("site", "exposed")) out.push("The site is outside the MICI wave envelope.");
+  if (has("buoyancy", "tall") && has("access", "substrate")) out.push("Narrow, tall floats reduce stability just where people walk on the planting surface. Check uneven loading.");
+  return out;
+}
+
+function stepNav() {
+  const done = STEPS.filter(answered).length;
+  return STEPS.map((s, i) => {
+    const reachable = i === 0 || answered(STEPS[i - 1]) || i <= current;
+    const cls = i === current ? "current" : (answered(s) ? "done" : "");
+    return `<button class="${cls}" data-go="${i}" ${reachable ? "" : "disabled"} aria-label="Question ${i + 1}: ${esc(s.title)}">${i + 1} ${s.short}</button>`;
+  }).join("") + `<button class="${current === STEPS.length ? "current" : ""}" data-go="${STEPS.length}" ${done === STEPS.length ? "" : "disabled"}>Brief</button>`;
+}
+
+function tradeCols(o, step) {
+  const [g, c] = (step && step.cols) || ["You gain", "You give up"];
+  return `<div class="tg">
+    <div class="col gain"><h4>${g}</h4><ul>${o.gains.map(g => `<li>${fmt(g)}</li>`).join("")}</ul></div>
+    <div class="col cost"><h4>${c}</h4><ul>${o.costs.map(c => `<li>${fmt(c)}</li>`).join("")}</ul></div>
+  </div>${o.notes.length ? `<div class="notes">${o.notes.map(([t, s]) => `<div class="item">${tagHtml(t)}<div>${fmt(s)}</div></div>`).join("")}</div>` : ""}`;
+}
+
+function renderQuestion() {
+  const el = document.getElementById("q");
+  if (current === STEPS.length) { renderFinal(el); return; }
+  const step = STEPS[current];
+  const chosenList = optsOf(step);
+  const opts = step.options.map(o => {
+    const on = has(step.id, o.id);
+    const tsrc = o.thumb || (o.imgs.length && IMG[o.imgs[0]][0]);
+    const sch = ((step.id === "buoyancy" || step.id === "ratio") && o.calc) ? calcSchematic(o) : null;
+    const csrc = o.custom ? (o.thumb || (o.imgs.length && IMG[o.imgs[0]][0])) : null;
+    const dsch = o.draw ? smallModulesSvg(o.drawShape || fixedShape(), (o.drawShape || fixedShape()) === "hex") : null;
+    const thumb = dsch ? `<span class="sthumb" style="position:relative;overflow:visible">${dsch.plan}${o.custom ? `<img class="cbadge" src="img/custom.svg" alt="Custom">` : ""}</span>` : sch ? `<span class="sthumb" style="position:relative;overflow:visible">${sch.plan}${o.custom ? `<img class="cbadge" src="img/custom.svg" alt="Custom">` : ""}</span>` : o.custom ? (csrc ? `<span class="cthumb"><img src="${csrc}" alt=""${o.thumbFit ? ` style="object-fit:${o.thumbFit};background:#fff"` : ""}><img class="cbadge" src="img/custom.svg" alt="Custom"></span>` : `<img src="img/custom.svg" alt="Custom" style="object-fit:contain;background:#fff">`) : tsrc ? `<img src="${tsrc}" alt=""${o.thumbFit ? ` style="object-fit:${o.thumbFit};background:#fff"` : ""}>` : "";
+    const off = blocked(o);
+    return `<button class="opt ${tsrc || o.custom || sch || o.draw ? "" : "noimg"}${off ? " blocked" : ""}" id="opt-${step.id}-${o.id}" data-opt="${o.id}" aria-pressed="${on}" ${off ? "disabled" : ""}>
+      ${thumb}<div><strong>${fmt(o.label)}</strong><span>${fmt(off ? (o.blockedIf && o.blockedIf() ? o.blockedIfReason() : o.blockedBy.reason) : o.sub)}</span></div></button>`;
+  }).join("");
+  const detail = chosenList.map(o => `<div class="detail"><div class="detail-head"><h3>${fmt(o.label)}</h3></div>${tradeCols(o, step)}${o.calc ? `<div style="margin-top:10px"><button class="btn primary" data-calc="${o.id}">Size this float in the calculator →</button></div>` : ""}</div>`).join("");
+  el.innerHTML = `
+    <div class="steps">${stepNav()}</div>
+    <div class="eyebrow">Question ${current + 1} of ${STEPS.length} · ${fmt(step.title)}</div>
+    <h2>${fmt(step.q)}</h2>
+    <p class="why">${fmt(typeof step.why === "function" ? step.why() : step.why)}</p>
+    <div class="tradeoff">${step.frame ? `<div class="versus"><span>${fmt(step.frame)}</span></div>` : "<b>The trade-off</b>"}${step.versus ? `<div class="versus"><span>${fmt(step.versus[0])}</span><svg viewBox="0 0 64 20" aria-label="against" role="img"><path d="M2 10 H62 M10 2 L2 10 L10 18 M54 2 L62 10 L54 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>${fmt(step.versus[1])}</span></div>` : ""}${fmt(step.tradeoff)}</div>
+    ${step.multi ? `<p class="multi-note">Select all that apply.</p>` : ""}
+    <div class="options" role="group" aria-label="${esc(step.title)}">${opts}</div>
+    ${detail}
+    <div class="nav">
+      <button class="btn" id="back" ${current === 0 ? "disabled" : ""}>Back</button>
+      <button class="btn primary" id="next" ${chosenList.length ? "" : "disabled"}>${current === STEPS.length - 1 ? "See design brief" : "Next question"}</button>
+    </div>`;
+  bind(el);
+}
+
+function renderFinal(el) {
+  const opens = [];
+  STEPS.forEach(s => optsOf(s).forEach(o => o.notes.forEach(([t, n]) => { if (t === "open") opens.push(n); })));
+  const c = conflicts();
+  el.innerHTML = `
+    <div class="steps">${stepNav()}</div>
+    <div class="eyebrow">Design brief</div>
+    <h2>Your MICI module, with its trade-offs</h2>
+    <p class="why">This frames a concept. It is not an engineered design: buoyancy, stability and connection loads still need calculation, and open questions need testing.</p>
+    <div class="final-step"><h3>Fit check</h3><div class="flags">${c.length ? c.map(x => `<div class="flag">${fmt(x)}</div>`).join("") : `<div class="flag ok">No conflicts between your choices.</div>`}</div></div>
+    ${opens.length ? `<div class="final-step"><h3>Open questions</h3><ul style="margin:0;padding-left:18px">${opens.map(o => `<li>${fmt(o)}</li>`).join("")}</ul></div>` : ""}
+    ${STEPS.map(s => `<div class="final-step"><h3>${fmt(s.title)} <span>· ${s.versus ? esc(s.versus[0] + " ↔ " + s.versus[1] + ". ") : ""}${fmt(s.tradeoff)}</span></h3>${optsOf(s).map(o => `<div class="detail" style="margin-top:4px"><div class="detail-head"><h3>${fmt(o.label)}</h3></div>${tradeCols(o, s)}</div>`).join("")}</div>`).join("")}
+    <div class="nav">
+      <button class="btn" id="restart">Start again</button>
+      <span><button class="btn primary" id="copy">Copy brief as text</button><span class="copied" id="copied"></span></span>
+    </div>`;
+  bind(el);
+  document.getElementById("restart").onclick = () => { for (const k in answers) delete answers[k]; focusOpt = {}; current = 0; update(); };
+  document.getElementById("copy").onclick = async () => {
+    const L = ["MICI module design brief", ""];
+    if (c.length) { L.push("Fit check:"); c.forEach(x => L.push("- " + x)); L.push(""); }
+    if (opens.length) { L.push("Open questions:"); opens.forEach(x => L.push("- " + x)); L.push(""); }
+    STEPS.forEach(s => {
+      L.push(`${s.title.toUpperCase()}`, `Trade-off: ${s.versus ? s.versus[0] + " <-> " + s.versus[1] + ". " : ""}${s.tradeoff}`);
+      optsOf(s).forEach(o => {
+        L.push(`Choice: ${o.label}`);
+        o.gains.forEach(g => L.push(`  ${s.cols ? s.cols[0] + ":" : "+"} ${g}`));
+        o.costs.forEach(g => L.push(`  ${s.cols ? s.cols[1] + ":" : "-"} ${g}`));
+        o.notes.forEach(([t, n]) => L.push(`  [${TAGS[t]}] ${n}`));
+      });
+      L.push("");
+    });
+    const msg = document.getElementById("copied");
+    try { await navigator.clipboard.writeText(qt(L.join("\n"))); msg.textContent = "Copied"; }
+    catch (e) { msg.textContent = "Copy was blocked. Select the text on the page instead."; }
+  };
+}
+
+function choose(step, optId) {
+  if (step.multi) {
+    let a = Array.isArray(answers[step.id]) ? answers[step.id].slice() : [];
+    if (a.includes(optId)) a = a.filter(x => x !== optId);
+    else {
+      if (step.exclusive && optId === step.exclusive) a = [];
+      else if (step.exclusive) a = a.filter(x => x !== step.exclusive);
+      a.push(optId);
+    }
+    if (a.length) answers[step.id] = a; else delete answers[step.id];
+  } else answers[step.id] = optId;
+  focusOpt[step.id] = optId;
+  imgIndex = 0; calcView = 0; calcVar = 0; calcShow = null;
+}
+
+function bind(el) {
+  el.querySelectorAll("[data-opt]").forEach(b => b.onclick = () => { const st = STEPS[current]; choose(st, b.dataset.opt); const o = st.options.find(x => x.id === b.dataset.opt); if (st.id === "ratio" && o && o.calc && o.calc.shape) answers.shape = { square: "rect", hex: "hex", oct: "oct" }[o.calc.shape]; update(); });
+  el.querySelectorAll("[data-calc]").forEach(b => b.onclick = () => sendToCalc(STEPS[current].options.find(o => o.id === b.dataset.calc)));
+  el.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { current = +b.dataset.go; imgIndex = 0; calcShow = null; calcVar = 0; update(); });
+  const back = document.getElementById("back"), next = document.getElementById("next");
+  if (back) back.onclick = () => { current--; imgIndex = 0; calcShow = null; calcVar = 0; update(); };
+  if (next) next.onclick = () => { current++; imgIndex = 0; calcShow = null; calcVar = 0; update(); };
+}
+
+function renderFigure() {
+  const el = document.getElementById("fig");
+  let step = STEPS[Math.min(current, STEPS.length - 1)];
+  if (current === STEPS.length) step = STEPS[0];
+  let opt = step.options.find(o => o.id === focusOpt[step.id]) || optsOf(step)[0];
+  let example = false;
+  if (!opt) { opt = step.options.find(o => o.imgs.length) || step.options[0]; example = true; }
+  if (opt.draw) {
+    const isC = has("jettyShape", "curved"), isS = has("jettyShape", "straight");
+    const J = opt.jetty && (opt.drawShape || fixedShape()) === "oct" ? ["Jetty, straight", "Jetty, curved"].filter((_, j) => j ? !isS : !isC) : [], nd = 1 + J.length;
+    const imgs = opt.imgs.filter(k => !(isC && k === "smallOctJetS") && !(isS && k === "smallOctJetC"));
+    const n = imgs.length + nd, i = Math.min(imgIndex, n - 1);
+    const thumbs = `<div class="thumbs"><button data-img="0" aria-pressed="${i === 0}" aria-label="Show schematic"><span class="thumb-text">Schematic</span></button>${J.map((t, j) => `<button data-img="${j + 1}" aria-pressed="${i === j + 1}" aria-label="Show schematic: ${t}"><span class="thumb-text">${t}</span></button>`).join("")}${imgs.map((k, j) => `<button data-img="${j + nd}" aria-pressed="${j + nd === i}" aria-label="Show image ${j + 1}">${IMG[k][0] ? `<img src="${IMG[k][2] || IMG[k][0]}" data-full="${IMG[k][0]}" alt="">` : `<span class="thumb-text">No render</span>`}</button>`).join("")}</div>`;
+    if (i > 0 && i < nd) {
+      const curved = J[i - 1] === "Jetty, curved", d = octJettySvg(curved);
+      el.innerHTML = `<div class="eyebrow">Schematic${example ? " · example option" : ""}</div><div class="schem" style="cursor:default"><div class="schem-plan" style="grid-column:1/-1">${d.plan}</div><div class="schem-sec" style="grid-column:1/-1">${d.sec}</div></div>${thumbs}<figcaption><b>Mangroves–path–mangroves, ${curved ? "curved" : "straight"}.</b> Four small octagonal modules across: decking between the two middle columns${curved ? ", curving between the trees" : ""}, and one tree per group of four modules on either side.</figcaption>`;
+    } else if (i === 0) {
+      const d = smallModulesSvg(opt.drawShape || fixedShape(), smallMany);
+      el.innerHTML = `<div class="eyebrow">Schematic${example ? " · example option" : ""}</div><div class="schem" style="cursor:default"><div class="schem-plan" id="smallPlan" style="cursor:pointer" title="Click to switch between one tree and several trees">${d.plan}</div><div class="schem-sec">${d.big}</div></div>${thumbs}<figcaption><b>${fmt(opt.label)}.</b> Plan and section of one mangrove spreading over several small modules, in your module shape.</figcaption>`;
+      document.getElementById("smallPlan").onclick = () => { smallMany = !smallMany; renderFigure(); };
+    } else {
+      const [src, cap] = IMG[imgs[i - nd]];
+      el.innerHTML = `<div class="eyebrow">Illustration${example ? " · example option" : ""}</div>${src ? `<img class="main" src="${src}" alt="${esc(cap)}" style="margin-top:8px">` : `<div class="noimage" style="margin-top:8px">${fmt(cap)}</div>`}${thumbs}<figcaption><b>${fmt(opt.label)}.</b> ${fmt(cap)}</figcaption>`;
+    }
+    el.querySelectorAll("[data-img]").forEach(b => b.onclick = () => { imgIndex = +b.dataset.img; renderFigure(); });
+    return;
+  }
+  if (opt.calc) {
+    const V = opt.calcVariants || [{ ...opt.calc, short: "Schematic" }], nv = V.length, vv = Math.min(calcVar, nv - 1), ni = opt.imgs.length;
+    const show = calcShow || (ni ? "img" : "view"), pi = Math.min(imgIndex, Math.max(ni - 1, 0));
+    const vopt = { ...opt, calc: (({ short, ...c }) => c)(V[vv]) }, sch = calcSchematic(vopt);
+    let views = [];
+    if (sch) {
+      views = [["Plan", sch.plan, sch.planT], ["Section", sch.bigN || sch.big || sch.sec, sch.big]];
+      if (has("jettyShape", "curved")) { if (sch.curve) views.push(["Curved jetty", sch.curve, sch.curveT]); if (sch.pond) views.push(["Pond", sch.pond, sch.pondT]); }
+    }
+    const vi = Math.min(calcView, Math.max(views.length - 1, 0)), onView = show === "view" || !ni;
+    const vthumb = (t, svg) => `<span class="vthumb">${svg}</span><span class="vlab">${t}</span>`;
+    const thumbs = `<div class="thumbs">${nv > 1 ? V.map((v, j) => `<button data-var="${j}" aria-pressed="${vv === j}" aria-label="Variant: ${esc(v.short)}"><span class="thumb-text">${esc(v.short)}</span></button>`).join("") : ""}${views.map(([t, svg], k) => `<button data-view="${k}" aria-pressed="${onView && vi === k}" aria-label="Show ${t}">${vthumb(t, svg)}</button>`).join("")}${opt.imgs.map((k, j) => `<button data-img="${j}" aria-pressed="${!onView && j === pi}" aria-label="Show image ${j + 1}">${IMG[k][0] ? `<img src="${IMG[k][2] || IMG[k][0]}" data-full="${IMG[k][0]}" alt="">` : `<span class="thumb-text">No render</span>`}</button>`).join("")}</div>`;
+    if (onView) {
+      const [vt, vn, vtr] = views[vi] || [];
+      el.innerHTML = `<div class="eyebrow">Schematic from the Float calculator${example ? " · example option" : ""}</div>
+        <div class="schem" id="schem" role="button" tabindex="0" title="Hover: show the mangroves · click: enlarge · right-click: open in the Float calculator">${sch ? `<div class="schem-one" id="schemPic"><div class="n">${vn}</div>${vtr ? `<div class="t">${vtr}</div>` : ""}</div>` : `<div class="noimage">Loading schematic…</div>`}<span class="schem-go" id="schemGo" style="cursor:pointer">Open in the Float calculator →</span></div>
+        ${thumbs}
+        <figcaption><b>${fmt(nv > 1 ? V[vv].label : opt.label)}${vt ? " · " + vt.toLowerCase() : ""}.</b> At the calculator's default inputs. Hover to show the mangroves, click to enlarge, right-click to open it in the Float calculator and size it.</figcaption>`;
+      const sc = document.getElementById("schem");
+      sc.onclick = e => { if (e.target.closest("#schemGo")) return sendToCalc(vopt); const pic = document.getElementById("schemPic"); if (pic) openLbSvg(pic.innerHTML); };
+      sc.oncontextmenu = e => { e.preventDefault(); sendToCalc(vopt); };
+    } else {
+      const [src, cap] = IMG[opt.imgs[pi]];
+      el.innerHTML = `<div class="eyebrow">Illustration${example ? " · example option" : ""}</div>
+        ${src ? `<img class="main" src="${src}" alt="${esc(cap)}" style="margin-top:8px">` : `<div class="noimage" style="margin-top:8px">${fmt(cap)}</div>`}
+        ${thumbs}
+        <figcaption><b>${fmt(opt.label)}.</b> ${fmt(cap)}</figcaption>`;
+    }
+    el.querySelectorAll("[data-var]").forEach(b => b.onclick = () => { calcVar = +b.dataset.var; calcShow = "view"; renderFigure(); });
+    el.querySelectorAll("[data-img]").forEach(b => b.onclick = () => { imgIndex = +b.dataset.img; calcShow = "img"; renderFigure(); });
+    el.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { calcView = +b.dataset.view; calcShow = "view"; renderFigure(); });
+    return;
+  }
+  if (!opt.imgs.length) {
+    el.innerHTML = `<div class="eyebrow">Illustration</div>
+      <div class="noimage" style="margin-top:8px">No render of “${fmt(opt.label)}” in the Functional Specs document.</div>
+      <figcaption>${fmt(opt.sub)}</figcaption>`;
+    return;
+  }
+  const i = Math.min(imgIndex, opt.imgs.length - 1);
+  const [src, cap] = IMG[opt.imgs[i]];
+  const thumbs = opt.imgs.length > 1 ? `<div class="thumbs">${opt.imgs.map((k, j) => `<button data-img="${j}" aria-pressed="${j === i}" aria-label="Show image ${j + 1}">${IMG[k][0] ? `<img src="${IMG[k][2] || IMG[k][0]}" data-full="${IMG[k][0]}" alt="">` : `<span class="thumb-text">No render</span>`}</button>`).join("")}</div>` : "";
+  el.innerHTML = `<div class="eyebrow">${IMG[opt.imgs[i]][3] ? esc(IMG[opt.imgs[i]][3]) : "Illustration"}${example ? " · example option" : ""}</div>
+    ${src ? `<img class="main" src="${src}" alt="${esc(cap)}" style="margin-top:8px">` : `<div class="noimage" style="margin-top:8px">${fmt(cap)}</div>`}
+    ${thumbs}
+    <figcaption><b>${fmt(opt.label)}.</b> ${fmt(cap)}</figcaption>`;
+  el.querySelectorAll("[data-img]").forEach(b => b.onclick = () => { imgIndex = +b.dataset.img; renderFigure(); });
+}
+
+function renderBrief() {
+  const el = document.getElementById("brief");
+  const rows = STEPS.map(s => {
+    const o = optsOf(s);
+    return `<dt>${fmt(s.title)}</dt><dd>${o.length ? o.map(x => fmt(x.label)).join("; ") : '<span style="color:var(--muted);font-weight:400">Not yet chosen</span>'}</dd>`;
+  }).join("");
+  const c = conflicts();
+  const n = STEPS.filter(answered).length;
+  el.innerHTML = `
+    <div class="eyebrow">Running brief</div>
+    <dl>${rows}</dl>
+    <h3>Fit check</h3>
+    <div class="flags">${c.length ? c.map(x => `<div class="flag">${fmt(x)}</div>`).join("") : `<div class="flag ok">${n < 2 ? "Answer more questions to see how your choices fit together." : "No conflicts so far."}</div>`}</div>
+    <div class="key">${Object.keys(TAGS).map(tagHtml).join("")}</div>`;
+}
+
+const JET_S = ["pmpWalk", "jRetro", "jNarrow", "jPmpS", "smallOctJetS", "tJetty"], JET_C = ["jRetroC", "jNarrowC", "jPmpC", "jPmpC2", "smallOctJetC", "prom", "nEnd"];
+// once the jetty shape is chosen, drop images of the other jetty shape everywhere after that question
+function resolveStep(st) {
+  let r = resolveStep0(st);
+  if (r.options.some(o => o.onlyIf)) r = { ...r, options: r.options.filter(o => !o.onlyIf || o.onlyIf()) };
+  if (st.id === "jettyShape" || !(has("jettyShape", "curved") || has("jettyShape", "straight"))) return r;
+  const drop = has("jettyShape", "curved") ? JET_S : JET_C;
+  return { ...r, options: r.options.map(o => o.imgs && o.imgs.some(k => drop.includes(k)) ? { ...o, imgs: o.imgs.filter(k => !drop.includes(k)) } : o) };
+}
+function resolveStep0(st) {
+  const c = (st.ctx || []).find(x => x.when());
+  if (!c) return st;
+  const { when, options, list, ...rest } = c;
+  if (list) return { ...st, ...rest, options: list };
+  return { ...st, ...rest, options: st.options.map(o => options && options[o.id] ? { ...o, ...options[o.id] } : o) };
+}
+function blocked(o) { if (o.blockedIf && o.blockedIf()) return true; return !!(o.blockedBy && Object.entries(o.blockedBy).some(([k, v]) => k !== "reason" && has(k, v))); }
+const lb = document.getElementById("lightbox");
+// prev/next arrows over the big picture: step through the panel's thumbnails
+const renderFigure0 = renderFigure;
+renderFigure = function () {
+  renderFigure0.apply(this, arguments);
+  const fig = document.getElementById("fig"), btns = [...fig.querySelectorAll(".thumbs button")];
+  const main = fig.querySelector("img.main, .schem, .noimage");
+  if (!main || btns.length < 2) return;
+  const cur = Math.max(0, btns.findIndex(b => b.getAttribute("aria-pressed") === "true"));
+  const mk = (d, side) => { const b = document.createElement("button"); b.type = "button"; b.className = "fignav"; b.textContent = d < 0 ? "‹" : "›"; b.setAttribute("aria-label", d < 0 ? "Previous picture" : "Next picture"); b.style[side] = "22px";
+    b.onclick = e => { e.stopPropagation(); btns[(cur + d + btns.length) % btns.length].click(); }; fig.appendChild(b); return b; };
+  const nav = [mk(-1, "left"), mk(1, "right")];
+  const place = () => nav.forEach(b => b.style.top = (main.offsetTop + main.offsetHeight / 2) + "px");
+  place(); if (main.tagName === "IMG" && !main.complete) main.addEventListener("load", place);
+};
+document.addEventListener("dblclick", e => {
+  const img = e.target.closest && e.target.closest("img");
+  if (!img || img.id === "lb-img") return;
+  e.preventDefault();
+  openLbImg(img.dataset.full || img.src, img.alt, img);
+});
+// gallery: the lightbox steps through the pictures of the panel the image came from
+let lbList = [], lbIdx = 0;
+function lbShow() { const i = document.getElementById("lb-img"), it = lbList[lbIdx]; i.src = it.src; i.alt = it.alt || ""; document.getElementById("lb-count").textContent = `${lbIdx + 1} / ${lbList.length}`; lb.classList.toggle("single", lbList.length < 2); }
+function openLbImg(src, alt, from) {
+  const box = (from && from.closest(".thumbs, figure, #fig, .opt")) || document.getElementById("fig");
+  const scope = box && box.closest("#fig") ? document.querySelector("#fig .thumbs") : null;
+  const imgs = scope ? [...scope.querySelectorAll("img")].map(x => ({ src: x.dataset.full || x.src, alt: x.alt })) : [];
+  lbList = imgs.length ? imgs : [{ src, alt }];
+  lbIdx = Math.max(0, lbList.findIndex(x => x.src === src || src.endsWith(x.src)));
+  if (lbList.findIndex(x => x.src === src || src.endsWith(x.src)) < 0) { lbList = [{ src, alt }, ...lbList]; lbIdx = 0; }
+  lb.classList.remove("svg"); lbShow(); lb.classList.add("open");
+}
+function lbStep(d) { if (lbList.length < 2) return; lbIdx = (lbIdx + d + lbList.length) % lbList.length; lbShow(); }
+document.getElementById("lb-prev").addEventListener("click", e => { e.stopPropagation(); lbStep(-1); });
+document.getElementById("lb-next").addEventListener("click", e => { e.stopPropagation(); lbStep(1); });
+document.getElementById("lb-img").addEventListener("click", e => { e.stopPropagation(); lbStep(1); });
+// download the enlarged picture (needs the downloads capability; hidden without it)
+let DL = null;
+(async () => { try { DL = window.claude && await window.claude.use("downloads"); } catch (e) { DL = null; } document.getElementById("lb-dl").hidden = !DL; })();
+document.getElementById("lb-dl").addEventListener("click", async e => {
+  e.stopPropagation(); if (!DL) return;
+  const b = e.currentTarget, t = b.textContent;
+  try {
+    if (lb.classList.contains("svg")) {
+      const svg = document.querySelector("#lb-svg .n svg") || document.querySelector("#lb-svg svg");
+      await DL.save({ filename: "mici-schematic.svg", data: new XMLSerializer().serializeToString(svg) });
+    } else {
+      const src = document.getElementById("lb-img").src, name = decodeURIComponent(src.split("/").pop().split("?")[0]) || "mici-image.jpg";
+      const blob = await (await fetch(src)).blob();
+      await DL.save({ filename: name, data: blob });
+    }
+  } catch (err) { if (err && err.code && err.code !== "declined") { b.textContent = "Download unavailable"; setTimeout(() => b.textContent = t, 2500); } }
+});
+
+function openLbSvg(html) { document.getElementById("lb-svg").innerHTML = html; lb.classList.add("svg", "open"); }
+document.addEventListener("click", e => { const img = e.target.closest && e.target.closest("#fig img.main"); if (img) openLbImg(img.dataset.full || img.src, img.alt, img); });
+lb.addEventListener("click", e => { if (e.target.closest("#lb-svg")) return; lb.classList.remove("open", "svg"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") lb.classList.remove("open"); if (!lb.classList.contains("open") || lb.classList.contains("svg")) return; if (e.key === "ArrowRight") lbStep(1); if (e.key === "ArrowLeft") lbStep(-1); });
+function update() {
+  ALL_STEPS.forEach(st => st.options.forEach(o => {
+    if (blocked(o) && has(st.id, o.id)) {
+      const alt = st.options.find(x => !blocked(x));
+      if (st.multi) { answers[st.id] = answers[st.id].filter(x => x !== o.id); if (!answers[st.id].length) delete answers[st.id]; }
+      else if (alt) answers[st.id] = alt.id;
+    }
+  }));
+  if (has("config", "park") && !answers.ratio) answers.ratio = "ring";
+  STEPS = ALL_STEPS.filter(s => !s.when || s.when()).map(resolveStep);
+  ALL_STEPS.forEach(s => { if (!STEPS.some(x => x.id === s.id)) { delete answers[s.id]; delete focusOpt[s.id]; } });
+  current = Math.min(current, STEPS.length);
+  renderQuestion(); renderFigure(); renderBrief();
+}
+function showPane(p) {
+  document.getElementById("pane-guide").hidden = p !== "guide";
+  document.getElementById("pane-calc").hidden = p !== "calc";
+  document.querySelectorAll(".toptabs button").forEach(b => b.classList.toggle("on", b.dataset.pane === p));
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".toptabs button").forEach(b => b.onclick = () => showPane(b.dataset.pane));
+
+// Drawn schematic: one mangrove spreading over several small modules, in the chosen module shape
+let smallMany = false;
+function smallModulesSvg(shapeKey, many) {
+  const shape = shapeKey === "hex" ? "hex" : shapeKey === "oct" ? "oct" : "square";
+  const FL = "#1e1e1e", SUB = "#4f9a3f", W = 260, H = 190;
+  const polyPts = (cx, cy, R, n, rot) => [...Array(n)].map((_, i) => { const t = rot + i * 2 * Math.PI / n; return (cx + R * Math.cos(t)).toFixed(1) + "," + (cy + R * Math.sin(t)).toFixed(1); }).join(" ");
+  const mod = (cx, cy, R, n, rot, wf) => `<polygon points="${polyPts(cx, cy, R, n, rot)}" fill="${FL}" stroke="#000"/><polygon points="${polyPts(cx, cy, R * wf, n, rot)}" fill="${SUB}" stroke="#2f6326"/>`;
+  let mods = "", tx = W / 2, ty = H / 2 - 4, HC = null;
+  if (shape === "hex") {
+    const R = 30, a = Math.sqrt(3) * R;            // flat-to-flat distance between centres
+    HC = [[0, 0]].concat([...Array(6)].map((_, i) => [a * Math.cos(Math.PI / 6 + i * Math.PI / 3), a * Math.sin(Math.PI / 6 + i * Math.PI / 3)]));
+    HC.forEach(([x, y]) => mods += mod(tx + x, ty + y, R, 6, 0, 0.72));
+  } else if (shape === "oct") {
+    const R = 30, s = 2 * R * Math.cos(Math.PI / 8), side = 2 * R * Math.sin(Math.PI / 8);
+    [-0.5, 0.5].forEach(i => [-0.5, 0.5].forEach(j => mods += mod(tx + i * s, ty + j * s, R, 8, Math.PI / 8, 0.74)));
+    mods += `<rect x="${(tx - side / 2).toFixed(1)}" y="${(ty - side / 2).toFixed(1)}" width="${side.toFixed(1)}" height="${side.toFixed(1)}" transform="rotate(45 ${tx.toFixed(1)} ${ty.toFixed(1)})" fill="#b0824a" stroke="#6b4a22"/>`;
+  } else {
+    const s = 70;
+    [-1, 0, 1].forEach(i => mods += `<rect x="${tx + i * s - s / 2}" y="${ty - s / 2}" width="${s}" height="${s}" fill="${FL}" stroke="#000"/><rect x="${tx + i * s - s / 2 + 10}" y="${ty - s / 2 + 10}" width="${s - 20}" height="${s - 20}" fill="${SUB}" stroke="#2f6326"/>`);
+  }
+  const canR = 78, canRy = shape === "hex" ? 78 : 52;
+  const can = (cx, cy, r, trunkX, trunkY) => `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r}" fill="#2d7a2a" fill-opacity=".28" stroke="#1d5a1b" stroke-dasharray="5 3"/><circle cx="${trunkX.toFixed(1)}" cy="${trunkY.toFixed(1)}" r="5" fill="#6b4a22" stroke="#3d2a12"/>`;
+  let canopies, caption;
+  if (shape === "hex") {
+    // a canopy reaching 3–4 modules: tree in one module, crown over it and its neighbours
+    const one = (k) => { const [x, y] = HC[k], [nx, ny] = [x * 0.45, y * 0.45]; return can(tx + nx, ty + ny, 46, tx + x * 0.78, ty + y * 0.78); };
+    if (many) { canopies = [1, 3, 5].map(one).join(""); caption = "7 modules, 3 trees, 3–4 modules each"; }
+    else { canopies = one(1); caption = "3–4 modules, 1 tree (click: 3 trees)"; }
+  } else if (shape === "oct") {
+    const s = 2 * 30 * Math.cos(Math.PI / 8);
+    canopies = `<circle cx="${tx}" cy="${ty}" r="${(s + 14).toFixed(1)}" fill="#2d7a2a" fill-opacity=".28" stroke="#1d5a1b" stroke-dasharray="5 3"/><circle cx="${(tx + s / 2 - 10).toFixed(1)}" cy="${(ty + s / 2 - 10).toFixed(1)}" r="5" fill="#6b4a22" stroke="#3d2a12"/>`;
+    caption = "4 modules, 1 tree";
+  } else {
+    canopies = `<ellipse cx="${tx}" cy="${ty}" rx="${canR + 30}" ry="${canRy}" fill="#2d7a2a" fill-opacity=".28" stroke="#1d5a1b" stroke-dasharray="5 3"/><circle cx="${tx}" cy="${ty}" r="5" fill="#6b4a22" stroke="#3d2a12"/>`;
+    caption = "3 modules, 1 tree";
+  }
+  const plan = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;background:#eef4f2;border-radius:8px"><title>Plan: one tree over several small modules</title>${mods}
+${canopies}
+    <text x="6" y="${H - 6}" font-size="10" fill="#5b6f6a">${caption}</text></svg>`;
+  // section: three small modules side by side, one tree in the middle, roots spreading into all three
+  const SW = 900, SH = 470, y0 = 300, Ds = 60, fd = 95, mw = 200, fw = 34, x0 = SW / 2 - 1.5 * mw;
+  const HEXV = shape === "hex" || shape === "oct", NM = HEXV ? [1, 2] : [0, 1, 2];
+  const VX = HEXV ? x0 + mw - 70 : x0 - 70, VW = HEXV ? 2 * mw + 140 : 3 * mw + 140;
+  let sec = `<svg viewBox="${VX} 0 ${VW} ${SH}" style="width:100%;height:auto;background:#eef4f2;border-radius:8px;margin-top:6px"><title>Section: one tree rooted across several small modules</title>`;
+  sec += `<rect x="${VX}" y="${y0 + 32}" width="${VW}" height="${SH - y0 - 32}" fill="#cfe8f3"/>`;
+  for (const i of NM) {
+    const xl = x0 + i * mw;
+    const first = i === NM[0] || !HEXV; // square modules: each has its own floats, so joints show two floats side by side
+    // neighbouring modules share one float at the joint: only the first module draws a left float
+    if (first) sec += `<rect x="${xl}" y="${y0}" width="${fw}" height="${fd}" fill="${FL}" stroke="#000"/>`;
+    sec += `<rect x="${xl + mw - fw}" y="${y0}" width="${fw}" height="${fd}" fill="${FL}" stroke="#000"/>`;
+    sec += `<rect x="${xl + (first ? fw : 0)}" y="${y0}" width="${mw - (first ? 2 : 1) * fw}" height="${Ds}" fill="${SUB}" stroke="#2f6326"/>`;
+  }
+  const cx = HEXV ? x0 + 2 * mw + 55 : x0 + 1.5 * mw;
+  // roots: tree centred over the two modules, roots spreading evenly into both
+  let roots = "";
+  const KL = HEXV ? 7 : 9, KR = HEXV ? 5 : 9;
+  for (let k = -KL; k <= KR; k++) {
+    const ex = cx + k * 30, mx = cx + k * 14;
+    if (ex < x0 || ex > x0 + 3 * mw) continue;
+    if (NM.some(i => { const xl = x0 + i * mw; return ((i === NM[0] || !HEXV) && ex > xl - 4 && ex < xl + fw + 4) || (ex > xl + mw - fw - 4 && ex < xl + mw + 4); })) continue;
+    roots += `<path d="M${cx} ${y0 - 60} C ${mx} ${y0 - 50}, ${ex} ${y0 - 25}, ${ex} ${y0 + 10} L ${ex} ${y0 + (Math.abs(k) % 3 === 0 ? 95 : 55)}" fill="none" stroke="#6b4a22" stroke-width="2.4"/>`;
+  }
+  sec += roots;
+  sec += `<rect x="${cx - 5}" y="${y0 - 190}" width="10" height="132" fill="#6b4a22"/>`;
+  [[0, -205, 120, 70], [-90, -185, 90, 55], [90, -185, 90, 55], [-50, -230, 80, 50], [50, -230, 80, 50]].forEach(([dx, dy, rx, ry]) => sec += `<ellipse cx="${cx + dx}" cy="${y0 + dy}" rx="${rx}" ry="${ry}" fill="#2f7a2a" stroke="#1d5a1b" fill-opacity=".92"/>`);
+  sec += `<line x1="${VX}" y1="${y0 + 32}" x2="${VX + VW}" y2="${y0 + 32}" stroke="#2b6a8a" stroke-width="1.5" stroke-dasharray="7 4"/><text x="${VX + VW - 6}" y="${y0 + 28}" text-anchor="end" font-size="12" fill="#2b6a8a">waterline</text>`;
+  sec += `<text x="${VX + VW / 2}" y="${SH - 14}" text-anchor="middle" font-size="14" fill="#5b6f6a">${HEXV ? "One tree spreading over two modules: roots grow into both planters" : "One tree in the middle module: roots spread into all three planters"}</text></svg>`;
+  return { plan, big: sec };
+}
+// Drawn schematic: mangroves–path–mangroves jetty from small octagonal modules, two groups of two modules either side of the path
+function octJettySvg(curved) {
+  const FL = "#1e1e1e", SUB = "#4f9a3f", R = 22, P = 2 * R * Math.cos(Math.PI / 8), side = 2 * R * Math.sin(Math.PI / 8), ROWS = 6, G = 0; // modules close up under the path, which partly covers the substrate
+  const pts = (cx, cy, r) => [...Array(8)].map((_, i) => { const t = Math.PI / 8 + i * Math.PI / 4; return (cx + r * Math.cos(t)).toFixed(1) + "," + (cy + r * Math.sin(t)).toFixed(1); }).join(" ");
+  const mod = (cx, cy) => `<polygon points="${pts(cx, cy, R)}" fill="${FL}" stroke="#000"/><polygon points="${pts(cx, cy, R * 0.74)}" fill="${SUB}" stroke="#2f6326"/>`;
+  const dia = (cx, cy) => `<rect x="${(cx - side / 2).toFixed(1)}" y="${(cy - side / 2).toFixed(1)}" width="${side.toFixed(1)}" height="${side.toFixed(1)}" transform="rotate(45 ${cx.toFixed(1)} ${cy.toFixed(1)})" fill="#cfe8f3" stroke="#555"/>`;
+  const can = (cx, cy) => `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(P + 4).toFixed(1)}" fill="#2d7a2a" fill-opacity=".3" stroke="#1d5a1b" stroke-dasharray="5 3"/><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="#6b4a22" stroke="#3d2a12"/>`;
+  const x0 = 20, y0 = 20, W = 4 * P + G + 40, H = ROWS * P + 40;
+  const C = j => x0 + (j + 0.5) * P + (j > 1 ? G : 0), Rw = i => y0 + (i + 0.5) * P;
+  let body = "";
+  for (let i = 0; i < ROWS; i++) for (let j = 0; j < 4; j++) body += mod(C(j), Rw(i));
+  for (let i = 0; i < ROWS - 1; i++) [x0 + P, x0 + 2 * P, x0 + 3 * P].forEach(x => body += dia(x, y0 + (i + 1) * P));
+  for (let g = 0; g < ROWS / 2; g++) { const cy = y0 + (2 * g + 1) * P; body += can(x0 + P, cy) + can(x0 + 3 * P + G, cy); }
+  const xm = x0 + 2 * P + G / 2, dw = 0.75 * P + 8, yt = y0 - 2, yb = y0 + ROWS * P + 2;
+  if (!curved) body += `<rect x="${(xm - dw / 2).toFixed(1)}" y="${yt}" width="${dw.toFixed(1)}" height="${(yb - yt).toFixed(1)}" fill="url(#deck)" stroke="#9aa3a6" stroke-width="2.5"/>`;
+  else {
+    // decking snakes between the trees, overhanging the inner modules on alternate sides
+    const A = 0.32 * P, N = 60, L = [], Rr = [];
+    for (let k = 0; k <= N; k++) { const y = yt + (yb - yt) * k / N, xc = xm + A * Math.sin(2 * Math.PI * (y - yt) / (4 * P) - Math.PI / 2) * Math.min(1, k / 6, (N - k) / 6); L.push(`${(xc - dw / 2).toFixed(1)},${y.toFixed(1)}`); Rr.unshift(`${(xc + dw / 2).toFixed(1)},${y.toFixed(1)}`); }
+    body += `<polygon points="${L.concat(Rr).join(" ")}" fill="url(#deck)" stroke="#9aa3a6" stroke-width="2.5"/>`;
+  }
+  body += `<text x="${xm}" y="${y0 + ROWS * P / 2}" font-size="11" fill="#3d2a12" font-weight="600" text-anchor="middle" transform="rotate(-90 ${xm} ${y0 + ROWS * P / 2})">path &gt; 1.5 m</text>`;
+  const defs = `<defs><pattern id="deck" width="8" height="7" patternUnits="userSpaceOnUse"><rect width="8" height="7" fill="#c9a27a"/><line x1="0" y1="0" x2="8" y2="0" stroke="#a37f5a" stroke-width="1.2"/></pattern></defs>`;
+  const plan = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" style="width:100%;max-height:420px;background:#cfe8f3;border-radius:8px"><title>Plan: ${curved ? "curved" : "straight"} mangroves–path–mangroves on small octagonal modules</title>${defs}${body}</svg>`;
+  // cross-section: two modules each side, a tree over each pair, decking across the gap between them
+  const SW = 900, SH = 330, sy = 210, Ds = 50, fd = 80, mw = 170, fw = 26, gap = 0, sx0 = SW / 2 - 2 * mw - gap / 2;
+  const XL = i => sx0 + i * mw + (i > 1 ? gap : 0);
+  let sec = `<svg viewBox="0 0 ${SW} ${SH}" style="width:100%;height:auto;background:#eef4f2;border-radius:8px;margin-top:6px"><title>Cross-section</title><rect x="0" y="${sy + 28}" width="${SW}" height="${SH - sy - 28}" fill="#cfe8f3"/>`;
+  const fl = [];
+  for (let i = 0; i < 4; i++) { const xl = XL(i), first = i % 2 === 0; if (first) fl.push(xl); fl.push(xl + mw - fw); sec += `<rect x="${xl + (first ? fw : 0)}" y="${sy}" width="${mw - (first ? 2 : 1) * fw}" height="${Ds}" fill="${SUB}" stroke="#2f6326"/>`; }
+  fl.forEach(x => sec += `<rect x="${x}" y="${sy}" width="${fw}" height="${fd}" fill="${FL}" stroke="#000"/>`);
+  [XL(1), XL(3)].forEach(cx => {
+    for (let k = -5; k <= 5; k++) { const ex = cx + k * 30; if (fl.some(x => ex > x - 4 && ex < x + fw + 4) || ex < XL(cx === XL(1) ? 0 : 2) + fw || ex > XL(cx === XL(1) ? 1 : 3) + mw - fw) continue; sec += `<path d="M${cx} ${sy - 50} C ${cx + k * 14} ${sy - 42}, ${ex} ${sy - 20}, ${ex} ${sy + 8} L ${ex} ${sy + (Math.abs(k) % 3 === 0 ? 80 : 46)}" fill="none" stroke="#6b4a22" stroke-width="2.2"/>`; }
+    sec += `<rect x="${cx - 4}" y="${sy - 150}" width="8" height="102" fill="#6b4a22"/>`;
+    [[0, -165, 95, 52], [-65, -150, 65, 40], [65, -150, 65, 40]].forEach(([dx, dy, rx, ry]) => sec += `<ellipse cx="${cx + dx}" cy="${sy + dy}" rx="${rx}" ry="${ry}" fill="#2f7a2a" stroke="#1d5a1b" fill-opacity=".92"/>`);
+  });
+  const dx0 = XL(2) - 0.375 * mw, dx1 = XL(2) + 0.375 * mw, xmid = (dx0 + dx1) / 2;
+  sec += `<rect x="${dx0}" y="${sy - 10}" width="${dx1 - dx0}" height="10" fill="#c9a27a" stroke="#6b4a22"/><text x="${xmid}" y="${sy - 18}" text-anchor="middle" font-size="13" fill="#3d2a12">decking · path &gt; 1.5 m</text>`;
+  sec += `<line x1="0" y1="${sy + 28}" x2="${SW}" y2="${sy + 28}" stroke="#2b6a8a" stroke-width="1.5" stroke-dasharray="7 4"/><text x="${SW - 6}" y="${sy + 24}" text-anchor="end" font-size="12" fill="#2b6a8a">waterline</text>`;
+  sec += `<text x="${SW / 2}" y="${SH - 10}" text-anchor="middle" font-size="14" fill="#5b6f6a">Cross-section: mangroves – path – mangroves, four modules across</text></svg>`;
+  return { plan, sec };
+}
+function calcSchematic(o) {
+  const fr = document.getElementById("calcFrame");
+  try {
+    const f = fr.contentWindow && fr.contentWindow.miciSchematic;
+    if (!f) { if (!fr.dataset.wait) { fr.dataset.wait = 1; fr.addEventListener("load", () => update(), { once: true }); } return null; }
+    const shapeMap = { rect: "square", hex: "hex", oct: "oct" };
+    const { label, ...spec } = o.calc;
+    spec.shape = spec.shape || (spec.rem === "pair" ? "square" : (shapeMap[fixedShape()] || shapeMap[answers.shape] || "square"));
+    return f(spec);
+  } catch (e) { return null; }
+}
+function sendToCalc(o) {
+  if (!o || !o.calc) return;
+  const shapeMap = { rect: "square", hex: "hex", oct: "oct" };
+  const shape = o.calc.shape || (o.calc.rem === "pair" ? "square" : (shapeMap[fixedShape()] || shapeMap[answers.shape] || "square"));
+  const { rem, shape: _s, ...extra } = o.calc;
+  const label = o.calc.shape ? o.calc.label : ({ square: "Square", hex: "Hexagonal", oct: "Octagonal" }[shape] + " – " + o.calc.label);
+  const msg = { type: "mici-float", rem, label, shape, extra };
+  showPane("calc");
+  const note = document.getElementById("calcNote");
+  note.hidden = false;
+  note.textContent = `Added "${o.calc.label}" from the design guide as the first option below. Adjust its dimensions there and compare it with the other options.`;
+  const fr = document.getElementById("calcFrame");
+  const post = () => { try { fr.contentWindow.postMessage(msg, "*"); } catch (e) {} };
+  let ok = false; try { ok = fr.contentDocument && fr.contentDocument.readyState === "complete" && fr.contentWindow.location.href !== "about:blank"; } catch (e) { ok = true; }
+  if (ok) setTimeout(post, 50); else fr.addEventListener("load", () => setTimeout(post, 50), { once: true });
+}
+update();
+</script>
+</body>
+</html>
