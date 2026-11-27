@@ -45,7 +45,7 @@
   .slideshow .dots button.active { background:#fff; }
   .ba { position:relative; margin-top:20px; border-radius:10px; overflow:hidden; aspect-ratio:1544/1018; user-select:none; touch-action:none; cursor:ew-resize; --pos:50%; }
   .ba img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
-  .ba .after { clip-path:inset(0 0 0 var(--pos)); }
+  .ba .after { position:absolute; inset:0; clip-path:inset(0 0 0 var(--pos)); pointer-events:none; }
   .ba .handle { position:absolute; top:0; bottom:0; left:var(--pos); width:3px; margin-left:-1.5px; background:#fff; box-shadow:0 0 6px rgba(0,0,0,.4); pointer-events:none; }
   .ba .handle::after { content:"94"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:40px; height:40px; border-radius:50%; background:#fff; color:var(--ink); display:grid; place-items:center; font-size:20px; box-shadow:0 2px 8px rgba(0,0,0,.35); }
   .ba .tag { position:absolute; top:12px; padding:3px 10px; border-radius:4px; background:rgba(0,0,0,.55); color:#fff; font-size:13px; letter-spacing:.05em; text-transform:uppercase; pointer-events:none; }
@@ -168,8 +168,8 @@
     <p style="margin:0;color:var(--muted)">Drag the slider to compare Momi Bay now and after adding floating mangrove pontoons.</p>
     <div class="ba">
       <img src="Slide%20show/Before%20and%20after%20sliders/Momi%20Bay/resort-7.jpg" alt="Momi Bay before: open sandy shoreline">
-      <img class="after" src="Slide%20show/Before%20and%20after%20sliders/Momi%20Bay/resort-8.jpg" alt="Momi Bay after: mangroves and walkways along the shoreline">
-      <span class="tag b">Before</span><span class="tag a">After</span>
+      <span class="tag b">Before</span>
+      <div class="after"><img src="Slide%20show/Before%20and%20after%20sliders/Momi%20Bay/resort-8.jpg" alt="Momi Bay after: mangroves and walkways along the shoreline"><span class="tag a">After</span></div>
       <div class="handle"></div>
       <input type="range" min="0" max="100" value="50" aria-label="Before and after comparison">
     </div>
@@ -178,8 +178,8 @@
     <p style="margin:0;color:var(--muted)">Drag the slider to compare Nawi marina today with floating mangrove pontoons added along the jetties.</p>
     <div class="ba" style="aspect-ratio:742/583">
       <img src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island/before.jpg" alt="Nawi Island marina before: rock breakwater and bare jetties">
-      <img class="after" src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island/after.jpg" alt="Nawi Island marina after: floating mangrove pontoons along the breakwater and jetties">
-      <span class="tag b">Before</span><span class="tag a">After</span>
+      <span class="tag b">Before</span>
+      <div class="after"><img src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island/after.jpg" alt="Nawi Island marina after: floating mangrove pontoons along the breakwater and jetties"><span class="tag a">After</span></div>
       <div class="handle"></div>
       <input type="range" min="0" max="100" value="50" aria-label="Nawi Island before and after comparison">
     </div>
@@ -188,8 +188,8 @@
     <p style="margin:0;color:var(--muted)">Drag the slider to compare Nawi marina today with floating mangrove pontoons added between the jetties and along the shoreline.</p>
     <div class="ba" style="aspect-ratio:582/552">
       <img src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island%202/before.jpg" alt="Aerial view of Nawi marina before: bare rock walls and jetties">
-      <img class="after" src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island%202/after.jpg" alt="Aerial view of Nawi marina after: floating mangrove pontoons between jetties and along the shore">
-      <span class="tag b">Before</span><span class="tag a">After</span>
+      <span class="tag b">Before</span>
+      <div class="after"><img src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island%202/after.jpg" alt="Aerial view of Nawi marina after: floating mangrove pontoons between jetties and along the shore"><span class="tag a">After</span></div>
       <div class="handle"></div>
       <input type="range" min="0" max="100" value="50" aria-label="Nawi Island 2 before and after comparison">
     </div>
@@ -198,8 +198,8 @@
     <p style="margin:0;color:var(--muted)">Drag the slider to compare Nawi Island today with mangroves and a boardwalk added around its rock wall.</p>
     <div class="ba" style="aspect-ratio:585/410">
       <img src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island%203/before.jpg" alt="Nawi Island before: rock wall around the island">
-      <img class="after" src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island%203/after.jpg" alt="Nawi Island after: mangroves and a boardwalk around the island">
-      <span class="tag b">Before</span><span class="tag a">After</span>
+      <span class="tag b">Before</span>
+      <div class="after"><img src="Slide%20show/Before%20and%20after%20sliders/Nawi%20Island%203/after.jpg" alt="Nawi Island after: mangroves and a boardwalk around the island"><span class="tag a">After</span></div>
       <div class="handle"></div>
       <input type="range" min="0" max="100" value="50" aria-label="Nawi Island 3 before and after comparison">
     </div>
@@ -208,8 +208,8 @@
     <p style="margin:0;color:var(--muted)">Drag the slider to compare Copra today with floating mangrove islands and walkways added in the lagoon.</p>
     <div class="ba" style="aspect-ratio:461/542">
       <img src="Slide%20show/Before%20and%20after%20sliders/Copra/before.jpg" alt="Copra before: overwater bungalows around an open lagoon">
-      <img class="after" src="Slide%20show/Before%20and%20after%20sliders/Copra/after.jpg" alt="Copra after: floating mangrove islands linked by walkways in the lagoon">
-      <span class="tag b">Before</span><span class="tag a">After</span>
+      <span class="tag b">Before</span>
+      <div class="after"><img src="Slide%20show/Before%20and%20after%20sliders/Copra/after.jpg" alt="Copra after: floating mangrove islands linked by walkways in the lagoon"><span class="tag a">After</span></div>
       <div class="handle"></div>
       <input type="range" min="0" max="100" value="50" aria-label="Copra before and after comparison">
     </div>
@@ -218,8 +218,8 @@
     <p style="margin:0;color:var(--muted)">Drag the slider to compare the Copra waterfront today with floating mangrove pontoons added along the jetties and seawall.</p>
     <div class="ba" style="aspect-ratio:1399/223">
       <img src="Slide%20show/Before%20and%20after%20sliders/Copra%202/before.jpg" alt="Copra waterfront before: jetties and a rock seawall">
-      <img class="after" src="Slide%20show/Before%20and%20after%20sliders/Copra%202/after.jpg" alt="Copra waterfront after: floating mangrove pontoons along the jetties and seawall">
-      <span class="tag b">Before</span><span class="tag a">After</span>
+      <span class="tag b">Before</span>
+      <div class="after"><img src="Slide%20show/Before%20and%20after%20sliders/Copra%202/after.jpg" alt="Copra waterfront after: floating mangrove pontoons along the jetties and seawall"><span class="tag a">After</span></div>
       <div class="handle"></div>
       <input type="range" min="0" max="100" value="50" aria-label="Copra 2 before and after comparison">
     </div>
